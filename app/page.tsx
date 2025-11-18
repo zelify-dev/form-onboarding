@@ -1,118 +1,135 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-// Componentes de layout
-import { Navbar } from './components/layout';
-// Componentes de UI
-import { AnimatedText, InputField, ProgressBar } from './components/ui';
-// Hook para manejar el formulario
-import { useFormQuestions } from './lib/hooks/useFormQuestions';
+import { useState } from "react";
+import Image from "next/image";
+import Navbar from "./components/Navbar";
+import ProgressBar from "./components/ProgressBar";
+import AnimatedQuestion from "./components/AnimatedQuestion";
+
+// Array de 6 preguntas de ejemplo
+const QUESTIONS = [
+  '¿Cuál es su rol dentro de la organización y en qué áreas toma decisiones relacionadas con tecnología o servicios financieros?',
+  '¿A qué actividad principal se dedica su empresa y qué productos financieros ofrecen actualmente?',
+  '¿Cuál es el mayor problema o fricción que tienen hoy en sus procesos financieros o tecnológicos?',
+  '¿Qué tipo de integraciones o servicios están buscando implementar (identidad, AML, pagos, tarjetas, transferencias, etc.)?',
+  '¿Cómo manejan hoy el onboarding, pagos o transferencias y qué parte de ese proceso sigue siendo manual?',
+  '¿Qué objetivos tienen para los próximos 6–12 meses en términos de nuevos productos o expansión digital?',
+  '¿Tienen un presupuesto asignado o un proceso definido para evaluar e implementar soluciones como Zelify?',
+  '¿Cuál sería para ustedes el resultado ideal al trabajar con Zelify?',
+];
 
 export default function Home() {
-  const {
-    currentQuestion,
-    currentPlaceholder,
-    currentAnswer,
-    currentQuestionIndex,
-    viewingQuestionIndex,
-    isViewingCurrentQuestion,
-    isExiting,
-    isTransitioning,
-    totalQuestions,
-    handleAnswer,
-    handleExitComplete,
-    navigateBack,
-    navigateForward,
-  } = useFormQuestions();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
+  const [showQuestion, setShowQuestion] = useState(true);
+  const [answers, setAnswers] = useState<string[]>(Array(QUESTIONS.length).fill(""));
+  const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
 
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastScrollTimeRef = useRef<number>(0);
+  const totalSteps = QUESTIONS.length;
+  const currentStep = currentQuestionIndex + 1;
+  const completedSteps = answers
+    .map((answer, index) => (answer.trim() !== "" ? index + 1 : -1))
+    .filter((step) => step > 0);
 
-  // Maneja el scroll para navegar entre preguntas
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      // No permite navegación durante transiciones
-      if (isTransitioning) return;
+  const handleNext = () => {
+    if (currentAnswer.trim() === "") return;
 
-      const now = Date.now();
-      // Throttle: solo procesa scroll cada 500ms
-      if (now - lastScrollTimeRef.current < 500) return;
-      lastScrollTimeRef.current = now;
+    // Guardar respuesta
+    const newAnswers = [...answers];
+    newAnswers[currentQuestionIndex] = currentAnswer;
+    setAnswers(newAnswers);
 
-      // Scroll hacia arriba = navegar hacia atrás (ver pregunta anterior)
-      if (e.deltaY < 0 && viewingQuestionIndex > 0) {
-        e.preventDefault();
-        navigateBack();
-      }
-      // Scroll hacia abajo = navegar hacia adelante (volver a la pregunta actual)
-      else if (e.deltaY > 0 && viewingQuestionIndex < currentQuestionIndex) {
-        e.preventDefault();
-        navigateForward();
-      }
-    };
+    // Si no es la última pregunta, iniciar animación de salida
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
+      setIsExiting(true);
+    }
+  };
 
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [viewingQuestionIndex, currentQuestionIndex, isTransitioning, navigateBack, navigateForward]);
+  const handleAnimationComplete = () => {
+    if (isExiting) {
+      // La animación de salida terminó, cambiar a la siguiente pregunta
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentAnswer(answers[nextIndex] || "");
+      setIsExiting(false);
+      setShowQuestion(false);
+      // Pequeño delay para asegurar que el DOM se actualice
+      setTimeout(() => {
+        setShowQuestion(true);
+      }, 50);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleNext();
+    }
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen flex flex-col">
       {/* Gradiente animado de fondo */}
       <div className="absolute inset-0 animated-gradient" />
-      
-      {/* Efecto de estrellas/textura con puntos brillantes */}
-      <div className="absolute inset-0">
-        <div 
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                              radial-gradient(circle at 60% 70%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 1px, transparent 1px),
-                              radial-gradient(circle at 40% 80%, rgba(255,255,255,0.08) 1px, transparent 1px)`,
-            backgroundSize: '200px 200px, 150px 150px, 180px 180px, 160px 160px'
-          }}
-        />
-      </div>
-      
-      {/* Contenido principal */}
-      <div className="relative z-10 flex min-h-screen flex-col">
-        {/* Navbar */}
+      <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar />
+        <div className="pt-4 pb-2 sm:pt-8 sm:pb-4 md:pt-12 md:pb-6 lg:pt-16 lg:pb-8">
+          <ProgressBar
+            totalSteps={totalSteps}
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+            viewingStep={currentStep}
+          />
+        </div>
 
-        {/* Barra de progreso */}
-        <ProgressBar 
-          currentQuestionIndex={currentQuestionIndex}
-          viewingQuestionIndex={viewingQuestionIndex}
-          totalQuestions={totalQuestions}
-        />
-
-        {/* Contenido centrado */}
-        <main className="flex flex-1 items-center justify-center px-4 sm:px-6 md:px-8 pb-8">
-          <div className="flex w-full max-w-sm sm:max-w-2xl md:max-w-3xl lg:max-w-4xl flex-col items-start justify-start gap-6 sm:gap-10 md:gap-12 lg:gap-16 text-left">
-            <h1 className="w-full text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-white">
-              <AnimatedText 
-                text={currentQuestion} 
+        {/* Contenedor de pregunta y respuesta - centrado verticalmente */}
+        <div className="flex-1 flex items-center justify-center py-4 sm:py-8">
+          <div className="flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+            {/* Pregunta animada */}
+            {showQuestion && (
+              <AnimatedQuestion
+                question={QUESTIONS[currentQuestionIndex]}
                 isExiting={isExiting}
-                onExitComplete={handleExitComplete}
+                onAnimationComplete={handleAnimationComplete}
               />
-            </h1>
-            
+            )}
+
+            {/* Input invisible */}
             <div className="w-full">
-              <InputField 
-                placeholder={currentPlaceholder}
-                initialValue={currentAnswer}
-                onSubmit={handleAnswer}
-                disabled={isTransitioning || !isViewingCurrentQuestion}
-                resetOnSubmit={true}
+              {/* Input sin bordes */}
+              <input
+                type="text"
+                value={currentAnswer}
+                onChange={(e) => setCurrentAnswer(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full bg-transparent text-white text-lg sm:text-xl md:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all"
+                placeholder="Escribe tu respuesta aquí"
+                disabled={isExiting}
               />
             </div>
+
+            {/* Espacio entre input y línea */}
+            <div className="h-3 sm:h-4 md:h-5 lg:h-6" />
+
+            {/* Línea/franja morada - ocupa todo el ancho */}
+            <div className="w-full h-1 bg-purple-500 rounded-full" />
+
+            {/* Botón con flecha alineado a la derecha */}
+            <button
+              onClick={handleNext}
+              disabled={isExiting || currentAnswer.trim() === ""}
+              className="self-end flex items-center gap-2 sm:gap-3 mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-8 sm:px-10 md:px-12 py-2 sm:py-3 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-lg sm:text-xl md:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+            >
+              <Image
+                src="/iconAlaiza.svg"
+                alt="Alaiza AI Logo"
+                width={20}
+                height={20}
+                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
+              />
+              &gt;
+            </button>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
