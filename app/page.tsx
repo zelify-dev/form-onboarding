@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Navbar from "./components/Navbar";
 import ProgressBar from "./components/ProgressBar";
@@ -47,13 +47,22 @@ const PLACEHOLDERS = [
   'Ejm: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
 ];
 
+const THANK_YOU_MESSAGE = "Muchas gracias por tus respuestas. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
+
 export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const [isGoingBack, setIsGoingBack] = useState(false);
   const [showQuestion, setShowQuestion] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [answers, setAnswers] = useState<string[]>(Array(QUESTIONS.length).fill(""));
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
+  const answersRef = useRef(answers);
+  
+  // Mantener la referencia más reciente de answers
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   const totalSteps = QUESTIONS.length;
   const currentStep = currentQuestionIndex + 1;
@@ -69,8 +78,13 @@ export default function Home() {
     newAnswers[currentQuestionIndex] = currentAnswer;
     setAnswers(newAnswers);
 
-    // Si no es la última pregunta, iniciar animación de salida
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
+    // Si es la última pregunta, marcar como completado
+    if (currentQuestionIndex === QUESTIONS.length - 1) {
+      setIsCompleted(true);
+      setIsExiting(true);
+      setIsGoingBack(false);
+    } else {
+      // Si no es la última pregunta, iniciar animación de salida
       setIsGoingBack(false);
       setIsExiting(true);
     }
@@ -88,31 +102,61 @@ export default function Home() {
     }
   };
 
-  const handleAnimationComplete = () => {
+  // Memoizar handleAnimationComplete para evitar que se recree en cada render
+  const handleAnimationComplete = useCallback(() => {
     if (isExiting) {
-      if (isGoingBack) {
+      if (isCompleted) {
+        // Si se completó, mostrar el mensaje de agradecimiento
+        setIsExiting(false);
+        setShowQuestion(false);
+        setTimeout(() => {
+          setShowQuestion(true);
+        }, 50);
+      } else if (isGoingBack) {
         // Retroceder a la pregunta anterior
-        const prevIndex = currentQuestionIndex - 1;
-        setCurrentQuestionIndex(prevIndex);
-        setCurrentAnswer(answers[prevIndex] || "");
+        setCurrentQuestionIndex((prevIndex) => {
+          const newIndex = prevIndex - 1;
+          setCurrentAnswer(answersRef.current[newIndex] || "");
+          return newIndex;
+        });
         setIsGoingBack(false);
+        setIsExiting(false);
+        setShowQuestion(false);
+        // Pequeño delay para asegurar que el DOM se actualice
+        setTimeout(() => {
+          setShowQuestion(true);
+        }, 50);
       } else {
         // Avanzar a la siguiente pregunta
-        const nextIndex = currentQuestionIndex + 1;
-        setCurrentQuestionIndex(nextIndex);
-        setCurrentAnswer(answers[nextIndex] || "");
+        setCurrentQuestionIndex((prevIndex) => {
+          const newIndex = prevIndex + 1;
+          setCurrentAnswer(answersRef.current[newIndex] || "");
+          return newIndex;
+        });
+        setIsExiting(false);
+        setShowQuestion(false);
+        // Pequeño delay para asegurar que el DOM se actualice
+        setTimeout(() => {
+          setShowQuestion(true);
+        }, 50);
       }
-      setIsExiting(false);
-      setShowQuestion(false);
-      // Pequeño delay para asegurar que el DOM se actualice
-      setTimeout(() => {
-        setShowQuestion(true);
-      }, 50);
     }
-  };
+  }, [isExiting, isGoingBack, isCompleted]);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Ajustar altura del textarea automáticamente
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [currentAnswer]);
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Si se presiona Enter sin Shift, avanzar a la siguiente pregunta
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleNext();
     }
   };
@@ -131,79 +175,98 @@ export default function Home() {
       />
       <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
         <Navbar />
-        <div className="pt-2 pb-1 sm:pt-3 sm:pb-2 md:pt-4 md:pb-2 lg:pt-5 lg:pb-3">
-          <ProgressBar
-            totalSteps={totalSteps}
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            viewingStep={currentStep}
-          />
-        </div>
+        {!isCompleted && (
+          <div className="pt-2 pb-1 sm:pt-3 sm:pb-2 md:pt-4 md:pb-2 lg:pt-5 lg:pb-3">
+            <ProgressBar
+              totalSteps={totalSteps}
+              currentStep={currentStep}
+              completedSteps={completedSteps}
+              viewingStep={currentStep}
+            />
+          </div>
+        )}
 
         {/* Contenedor de pregunta y respuesta - centrado verticalmente */}
         <div className="flex-1 flex items-center justify-center py-2 sm:py-4 md:py-8">
           <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
-            {/* Pregunta animada */}
-            {showQuestion && (
-              <AnimatedQuestion
-                question={QUESTIONS[currentQuestionIndex]}
-                isExiting={isExiting}
-                isGoingBack={isGoingBack}
-                onAnimationComplete={handleAnimationComplete}
-              />
-            )}
-
-            {/* Input invisible */}
-            <div className="w-full">
-              {/* Input sin bordes */}
-              <input
-                type="text"
-                value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full bg-transparent text-white text-base sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all"
-                placeholder={PLACEHOLDERS[currentQuestionIndex]}
-                disabled={isExiting}
-              />
-            </div>
-
-            {/* Espacio entre input y línea */}
-            <div className="h-2 sm:h-3 md:h-4 lg:h-5" />
-
-            {/* Línea/franja morada - ocupa todo el ancho */}
-            <div className="w-full h-1 bg-purple-500 rounded-full" />
-
-            {/* Botones de navegación */}
-            <div className="flex justify-between items-center gap-2 sm:gap-0 mt-4 sm:mt-6 md:mt-8 lg:mt-10">
-              {/* Botón para retroceder */}
-              {currentQuestionIndex > 0 && (
-                <button
-                  onClick={handlePrevious}
-                  disabled={isExiting}
-                  className="flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 py-1 sm:py-1.5 md:py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:cursor-not-allowed text-white text-sm sm:text-base md:text-lg lg:text-xl font-medium rounded-lg transition-all duration-300"
-                  title="Retroceder"
-                >
-                  &lt;
-                  <span className="hidden sm:inline">Anterior</span>
-                </button>
-              )}
-              
-              {/* Botón para avanzar */}
-              <button
-                onClick={handleNext}
-                disabled={isExiting || currentAnswer.trim() === ""}
-                className={`flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? 'ml-auto' : ''}`}
-              >
-                <Image
-                  src="/iconAlaiza.svg"
-                  alt="Alaiza AI Logo"
-                  width={20}
-                  height={20}
-                  className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
+            {isCompleted ? (
+              /* Mensaje de agradecimiento */
+              showQuestion && (
+                <AnimatedQuestion
+                  question={THANK_YOU_MESSAGE}
+                  isExiting={false}
+                  isGoingBack={false}
+                  isFirstQuestion={false}
+                  onAnimationComplete={() => {}}
                 />
-                &gt;
-              </button>
-            </div>
+              )
+            ) : (
+              <>
+                {/* Pregunta animada */}
+                {showQuestion && (
+                  <AnimatedQuestion
+                    question={QUESTIONS[currentQuestionIndex]}
+                    isExiting={isExiting}
+                    isGoingBack={isGoingBack}
+                    isFirstQuestion={currentQuestionIndex === 0}
+                    onAnimationComplete={handleAnimationComplete}
+                  />
+                )}
+
+                {/* Textarea que se ajusta automáticamente */}
+                <div className="w-full">
+                  {/* Textarea sin bordes que crece con el contenido */}
+                  <textarea
+                    ref={textareaRef}
+                    value={currentAnswer}
+                    onChange={(e) => setCurrentAnswer(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="w-full bg-transparent text-white text-base sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em]"
+                    placeholder={PLACEHOLDERS[currentQuestionIndex]}
+                    disabled={isExiting}
+                    rows={1}
+                  />
+                </div>
+
+                {/* Espacio entre input y línea */}
+                <div className="h-2 sm:h-3 md:h-4 lg:h-5" />
+
+                {/* Línea/franja morada - ocupa todo el ancho */}
+                <div className="w-full h-1 bg-purple-500 rounded-full" />
+
+                {/* Botones de navegación */}
+                <div className="flex justify-between items-center gap-2 sm:gap-0 mt-4 sm:mt-6 md:mt-8 lg:mt-10">
+                  {/* Botón para retroceder */}
+                  {currentQuestionIndex > 0 && (
+                    <button
+                      onClick={handlePrevious}
+                      disabled={isExiting}
+                      className="flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 py-1 sm:py-1.5 md:py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:cursor-not-allowed text-white text-sm sm:text-base md:text-lg lg:text-xl font-medium rounded-lg transition-all duration-300"
+                      title="Retroceder"
+                    >
+                      &lt;
+                      <span className="hidden sm:inline">Anterior</span>
+                    </button>
+                  )}
+                  
+                  {/* Botón para avanzar */}
+                  <button
+                    onClick={handleNext}
+                    disabled={isExiting || currentAnswer.trim() === ""}
+                    className={`flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? 'ml-auto' : ''}`}
+                  >
+                    <Image
+                      src="/iconAlaiza.svg"
+                      alt="Alaiza AI Logo"
+                      width={20}
+                      height={20}
+                      className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
+                    />
+                    &gt;
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
