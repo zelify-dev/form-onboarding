@@ -53,12 +53,12 @@ export default function ProgressBar({
                 ? "bg-purple-500"
                 : "bg-white/20"
             }`}
-            style={{ width: 'clamp(3px, 0.6vw, 8px)' }}
+            style={{ width: 'clamp(2px, 0.4vw, 6px)' }}
           />
         )}
 
         {/* Contenedor del círculo */}
-        <div className="relative flex items-center justify-center p-1 sm:p-1.5 md:p-2">
+        <div className="relative flex items-center justify-center p-0.5 sm:p-1 md:p-1.5 lg:p-2">
           {/* Anillo exterior para pulso */}
           {(state === "current" ||
             state === "viewing-completed" ||
@@ -88,14 +88,14 @@ export default function ProgressBar({
           <div
             className={`relative flex items-center justify-center rounded-full transition-all duration-500 ${
               state === "completed"
-                ? "bg-purple-600 border border-purple-500 shadow-md shadow-purple-500/50 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
+                ? "bg-purple-600 border border-purple-500 shadow-md shadow-purple-500/50 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6"
                 : state === "current"
-                ? "bg-purple-500/30 border border-purple-500 shadow-md shadow-purple-500/50 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7"
+                ? "bg-purple-500/30 border border-purple-500 shadow-md shadow-purple-500/50 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px] md:w-6 md:h-6 lg:w-7 lg:h-7"
                 : state === "viewing-completed"
-                ? "bg-purple-400 border border-purple-400 shadow-md shadow-purple-400/50 scale-110 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7"
+                ? "bg-purple-400 border border-purple-400 shadow-md shadow-purple-400/50 scale-110 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px] md:w-6 md:h-6 lg:w-7 lg:h-7"
                 : state === "viewing-future"
-                ? "bg-blue-500/30 border border-blue-500 shadow-md shadow-blue-500/50 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7"
-                : "bg-transparent border border-white/20 w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5"
+                ? "bg-blue-500/30 border border-blue-500 shadow-md shadow-blue-500/50 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px] md:w-6 md:h-6 lg:w-7 lg:h-7"
+                : "bg-transparent border border-white/20 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5"
             }`}
           >
             {/* Checkmark para completadas */}
@@ -118,7 +118,7 @@ export default function ProgressBar({
             {/* Número para no completadas */}
             {!isCompleted && (
               <span
-                className={`text-[7px] sm:text-[8px] md:text-[9px] font-medium transition-all duration-500 ${
+                className={`text-[6px] sm:text-[7px] md:text-[8px] lg:text-[9px] font-medium transition-all duration-500 ${
                   state === "current"
                     ? "text-purple-300"
                     : state === "viewing-future"
@@ -141,8 +141,8 @@ export default function ProgressBar({
   };
 
   return (
-    <div className="flex justify-center items-center w-full px-1 sm:px-2 md:px-3 py-2 sm:py-3 md:py-4 overflow-visible">
-      <div className="flex items-center justify-center overflow-y-visible w-full max-w-full" style={{ gap: 'clamp(4px, 0.9vw, 20px)' }}>
+    <div className="flex justify-center items-center w-full px-0.5 sm:px-1 md:px-2 lg:px-3 py-2 sm:py-3 md:py-4 overflow-hidden">
+      <div className="flex items-center justify-center overflow-y-visible w-full max-w-full" style={{ gap: 'clamp(1px, 0.5vw, 12px)' }}>
         {Array.from({ length: totalSteps }, (_, index) => renderStep(index))}
       </div>
     </div>

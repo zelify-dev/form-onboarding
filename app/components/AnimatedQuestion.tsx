@@ -159,8 +159,8 @@ export default function AnimatedQuestion({
   return (
     <h2
       ref={containerRef}
-      className="font-medium text-white text-left mb-6 sm:mb-8 md:mb-10 lg:mb-12"
-      style={{ fontSize: 'clamp(1rem, 2.5vw, 1.75rem)' }}
+      className="font-medium text-white text-left mb-4 sm:mb-6 md:mb-8 lg:mb-10"
+      style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1.75rem)' }}
     >
       {palabras.map((palabra, palabraIndex) => {
         const esEspacio = /^\s+$/.test(palabra);
