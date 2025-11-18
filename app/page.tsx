@@ -1,29 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Navbar from "./components/Navbar";
 import ProgressBar from "./components/ProgressBar";
 import AnimatedQuestion from "./components/AnimatedQuestion";
+import AnimatedHalftoneBackground from "./components/AnimatedHalftoneBackground";
 
-// Array de 6 preguntas de ejemplo
+// Array de preguntas
 const QUESTIONS = [
-  '¿Cuál es su rol dentro de la organización y en qué áreas toma decisiones relacionadas con tecnología o servicios financieros?',
-  '¿A qué actividad principal se dedica su empresa y qué productos financieros ofrecen actualmente?',
-  '¿Cuál es el mayor problema o fricción que tienen hoy en sus procesos financieros o tecnológicos?',
-  '¿Qué tipo de integraciones o servicios están buscando implementar (identidad, AML, pagos, tarjetas, transferencias, etc.)?',
-  '¿Cómo manejan hoy el onboarding, pagos o transferencias y qué parte de ese proceso sigue siendo manual?',
-  '¿Qué objetivos tienen para los próximos 6–12 meses en términos de nuevos productos o expansión digital?',
-  '¿Tienen un presupuesto asignado o un proceso definido para evaluar e implementar soluciones como Zelify?',
-  '¿Cuál sería para ustedes el resultado ideal al trabajar con Zelify?',
+  '1. Ingresa tu nombre y apellido',
+  '2. ¿A qué institución financiera o empresa perteneces?',
+  '3. ¿Cuál es tu rol dentro de la organización? Cuéntame un poco más sobre tus responsabilidades.',
+  '4. ¿En qué áreas se toman decisiones relacionadas con tecnología o servicios financieros?',
+  '5. ¿Cuál es la actividad principal de la institución y qué productos o servicios financieros ofrecen actualmente?',
+  '6. ¿Cuál es el mayor problema que enfrentan actualmente en sus procesos financieros o tecnológicos?',
+  '7. Háblame de tus clientes:\n• ¿A qué segmento de mercado atienden?\n• ¿A quién brindan servicios directamente?\n• ¿Cómo describirías a tu cliente ideal?',
+  '8. Háblame del volumen de clientes: ¿cuántos clientes atienden actualmente?',
+  '9. ¿Qué tan digitalizada consideras que está tu institución? (bajo, medio, alto)',
+  '10. ¿Tienen un equipo interno de tecnología o tercerizan?',
+  '11. Si cuentan con equipo interno, cuéntame más de la tecnología que desarrollan.',
+  '12. ¿Tienen proveedores externos de tecnología? ¿Cuáles?',
+  '13. ¿Qué tipo de integraciones desean implementar?',
+  '14. ¿Cuál es tu visión a largo plazo?',
+  '15. ¿Tienen presupuesto asignado para soluciones tecnológicas?',
+  '16. Cuéntame quién te refirió con nosotros.',
+];
+
+// Array de placeholders para cada pregunta
+const PLACEHOLDERS = [
+  'Ejm: Rodrigo Pérez',
+  'Ejm: Banco XYZ',
+  'Ejm: Director de TI, encargado de la infraestructura tecnológica.',
+  'Ejm: Jefaturas de Tecnología, Dirección General, etc.',
+  'Ejm: Banco que ofrece cuentas de ahorro, crédito personal y seguros.',
+  'Ejm: Dependencia de sistemas legacy, demoras en las transacciones, falta de innovación tecnológica.',
+  'Ejm: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta.',
+  'Ejm: Atendemos a 10,000 clientes activos con cuentas bancarias.',
+  'Ejm: Alta digitalización, con múltiples canales de comunicación y APIs integradas.',
+  'Ejm: Contamos con un equipo interno de tecnología que gestiona la infraestructura digital.',
+  'Ejm: Desarrollamos soluciones en la nube, microservicios y servicios de ciberseguridad.',
+  'Ejm: Utilizamos proveedores como Visa, Mastercard y sistemas de core bancario.',
+  'Ejm: Deseamos integrar soluciones de pagos, transferencias y autenticación biométrica.',
+  'Ejm: Buscamos lograr independencia tecnológica y optimizar costos operativos.',
+  'Ejm: Sí, contamos con un presupuesto de $500,000 anuales para tecnología.',
+  'Ejm: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
 ];
 
 export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
+  const [isGoingBack, setIsGoingBack] = useState(false);
   const [showQuestion, setShowQuestion] = useState(true);
   const [answers, setAnswers] = useState<string[]>(Array(QUESTIONS.length).fill(""));
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+  const isScrollingRef = useRef(false);
 
   const totalSteps = QUESTIONS.length;
   const currentStep = currentQuestionIndex + 1;
@@ -41,16 +74,37 @@ export default function Home() {
 
     // Si no es la última pregunta, iniciar animación de salida
     if (currentQuestionIndex < QUESTIONS.length - 1) {
+      setIsGoingBack(false);
+      setIsExiting(true);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0 && !isExiting && !isScrollingRef.current) {
+      // Guardar respuesta actual antes de retroceder
+      const newAnswers = [...answers];
+      newAnswers[currentQuestionIndex] = currentAnswer;
+      setAnswers(newAnswers);
+
+      setIsGoingBack(true);
       setIsExiting(true);
     }
   };
 
   const handleAnimationComplete = () => {
     if (isExiting) {
-      // La animación de salida terminó, cambiar a la siguiente pregunta
-      const nextIndex = currentQuestionIndex + 1;
-      setCurrentQuestionIndex(nextIndex);
-      setCurrentAnswer(answers[nextIndex] || "");
+      if (isGoingBack) {
+        // Retroceder a la pregunta anterior
+        const prevIndex = currentQuestionIndex - 1;
+        setCurrentQuestionIndex(prevIndex);
+        setCurrentAnswer(answers[prevIndex] || "");
+        setIsGoingBack(false);
+      } else {
+        // Avanzar a la siguiente pregunta
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
+        setCurrentAnswer(answers[nextIndex] || "");
+      }
       setIsExiting(false);
       setShowQuestion(false);
       // Pequeño delay para asegurar que el DOM se actualice
@@ -60,19 +114,130 @@ export default function Home() {
     }
   };
 
+  // Detectar scroll para navegación hacia adelante y atrás
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (isExiting || isScrollingRef.current) return;
+
+      const currentScrollY = window.scrollY;
+      const scrollDelta = e.deltaY;
+
+      // Scroll hacia arriba: retroceder a pregunta anterior
+      if (scrollDelta < 0 && currentQuestionIndex > 0 && currentScrollY < 100) {
+        e.preventDefault();
+        isScrollingRef.current = true;
+        
+        // Guardar respuesta actual antes de retroceder
+        const newAnswers = [...answers];
+        newAnswers[currentQuestionIndex] = currentAnswer;
+        setAnswers(newAnswers);
+
+        setIsGoingBack(true);
+        setIsExiting(true);
+        
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 500);
+      }
+      // Scroll hacia abajo: avanzar a siguiente pregunta (si hay respuesta o ya está completada)
+      else if (scrollDelta > 0 && currentQuestionIndex < QUESTIONS.length - 1) {
+        // Solo avanzar si hay respuesta o si la pregunta actual ya está completada
+        const hasAnswer = currentAnswer.trim() !== "" || answers[currentQuestionIndex]?.trim() !== "";
+        
+        if (hasAnswer) {
+          e.preventDefault();
+          isScrollingRef.current = true;
+          
+          // Guardar respuesta actual antes de avanzar
+          const newAnswers = [...answers];
+          newAnswers[currentQuestionIndex] = currentAnswer;
+          setAnswers(newAnswers);
+
+          setIsGoingBack(false);
+          setIsExiting(true);
+          
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, 500);
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [currentQuestionIndex, isExiting, currentAnswer, answers]);
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleNext();
+    } else if (e.key === "ArrowUp" && currentQuestionIndex > 0) {
+      e.preventDefault();
+      handlePrevious();
     }
   };
+
+  // Detectar teclas de flecha en toda la página
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Flecha arriba: retroceder
+      if (e.key === "ArrowUp" && currentQuestionIndex > 0 && !isExiting && !isScrollingRef.current) {
+        e.preventDefault();
+        isScrollingRef.current = true;
+        
+        // Guardar respuesta actual antes de retroceder
+        const newAnswers = [...answers];
+        newAnswers[currentQuestionIndex] = currentAnswer;
+        setAnswers(newAnswers);
+
+        setIsGoingBack(true);
+        setIsExiting(true);
+        
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 500);
+      }
+      // Flecha abajo: avanzar (si hay respuesta o ya está completada)
+      else if (e.key === "ArrowDown" && currentQuestionIndex < QUESTIONS.length - 1 && !isExiting && !isScrollingRef.current) {
+        const hasAnswer = currentAnswer.trim() !== "" || answers[currentQuestionIndex]?.trim() !== "";
+        
+        if (hasAnswer) {
+          e.preventDefault();
+          isScrollingRef.current = true;
+          
+          // Guardar respuesta actual antes de avanzar
+          const newAnswers = [...answers];
+          newAnswers[currentQuestionIndex] = currentAnswer;
+          setAnswers(newAnswers);
+
+          setIsGoingBack(false);
+          setIsExiting(true);
+          
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, 500);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentQuestionIndex, isExiting, currentAnswer, answers]);
 
   return (
     <div className="relative min-h-screen flex flex-col">
       {/* Gradiente animado de fondo */}
       <div className="absolute inset-0 animated-gradient" />
+      {/* Fondo de halftone animado */}
+      <AnimatedHalftoneBackground 
+        isDark={true} 
+        fullScreen={true} 
+        intensity={0.6}
+        brightness={0.8}
+        className="z-0"
+      />
       <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar />
-        <div className="pt-4 pb-2 sm:pt-8 sm:pb-4 md:pt-12 md:pb-6 lg:pt-16 lg:pb-8">
+        <div className="pt-2 pb-1 sm:pt-3 sm:pb-2 md:pt-4 md:pb-2 lg:pt-5 lg:pb-3">
           <ProgressBar
             totalSteps={totalSteps}
             currentStep={currentStep}
@@ -89,6 +254,7 @@ export default function Home() {
               <AnimatedQuestion
                 question={QUESTIONS[currentQuestionIndex]}
                 isExiting={isExiting}
+                isGoingBack={isGoingBack}
                 onAnimationComplete={handleAnimationComplete}
               />
             )}
@@ -102,7 +268,7 @@ export default function Home() {
                 onChange={(e) => setCurrentAnswer(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="w-full bg-transparent text-white text-lg sm:text-xl md:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all"
-                placeholder="Escribe tu respuesta aquí"
+                placeholder={PLACEHOLDERS[currentQuestionIndex]}
                 disabled={isExiting}
               />
             </div>
@@ -113,21 +279,37 @@ export default function Home() {
             {/* Línea/franja morada - ocupa todo el ancho */}
             <div className="w-full h-1 bg-purple-500 rounded-full" />
 
-            {/* Botón con flecha alineado a la derecha */}
-            <button
-              onClick={handleNext}
-              disabled={isExiting || currentAnswer.trim() === ""}
-              className="self-end flex items-center gap-2 sm:gap-3 mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-8 sm:px-10 md:px-12 py-2 sm:py-3 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-lg sm:text-xl md:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
-            >
-              <Image
-                src="/iconAlaiza.svg"
-                alt="Alaiza AI Logo"
-                width={20}
-                height={20}
-                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
-              />
-              &gt;
-            </button>
+            {/* Botones de navegación */}
+            <div className="flex justify-between items-center mt-6 sm:mt-8 md:mt-10 lg:mt-12">
+              {/* Botón para retroceder */}
+              {currentQuestionIndex > 0 && (
+                <button
+                  onClick={handlePrevious}
+                  disabled={isExiting}
+                  className="flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-1 sm:py-1.5 md:py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300"
+                  title="Retroceder (Scroll ↑ o Flecha ↑)"
+                >
+                  &lt;
+                  <span className="hidden sm:inline">Anterior</span>
+                </button>
+              )}
+              
+              {/* Botón para avanzar */}
+              <button
+                onClick={handleNext}
+                disabled={isExiting || currentAnswer.trim() === ""}
+                className={`flex items-center gap-2 sm:gap-3 px-8 sm:px-10 md:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-lg sm:text-xl md:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? 'ml-auto' : ''}`}
+              >
+                <Image
+                  src="/iconAlaiza.svg"
+                  alt="Alaiza AI Logo"
+                  width={20}
+                  height={20}
+                  className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
+                />
+                &gt;
+              </button>
+            </div>
           </div>
         </div>
       </div>
