@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Form Onboarding - Alaiza
 
-## Getting Started
+Aplicación de onboarding con formulario interactivo construida con Next.js 14, TypeScript y Tailwind CSS.
 
-First, run the development server:
+## 🚀 Inicio Rápido
 
 ```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar servidor de desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Construir para producción
+npm run build
+
+# Iniciar servidor de producción
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Estructura del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+form-onboarding/
+├── app/
+│   ├── components/
+│   │   ├── layout/          # Componentes de layout (Logo, ThemeToggle)
+│   │   └── ui/              # Componentes de UI (AnimatedText, InputField)
+│   ├── providers/           # Providers de React Context
+│   ├── types/               # Tipos TypeScript globales
+│   ├── lib/                 # Utilidades y constantes
+│   ├── page.tsx             # Página principal
+│   ├── layout.tsx           # Layout raíz
+│   └── globals.css          # Estilos globales
+├── public/
+│   └── icons/               # Iconos SVG
+└── ...
+```
 
-## Learn More
+Para más detalles sobre la estructura, consulta [STRUCTURE.md](./STRUCTURE.md).
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tecnologías
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Next.js 14** - Framework React con App Router
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Estilos utility-first
+- **next-themes** - Manejo de temas (dark/light mode)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📝 Componentes Principales
 
-## Deploy on Vercel
+- **Logo**: Logo de Alaiza con icono SVG
+- **ThemeToggle**: Switch para cambiar entre tema claro/oscuro
+- **AnimatedText**: Texto con animación de letras dispersas
+- **InputField**: Campo de entrada con botón de envío
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎨 Personalización
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+La animación del texto se puede personalizar en `app/components/ui/AnimatedText.tsx` modificando el objeto `ANIMATION_CONFIG`.
