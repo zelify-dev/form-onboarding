@@ -9,26 +9,27 @@ import AnimatedHalftoneBackground from "./components/AnimatedHalftoneBackground"
 
 // Array de preguntas
 const QUESTIONS = [
-  '1. Ingresa tu nombre y apellido',
+  '1.Ingresa tu nombre y apellido',
   '2. Ingresa tu correo electrónico de contacto',
-  '3. Ingresa tu número de celular de contacto',
+  '3.Ingresa tu número de celular de contacto',
   '4. ¿A qué institución financiera o empresa perteneces?',
   '5. ¿Cuál es tu rol dentro de la organización? Cuéntame un poco más sobre tus responsabilidades.',
   '6. ¿Cuál es la actividad principal de la institución y qué productos o servicios financieros ofrecen actualmente?',
   '7. ¿Cuál es el mayor problema que enfrentan actualmente en sus procesos financieros o tecnológicos?',
-  '8. Háblame de tus clientes: ¿A qué segmento de mercado atienden? ¿A quién brindan servicios directamente? ¿Cómo describirías a tu cliente ideal? ¿Cuántos clientes atienden actualmente?',
+  '⁠8. Háblame de tus clientes: ¿A qué segmento atienden, a quién sirven directamente, cómo es su cliente ideal y cuántos clientes tienen actualmente?',
   '9. ¿Qué tan digitalizada consideras que está tu institución? (bajo, medio, alto)',
-  '10. Cuéntame sobre su infraestructura tecnológica: ¿Tienen un equipo interno de tecnología o tercerizan? Si tienen equipo interno, ¿qué tipo de soluciones desarrollan? ¿Trabajan con proveedores externos? ¿Cuáles? ¿Qué tipo de integraciones desean implementar?',
+  '10. Cuéntame sobre su infraestructura tecnológica: ¿Tienen equipo interno o tercerizan, qué soluciones desarrollan, con qué proveedores externos trabajan y qué integraciones desean implementar?',
   '11. ¿Cuál es la visión de tu institución a largo plazo y qué tipo de soluciones tecnológicas consideran implementar?',
   '12. ¿Tienen presupuesto asignado para soluciones tecnológicas?',
-  '13. ¿Quién te refirió con nosotros?',
-  '14. ¿Disponen de conexiones vía API (JSON o XML)? ¿Qué tipo de conexión tienen actualmente con el core bancario? ¿El core maneja webhooks o notificación de eventos en tiempo real? ¿Qué mecanismos utilizan para procesar transacciones y pagos de servicios básicos? ¿Cuentan con un wallet o canal móvil/web para pagos y transacciones?',
-  '15. ¿Cuentan con alguna normativa o lineamiento del Banco Central que condicione las integraciones? (Ejemplo: límites, formatos, requerimientos técnicos, seguridad, etc.)',
-  '16. ¿Cómo gestionan el registro de usuarios y la apertura de cuentas digitales? ¿Incluye validación de identidad (documento + prueba de vida), validación en listas negras y apertura inmediata? ¿Cómo realizan el screening de listas nacionales e internacionales? ¿Utilizan servicios del Registro Civil u otros proveedores para la validación de identidad?',
-  '17. ¿Cuentan con ambientes de prueba (Sandbox) y de producción? ¿Cuál es el proceso para acceder a esos ambientes? ¿Tienen un módulo o repositorio de documentación técnica actualizada? En caso de no tenerlo, ¿de qué año/mes es la última versión disponible?',
-  '18. ¿Qué problemas presentan actualmente en los procesos de registro, validación de identidad y validación de listas negras?',
-  '19. ¿Su app tiene transferencia interbancaria por SPI? ¿Qué otro mecanismo usa?',
-  '20. ¿Tienes tarjeta de débito o crédito?',
+  '⁠13. ¿Qué conexiones API tienen actualmente con el core bancario, manejan webhooks o eventos en tiempo real, cómo procesan transacciones y pagos, y cuentan con wallet o canal móvil/web?',
+  '14. ¿Cuentan con alguna normativa o lineamiento del Banco Central que condicione las integraciones? (Ejemplo: límites, formatos, requerimientos técnicos, seguridad, etc.)',
+  '15. ¿Cómo gestionan el registro y apertura de cuentas digitales, qué validaciones de identidad y listas negras realizan, y qué servicios o proveedores usan para esa verificación?',
+  '16. ¿Cuentan con ambientes de prueba y producción, cuál es el proceso de acceso y disponen de documentación técnica actualizada (o de qué fecha es la última versión)?',
+  '17. ¿Qué problemas presentan actualmente en los procesos de registro, validación de identidad y validación de listas negras?',
+  '18. ¿Su app tiene transferencia interbancaria por SPI? ¿Qué otro mecanismo usa?',
+  '19. ¿Emiten tarjetas de débito o crédito?',
+  '20. ¿Que servicios te interesarian?',
+  '21. ¿Quién te refirió con nosotros?',
 ];
 
 // Array de placeholders para cada pregunta
@@ -40,20 +41,20 @@ const PLACEHOLDERS = [
   'Ejm: Director de TI, encargado de la infraestructura tecnológica.',
   'Ejm: Banco que ofrece cuentas de ahorro, crédito personal y seguros.',
   'Ejm: Dependencia de sistemas legacy, demoras en las transacciones, falta de innovación tecnológica.',
-  'Ejm: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta.',
+  'Ejm: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta. Tenemos aproximadamente 10,000 clientes activos.',
   'Ejm: Alta digitalización, con múltiples canales de comunicación y APIs integradas.',
-  'Ejm: Contamos con un equipo interno de tecnología que gestiona la infraestructura digital.',
-  'Ejm: Desarrollamos soluciones en la nube, microservicios y servicios de ciberseguridad.',
+  'Ejm: Contamos con un equipo interno de tecnología que gestiona la infraestructura digital. Trabajamos con proveedores como Visa y Mastercard.',
   'Ejm: Buscamos lograr independencia tecnológica y optimizar costos operativos.',
   'Ejm: Sí, contamos con un presupuesto de $500,000 anuales para tecnología.',
-  'Ejm: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
-  'Ejm: Utilizamos conexiones API para integrar sistemas bancarios. El core maneja webhooks para transacciones en tiempo real.',
+  'Ejm: Utilizamos conexiones API para integrar sistemas bancarios. El core maneja webhooks para transacciones en tiempo real. Contamos con app móvil y portal web.',
   'Ejm: Cumplimos con las normativas del Banco Central que regulan las integraciones tecnológicas.',
-  'Ejm: La validación de identidad se hace con el Registro Civil y proveedores privados de autenticación.',
+  'Ejm: La validación de identidad se hace con el Registro Civil y proveedores privados de autenticación. Realizamos screening de listas nacionales e internacionales.',
   'Ejm: Usamos un sistema de Sandbox para pruebas, y nuestra documentación técnica está actualizada hasta enero de 2025.',
   'Ejm: Los problemas incluyen demoras en la validación de identidad y falta de integración de listas negras.',
-  'Ejm: Ofrecemos transferencias interbancarias por SPI y mecanismos adicionales como pagos por QR.',
-  'Ejm: Sí, tenemos tarjetas de débito y crédito emitidas para nuestros clientes.',
+  'Ejm: Sí, ofrecemos transferencias interbancarias por SPI y mecanismos adicionales como pagos por QR.',
+  'Ejm: Sí, emitimos tarjetas de débito y crédito para nuestros clientes.',
+  'Ejm: Servicios de identidad, AML, tarjetas, transferencias, pagos, etc.',
+  'Ejm: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
 ];
 
 const THANK_YOU_MESSAGE = "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
@@ -61,6 +62,28 @@ const THANK_YOU_MESSAGE = "Muchas gracias por tus respuestas. Estamos procesando
 const DECLINE_MESSAGE = "Muchas gracias por tus respuestas. Estaremos revisando la información proporcionada, nos pondremos en contacto.";
 
 const DOCS_URL = "https://docs.zelify.com";
+
+// ID del archivo de Google Drive para la propuesta
+const PROPOSAL_FILE_ID = "178RB8SelWt4Ya6tl0xF0OuUyvf2Hqu97";
+const PROPOSAL_DOWNLOAD_URL = `https://drive.google.com/uc?export=download&id=${PROPOSAL_FILE_ID}`;
+
+// Servicios disponibles para la pregunta de servicios
+const SERVICES = [
+  'Auth',
+  'Identity',
+  'AML',
+  'Connect',
+  'Cards',
+  'Transfers',
+  'TX',
+  'Payments',
+  'Discounts',
+  'Alaiza IA',
+  'Insurance',
+];
+
+// Índice de la pregunta de servicios (0-indexed) - Pregunta 20
+const SERVICES_QUESTION_INDEX = 19;
 
 // Clave para localStorage
 const STORAGE_KEY = "form-onboarding-answers";
@@ -160,6 +183,11 @@ export default function Home() {
   const [phoneError, setPhoneError] = useState("");
   const [answers, setAnswers] = useState<string[]>(loadAnswersFromStorage);
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
+  const [selectedServices, setSelectedServices] = useState<string[]>(() => {
+    // Cargar servicios seleccionados desde la respuesta guardada
+    const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
+    return savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
+  });
   const [submissionStatus, setSubmissionStatus] = useState<"next" | "decline" | null>(null);
   const [showStatusTab, setShowStatusTab] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -185,12 +213,33 @@ export default function Home() {
 
   // Cargar la respuesta actual cuando cambia el índice de pregunta
   useEffect(() => {
-    setCurrentAnswer(answers[currentQuestionIndex] || "");
+    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
+      // Si es la pregunta de servicios, cargar los servicios seleccionados
+      const savedAnswer = answers[currentQuestionIndex] || "";
+      const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
+      setSelectedServices(services);
+      setCurrentAnswer(savedAnswer);
+    } else {
+      setCurrentAnswer(answers[currentQuestionIndex] || "");
+    }
     // Limpiar errores al cambiar de pregunta
     setNameError("");
     setEmailError("");
     setPhoneError("");
   }, [currentQuestionIndex, answers]);
+
+  // Manejar selección de servicios
+  const handleServiceToggle = (service: string) => {
+    setSelectedServices(prev => {
+      const newServices = prev.includes(service)
+        ? prev.filter(s => s !== service)
+        : [...prev, service];
+      // Actualizar currentAnswer con los servicios seleccionados
+      const answerValue = newServices.join(', ');
+      setCurrentAnswer(answerValue);
+      return newServices;
+    });
+  };
 
   // Validar y actualizar respuesta cuando el usuario escribe
   const handleAnswerChange = (value: string) => {
@@ -340,7 +389,12 @@ export default function Home() {
     .filter((step) => step > 0);
 
   const handleNext = () => {
-    if (currentAnswer.trim() === "") return;
+    // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
+    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
+      if (selectedServices.length === 0) return;
+    } else {
+      if (currentAnswer.trim() === "") return;
+    }
 
     // Validar nombre y apellido si es la pregunta 1 (índice 0)
     if (currentQuestionIndex === 0) {
@@ -371,7 +425,12 @@ export default function Home() {
 
     // Guardar respuesta
     const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = currentAnswer;
+    // Para la pregunta de servicios, guardar los servicios seleccionados como string
+    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
+      newAnswers[currentQuestionIndex] = selectedServices.join(', ');
+    } else {
+      newAnswers[currentQuestionIndex] = currentAnswer;
+    }
     setAnswers(newAnswers);
 
     // Calcular siguiente índice considerando lógica condicional
@@ -464,8 +523,12 @@ export default function Home() {
   // Calcular el estado disabled del botón de manera consistente
   const isNextButtonDisabled = useMemo(() => {
     if (!mounted) return true; // Deshabilitar hasta que esté montado para evitar errores de hidratación
+    // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
+    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
+      return isExiting || selectedServices.length === 0 || nameError !== "" || emailError !== "" || phoneError !== "";
+    }
     return isExiting || currentAnswer.trim() === "" || nameError !== "" || emailError !== "" || phoneError !== "";
-  }, [mounted, isExiting, currentAnswer, nameError, emailError, phoneError]);
+  }, [mounted, isExiting, currentAnswer, selectedServices, currentQuestionIndex, nameError, emailError, phoneError]);
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
@@ -522,27 +585,49 @@ export default function Home() {
                         <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 font-medium">
                           Mientras tanto, te invitamos a visitar nuestro sitio de documentación para conocer más sobre nuestros servicios:
                         </p>
-                        <a
-                          href={DOCS_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-purple-500 hover:bg-purple-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
-                        >
-                          <svg
-                            className="w-5 h-5 sm:w-6 sm:h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5">
+                          <a
+                            href={DOCS_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-purple-500 hover:bg-purple-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
-                          Visitar Documentación
-                        </a>
+                            <svg
+                              className="w-5 h-5 sm:w-6 sm:h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                            Visitar Documentación
+                          </a>
+                          <a
+                            href={PROPOSAL_DOWNLOAD_URL}
+                            download
+                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-green-500 hover:bg-green-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-green-500/50 hover:shadow-green-500/70"
+                          >
+                            <svg
+                              className="w-5 h-5 sm:w-6 sm:h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
+                            Descargar Propuesta
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -570,19 +655,53 @@ export default function Home() {
                   />
                 )}
 
-                {/* Textarea que se ajusta automáticamente */}
+                {/* Input según el tipo de pregunta */}
                 <div className="w-full">
-                  {/* Textarea sin bordes que crece con el contenido */}
-                  <textarea
-                    ref={textareaRef}
-                    value={currentAnswer}
-                    onChange={(e) => handleAnswerChange(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    className={`w-full bg-transparent text-white text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError || emailError || phoneError ? 'placeholder-red-400/70' : ''}`}
-                    placeholder={PLACEHOLDERS[currentQuestionIndex]}
-                    disabled={isExiting}
-                    rows={1}
-                  />
+                  {currentQuestionIndex === SERVICES_QUESTION_INDEX ? (
+                    /* Checkboxes para servicios */
+                    <div className="w-full">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+                        {SERVICES.map((service) => (
+                          <label
+                            key={service}
+                            className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                              selectedServices.includes(service)
+                                ? 'bg-purple-500/20 border-purple-500 text-white'
+                                : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
+                            } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedServices.includes(service)}
+                              onChange={() => handleServiceToggle(service)}
+                              disabled={isExiting}
+                              className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-purple-500 cursor-pointer"
+                            />
+                            <span className="text-sm sm:text-base md:text-lg font-medium select-none">
+                              {service}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {selectedServices.length === 0 && (
+                        <p className="text-white/50 text-sm sm:text-base mt-4">
+                          Selecciona al menos un servicio
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    /* Textarea para otras preguntas */
+                    <textarea
+                      ref={textareaRef}
+                      value={currentAnswer}
+                      onChange={(e) => handleAnswerChange(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      className={`w-full bg-transparent text-white text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError || emailError || phoneError ? 'placeholder-red-400/70' : ''}`}
+                      placeholder={PLACEHOLDERS[currentQuestionIndex]}
+                      disabled={isExiting}
+                      rows={1}
+                    />
+                  )}
                   {/* Mensajes de error */}
                   {nameError && (
                     <p className="text-red-400 text-sm sm:text-base mt-2">
