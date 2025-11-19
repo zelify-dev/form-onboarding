@@ -27,6 +27,11 @@ const SALIDA = {
   duracion: 0.4         // más corto que entrada
 };
 
+const LATERAL_PHASE1_DELAY_PER_LETTER = 3;   // ms
+const LATERAL_PHASE1_DURATION = 0.035;       // s
+const LATERAL_PHASE2_DURATION = 0.3;         // s
+const LATERAL_PHASE3_DURATION = 0.15;        // s
+
 // Ajustar delay y duración según longitud del texto
 function getConfig(texto: string, esSalida: boolean) {
   const baseConfig = esSalida ? SALIDA : ENTRADA;
@@ -242,12 +247,10 @@ export default function AnimatedQuestion({
           
           // Calcular delay basado en la posición dentro del grupo
           // Las letras aparecen en orden desde su extremo correspondiente
-          const phase1Delay = positionInGroup * 10; // Delay basado en posición en el grupo (10ms por letra - rápido)
-          const phase1Duration = 0.1; // Tiempo flotando en laterales (0.1s - rápido)
+          const phase1Delay = positionInGroup * LATERAL_PHASE1_DELAY_PER_LETTER; // Delay basado en posición en el grupo
           
           // Fase 2: Viajar hacia el centro
-          const phase2Delay = phase1Delay + phase1Duration * 1000;
-          const phase2Duration = 0.8; // Tiempo viajando al centro (0.8s - rápido para construir la pregunta)
+          const phase2Delay = phase1Delay + LATERAL_PHASE1_DURATION * 1000;
           
           // Estado inicial: fuera de pantalla en los laterales
           letter.style.position = 'absolute';
@@ -259,7 +262,7 @@ export default function AnimatedQuestion({
           
           // Fase 1: Aparecer y flotar en los laterales (desktop) o arriba/abajo (móvil)
           const timeout1 = setTimeout(() => {
-            letter.style.transition = `transform ${phase1Duration}s ease-out, opacity ${phase1Duration * 0.6}s ease-out`;
+            letter.style.transition = `transform ${LATERAL_PHASE1_DURATION}s ease-out, opacity ${LATERAL_PHASE1_DURATION * 0.6}s ease-out`;
             let floatX: number;
             let floatY: number;
             
@@ -281,7 +284,7 @@ export default function AnimatedQuestion({
           // Fase 2: Viajar hacia la posición final
           const timeout2 = setTimeout(() => {
             const finalPos = finalPositions[index] || { x: 0, y: 0 };
-            letter.style.transition = `transform ${phase2Duration}s cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${phase2Duration * 0.4}s ease-in`;
+            letter.style.transition = `transform ${LATERAL_PHASE2_DURATION}s cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${LATERAL_PHASE2_DURATION * 0.4}s ease-in`;
             letter.style.transform = `translate(${finalPos.x}px, ${finalPos.y}px) rotate(0deg) scale(1)`;
             letter.style.opacity = "1";
           }, phase2Delay);
@@ -290,9 +293,9 @@ export default function AnimatedQuestion({
           // Fase 3: Restaurar posición relativa y ajuste final
           const timeout3 = setTimeout(() => {
             letter.style.position = '';
-            letter.style.transition = `transform 0.2s ease-out`;
+            letter.style.transition = `transform ${LATERAL_PHASE3_DURATION}s ease-out`;
             letter.style.transform = `translate(0, 0) rotate(0deg) scale(1)`;
-          }, phase2Delay + phase2Duration * 1000);
+          }, phase2Delay + LATERAL_PHASE2_DURATION * 1000);
           timeoutsRef.current.push(timeout3);
         };
         
@@ -321,11 +324,11 @@ export default function AnimatedQuestion({
         // Calcular el máximo delay entre ambos grupos (izquierda y derecha)
         const leftCount = Math.ceil(question.length / 2);
         const rightCount = Math.floor(question.length / 2);
-        const maxDelay = Math.max(leftCount, rightCount) * 10; // 10ms por letra
-        // Fase 1: aparecer (delay máximo) + 100ms flotación
-        // Fase 2: viajar al centro 800ms
-        // Fase 3: ajuste final 200ms
-        totalTime = maxDelay + 100 + 800 + 200;
+        const maxDelay = Math.max(leftCount, rightCount) * LATERAL_PHASE1_DELAY_PER_LETTER;
+        const phase1Ms = LATERAL_PHASE1_DURATION * 1000;
+        const phase2Ms = LATERAL_PHASE2_DURATION * 1000;
+        const phase3Ms = LATERAL_PHASE3_DURATION * 1000;
+        totalTime = maxDelay + phase1Ms + phase2Ms + phase3Ms;
       }
     }
     
@@ -414,4 +417,3 @@ export default function AnimatedQuestion({
     </h2>
   );
 }
-
