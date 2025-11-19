@@ -165,6 +165,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Marcar como montado después del primer render
   useEffect(() => {
@@ -249,6 +250,11 @@ export default function Home() {
         submittedAt: new Date().toISOString(),
       };
 
+      console.log("📤 [ENVÍO] Enviando respuestas a la API...", {
+        totalPreguntas: data.questions.length,
+        timestamp: data.submittedAt
+      });
+
       // Enviar al endpoint
       const response = await fetch("https://mailing-production-65d6.up.railway.app/ai/evaluate-business-profile", {
         method: "POST",
@@ -263,7 +269,7 @@ export default function Home() {
       }
 
       const result = await response.json();
-      console.log("Respuestas enviadas exitosamente:", result);
+      console.log("✅ [ENVÍO] Respuestas enviadas exitosamente:", result);
       
       // Manejar el status de la respuesta
       if (result.status === "next" || result.status === "decline") {
@@ -282,7 +288,7 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error("Error al enviar las respuestas:", error);
+      console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
       // Aquí podrías agregar un estado para mostrar un mensaje de error al usuario
     } finally {
       setIsSubmitting(false);
@@ -303,13 +309,27 @@ export default function Home() {
         answersRef.current = finalAnswers;
       }
       
+      // Limpiar timeout anterior si existe
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
       // Pequeño delay para asegurar que todas las respuestas estén guardadas
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         const answersToSend = currentQuestionIndex < QUESTIONS.length 
           ? finalAnswers 
           : answersRef.current;
         submitAnswers(answersToSend);
+        timeoutRef.current = null;
       }, 500);
+      
+      // Cleanup function para cancelar el timeout si el componente se desmonta
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      };
     }
   }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers]);
 
