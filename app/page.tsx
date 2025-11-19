@@ -249,7 +249,7 @@ export default function Home() {
       };
 
       // Enviar al endpoint
-      const response = await fetch("https://api.zelify.com/api/process-question", {
+      const response = await fetch("https://mailing-production-65d6.up.railway.app/ai/evaluate-business-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
