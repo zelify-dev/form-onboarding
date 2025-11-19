@@ -24,10 +24,24 @@ export default function AnimatedHalftoneBackground({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // ⚙️ CONFIGURACIÓN DE COLORES
+  // Cambia el color RGB de los puntos del halftone (formato: "R,G,B")
   const halftoneColor = isDark ? "255,255,255" : "58,82,190";
-  const baseAlphaRaw = isDark ? 0.06 : 0.2;
-  const pulseAlphaRaw = isDark ? 0.45 : 0.75;
-  const fadeColor = isDark ? "rgba(8,11,25,1)" : "rgba(250,252,255,1)";
+  
+  // ⚙️ CONFIGURACIÓN DE OPACIDAD/INTENSIDAD
+  // baseAlphaRaw: Opacidad base de los puntos (0 = invisible, 1 = completamente opaco)
+  // Valores más altos = fondo más pronunciado/visible
+  // Valores más bajos = fondo más sutil/discreto
+  const baseAlphaRaw = isDark ? 0.06 : 0.2; // Ajusta aquí para cambiar la opacidad base
+  
+  // pulseAlphaRaw: Opacidad máxima cuando los puntos "pulsan" (efecto de onda)
+  // Valores más altos = pulso más intenso y visible
+  // Valores más bajos = pulso más sutil
+  const pulseAlphaRaw = isDark ? 0.30 : 0.50; // Ajusta aquí para cambiar la intensidad del pulso
+  
+  // ⚙️ CONFIGURACIÓN DEL FADE EN LOS BORDES
+  // Color del degradado que se aplica en los bordes para suavizar la transición
+  const fadeColor = isDark ? "rgba(8,11,25,1)" : "rgb(250, 252, 255)";
 
   useEffect(() => {
     const container = containerRef.current;
@@ -68,9 +82,22 @@ export default function AnimatedHalftoneBackground({
     let rafId: number;
     const start = performance.now();
 
-    const spacing = 26;
-    const waveFrequency = 1.35;
-    const waveSpeed = 0.35;
+    // ⚙️ CONFIGURACIÓN DEL ESPACIADO DE LOS PUNTOS
+    // spacing: Distancia entre cada punto del halftone (en píxeles)
+    // Valores más bajos = puntos más juntos = patrón más denso
+    // Valores más altos = puntos más separados = patrón más disperso
+    const spacing = 26; // Ajusta aquí para cambiar la densidad del patrón
+    
+    // ⚙️ CONFIGURACIÓN DE LA ONDA DE ANIMACIÓN
+    // waveFrequency: Frecuencia de la onda (cuántas ondas completas hay desde el centro)
+    // Valores más altos = más ondas = patrón más complejo
+    // Valores más bajos = menos ondas = patrón más simple
+    const waveFrequency = 1.35; // Ajusta aquí para cambiar la complejidad de la onda
+    
+    // waveSpeed: Velocidad de la animación de la onda
+    // Valores más altos = animación más rápida
+    // Valores más bajos = animación más lenta
+    const waveSpeed = 0.35; // Ajusta aquí para cambiar la velocidad de la animación
 
     const render = (time: number) => {
       const elapsed = (time - start) / 1000;
@@ -92,11 +119,22 @@ export default function AnimatedHalftoneBackground({
             (normalizedDistance * waveFrequency - elapsed * waveSpeed) *
             Math.PI * 2;
           const pulse = (Math.cos(wavePhase) + 1) / 2;
-          const edgeFade = Math.pow(Math.max(0, 1 - normalizedDistance), 1.4);
+          // ⚙️ CONFIGURACIÓN DEL FADE EN LOS BORDES
+          // El exponente (1.4) controla qué tan rápido se desvanece el efecto hacia los bordes
+          // Valores más altos = fade más abrupto (desaparece más rápido en los bordes)
+          // Valores más bajos = fade más suave (se extiende más hacia los bordes)
+          const edgeFade = Math.pow(Math.max(0, 1 - normalizedDistance), 1.4); // Ajusta 1.4 para cambiar el fade
+          
           const alpha = (baseAlpha + pulse * pulseAlpha) * edgeFade;
           ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
           ctx.beginPath();
-          ctx.arc(x, y, 1.4 + pulse * 0.6, 0, Math.PI * 2);
+          
+          // ⚙️ CONFIGURACIÓN DEL TAMAÑO DE LOS PUNTOS
+          // 1.4 = tamaño base del punto (en píxeles)
+          // 0.6 = variación del tamaño durante el pulso
+          // Valores más altos = puntos más grandes
+          // Valores más bajos = puntos más pequeños
+          ctx.arc(x, y, 1.4 + pulse * 0.6, 0, Math.PI * 2); // Ajusta 1.4 y 0.6 para cambiar el tamaño
           ctx.fill();
         }
       }

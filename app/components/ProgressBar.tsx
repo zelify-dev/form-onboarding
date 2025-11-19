@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
 interface ProgressBarProps {
   totalSteps: number;
   currentStep: number;
@@ -11,6 +15,11 @@ export default function ProgressBar({
   completedSteps,
   viewingStep,
 }: ProgressBarProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const getStepState = (step: number) => {
     const stepNumber = step + 1;
     const isCompleted = completedSteps.includes(stepNumber);
@@ -139,6 +148,33 @@ export default function ProgressBar({
       </div>
     );
   };
+
+  // Evitar error de hidratación: solo renderizar después de montar en el cliente
+  if (!mounted) {
+    return (
+      <div className="flex justify-center items-center w-full px-0.5 sm:px-1 md:px-2 lg:px-3 py-2 sm:py-3 md:py-4 overflow-hidden">
+        <div className="flex items-center justify-center overflow-y-visible w-full max-w-full" style={{ gap: 'clamp(1px, 0.5vw, 12px)' }}>
+          {Array.from({ length: totalSteps }, (_, index) => (
+            <div key={index} className="flex items-center">
+              {index > 0 && (
+                <div
+                  className="h-0.5 bg-white/20"
+                  style={{ width: 'clamp(2px, 0.4vw, 6px)' }}
+                />
+              )}
+              <div className="relative flex items-center justify-center p-0.5 sm:p-1 md:p-1.5 lg:p-2">
+                <div className="relative flex items-center justify-center rounded-full bg-transparent border border-white/20 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5">
+                  <span className="text-[6px] sm:text-[7px] md:text-[8px] lg:text-[9px] font-medium text-white/40">
+                    {index + 1}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center w-full px-0.5 sm:px-1 md:px-2 lg:px-3 py-2 sm:py-3 md:py-4 overflow-hidden">

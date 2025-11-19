@@ -42,3 +42,19 @@ body {
   background-size: 200% 200%;
   animation: gradientShift 20s ease infinite;
 }
+
+/* Animación para la pestaña de notificación */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
