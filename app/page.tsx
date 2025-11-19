@@ -164,6 +164,7 @@ export default function Home() {
   const [showStatusTab, setShowStatusTab] = useState(false);
   const [mounted, setMounted] = useState(false);
   const answersRef = useRef(answers);
+  const hasSubmittedRef = useRef(false);
   
   // Marcar como montado después del primer render
   useEffect(() => {
@@ -288,25 +289,29 @@ export default function Home() {
     }
   }, []);
 
-  // Enviar respuestas cuando se complete el formulario
+  // Enviar respuestas cuando se complete el formulario (solo una vez)
   useEffect(() => {
-    if (isCompleted && !isSubmitting) {
+    if (isCompleted && !isSubmitting && !hasSubmittedRef.current) {
+      // Marcar como enviado inmediatamente para evitar múltiples envíos
+      hasSubmittedRef.current = true;
+      
       // Guardar la última respuesta antes de enviar
-      const finalAnswers = [...answers];
+      const finalAnswers = [...answersRef.current];
       if (currentQuestionIndex < QUESTIONS.length) {
         finalAnswers[currentQuestionIndex] = currentAnswer;
         setAnswers(finalAnswers);
+        answersRef.current = finalAnswers;
       }
       
       // Pequeño delay para asegurar que todas las respuestas estén guardadas
       setTimeout(() => {
         const answersToSend = currentQuestionIndex < QUESTIONS.length 
           ? finalAnswers 
-          : answers;
+          : answersRef.current;
         submitAnswers(answersToSend);
       }, 500);
     }
-  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, answers, submitAnswers]);
+  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers]);
 
   const totalSteps = QUESTIONS.length;
   const currentStep = currentQuestionIndex + 1;
