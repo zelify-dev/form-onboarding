@@ -22,13 +22,13 @@ const QUESTIONS = [
   '9. ¿Qué tan digitalizada consideras que está tu institución? (bajo, medio, alto)',
   '10. Cuéntame sobre su infraestructura tecnológica: ¿Tienen equipo interno o tercerizan, qué soluciones desarrollan, con qué proveedores externos trabajan y qué integraciones desean implementar?',
   '11. ¿Cuál es la visión de tu institución a largo plazo y qué tipo de soluciones tecnológicas consideran implementar?',
-  '12. ¿Cual es el porcentaje de presupuesto asignado para soluciones tecnológicas?',
+  '12. ¿Cuentan con presupuesto asignado para soluciones tecnológicas?',
   '⁠13. ¿Qué conexiones API tienen actualmente con el core bancario, manejan webhooks o eventos en tiempo real, cómo procesan transacciones y pagos, y cuentan con wallet o canal móvil/web?',
-  '14. ¿Cuentan con alguna normativa o lineamiento del Banco Central que condicione las integraciones? (Ejemplo: límites, formatos, requerimientos técnicos, seguridad, etc.)',
-  '15. ¿Cómo gestionan el registro y apertura de cuentas digitales, qué validaciones de identidad y listas negras realizan, y qué servicios o proveedores usan para esa verificación?',
-  '16. ¿Cuentan con ambientes de prueba y producción, cuál es el proceso de acceso y disponen de documentación técnica actualizada (o de qué fecha es la última versión)?',
+  '14. ¿Qué productos o soluciones digitales utilizan actualmente en sus servicios o canales digitales?',
+  '15. ¿Qué medidas o controles antifraude emplean en sus procesos digitales actualmente?',
+  '16. ¿Cuentan con ambientes de prueba y producción? ¿Cómo gestionan el acceso y qué tan actualizada está su documentación técnica?',
   '17. ¿Qué problemas presentan actualmente en los procesos de registro, validación de identidad y validación de listas negras?',
-  '18. ¿Su app tiene transferencia interbancaria por SPI? ¿Qué otro mecanismo usa?',
+  '18. ¿Su aplicativo tiene transferencia interbancaria por SPI? ¿Qué otro mecanismo usa?',
   '19. ¿Emiten tarjetas de débito o crédito?',
   '20. ¿Que servicios te interesarian?',
   '21. ¿Quién te refirió con nosotros?',
@@ -36,27 +36,27 @@ const QUESTIONS = [
 
 // Array de placeholders para cada pregunta
 const PLACEHOLDERS = [
-  'Ejm: Rodrigo Pérez',
-  'Ejm: rodrigo.perez@banco.com',
-  'Ejm: +593 99 123 4567',
-  'Ejm: Banco XYZ',
-  'Ejm: Director de TI, encargado de la infraestructura tecnológica.',
-  'Ejm: Banco que ofrece cuentas de ahorro, crédito personal y seguros.',
-  'Ejm: Dependencia de sistemas legacy, demoras en las transacciones, falta de innovación tecnológica.',
-  'Ejm: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta. Tenemos aproximadamente 10,000 clientes activos.',
-  'Ejm: Alta digitalización, con múltiples canales de comunicación y APIs integradas.',
-  'Ejm: Contamos con un equipo interno de tecnología que gestiona la infraestructura digital. Trabajamos con proveedores como Visa y Mastercard.',
-  'Ejm: Buscamos lograr independencia tecnológica y optimizar costos operativos.',
-  'Ejm: Sí, contamos con un presupuesto de $500,000 anuales para tecnología.',
-  'Ejm: Utilizamos conexiones API para integrar sistemas bancarios. El core maneja webhooks para transacciones en tiempo real. Contamos con app móvil y portal web.',
-  'Ejm: Cumplimos con las normativas del Banco Central que regulan las integraciones tecnológicas.',
-  'Ejm: La validación de identidad se hace con el Registro Civil y proveedores privados de autenticación. Realizamos screening de listas nacionales e internacionales.',
-  'Ejm: Usamos un sistema de Sandbox para pruebas, y nuestra documentación técnica está actualizada hasta enero de 2025.',
-  'Ejm: Los problemas incluyen demoras en la validación de identidad y falta de integración de listas negras.',
-  'Ejm: Sí, ofrecemos transferencias interbancarias por SPI y mecanismos adicionales como pagos por QR.',
-  'Ejm: Sí, emitimos tarjetas de débito y crédito para nuestros clientes.',
-  'Ejm: Servicios de identidad, AML, tarjetas, transferencias, pagos, etc.',
-  'Ejm: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
+  'Ej: Rodrigo Pérez',
+  'Ej: rodrigo.perez@banco.com',
+  'Ej: +593 99 123 4567',
+  'Ej: Banco XYZ',
+  'Ej: Director de TI, encargado de la infraestructura tecnológica.',
+  'Ej: Banco que ofrece cuentas de ahorro, crédito personal y seguros.',
+  'Ej: Dependencia de sistemas legacy, demoras en las transacciones, falta de innovación tecnológica.',
+  'Ej: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta. Tenemos aproximadamente 10,000 clientes activos.',
+  'Ej: Alta digitalización, con múltiples canales de comunicación y APIs integradas.',
+  'Ej: Dependencia en el core bancario, aplicativos mobiles, APIs, etc.',
+  'Ej: Buscamos lograr independencia tecnológica y optimizar costos operativos.',
+  'Ej: Sí, contamos con un porcentaje del presupuesto destinado a soluciones tecnológicas.',
+  'Ej: Utilizamos conexiones API para integrar sistemas bancarios. El core maneja webhooks para transacciones en tiempo real. Contamos con aplicativo móvil y portal web.',
+  'Ej: Aplicativo, sistema antifraude, portal web…',
+  'Ej: Validación de identidad con proveedores privados, consultas en listas nacionales e internacionales…',
+  'Ej: Usamos un sistema de Sandbox para pruebas, y nuestra documentación técnica está actualizada hasta enero de 2025.',
+  'Ej: Los problemas incluyen demoras en la validación de identidad y falta de integración de listas negras.',
+  'Ej: Sí, ofrecemos transferencias interbancarias por SPI y mecanismos adicionales como pagos por QR.',
+  'Ej: Sí, emitimos tarjetas de débito y crédito para nuestros clientes.',
+  'Ej: Servicios de identidad, AML, tarjetas, transferencias, pagos, etc.',
+  'Ej: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
 ];
 
 const THANK_YOU_MESSAGE = "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
@@ -86,6 +86,9 @@ const SERVICES = [
 
 // Índice de la pregunta de servicios (0-indexed) - Pregunta 20
 const SERVICES_QUESTION_INDEX = 19;
+
+// Índice de la pregunta de presupuesto (0-indexed) - Pregunta 12
+const BUDGET_QUESTION_INDEX = 11;
 
 // Clave para localStorage
 const STORAGE_KEY = "form-onboarding-answers";
@@ -395,7 +398,12 @@ export default function Home() {
     // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
     if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
       if (selectedServices.length === 0) return;
-    } else {
+    } 
+    // Para la pregunta de presupuesto, verificar que se haya seleccionado una opción
+    else if (currentQuestionIndex === BUDGET_QUESTION_INDEX) {
+      if (currentAnswer.trim() === "") return;
+    } 
+    else {
       if (currentAnswer.trim() === "") return;
     }
 
@@ -529,6 +537,10 @@ export default function Home() {
     // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
     if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
       return isExiting || selectedServices.length === 0 || nameError !== "" || emailError !== "" || phoneError !== "";
+    }
+    // Para la pregunta de presupuesto, verificar que se haya seleccionado una opción
+    if (currentQuestionIndex === BUDGET_QUESTION_INDEX) {
+      return isExiting || currentAnswer.trim() === "" || nameError !== "" || emailError !== "" || phoneError !== "";
     }
     return isExiting || currentAnswer.trim() === "" || nameError !== "" || emailError !== "" || phoneError !== "";
   }, [mounted, isExiting, currentAnswer, selectedServices, currentQuestionIndex, nameError, emailError, phoneError]);
@@ -696,6 +708,40 @@ export default function Home() {
                       {selectedServices.length === 0 && (
                         <p className="text-white/50 text-sm sm:text-base mt-4">
                           Selecciona al menos un servicio
+                        </p>
+                      )}
+                    </div>
+                  ) : currentQuestionIndex === BUDGET_QUESTION_INDEX ? (
+                    /* Radio buttons para pregunta de presupuesto */
+                    <div className="w-full flex justify-center">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                        {['Sí', 'No'].map((option) => (
+                          <label
+                            key={option}
+                            className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                              currentAnswer === option
+                                ? 'bg-purple-500/20 border-purple-500 text-white'
+                                : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
+                            } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <input
+                              type="radio"
+                              name="budget"
+                              value={option}
+                              checked={currentAnswer === option}
+                              onChange={(e) => handleAnswerChange(e.target.value)}
+                              disabled={isExiting}
+                              className="w-5 h-5 sm:w-6 sm:h-6 accent-purple-500 cursor-pointer"
+                            />
+                            <span className="text-base sm:text-lg md:text-xl font-medium select-none">
+                              {option}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {currentAnswer.trim() === "" && (
+                        <p className="text-white/50 text-sm sm:text-base mt-4">
+                          Selecciona una opción
                         </p>
                       )}
                     </div>
