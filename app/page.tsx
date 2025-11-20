@@ -71,17 +71,17 @@ const PROPOSAL_DOWNLOAD_URL = `https://drive.google.com/uc?export=download&id=${
 
 // Servicios disponibles para la pregunta de servicios
 const SERVICES = [
-  'Auth',
-  'Identity',
-  'AML',
-  'Connect',
-  'Cards',
-  'Transfers',
-  'TX',
-  'Payments',
-  'Discounts',
-  'Alaiza IA',
-  'Insurance',
+  { name: 'Autenticación', description: 'Autenticación segura y gestión de accesos' },
+  { name: 'Identidad', description: 'Verificación y validación de identidad' },
+  { name: 'AML (prevención de lavado de dinero)', description: 'Prevención de lavado de activos/antifraude y cumplimiento' },
+  { name: 'Conexión', description: 'Integración y conexión con sistemas externos' },
+  { name: 'Tarjetas', description: 'Emisión y gestión de tarjetas de débito' },
+  { name: 'Transferencias', description: 'Transferencias bancarias y transacciones' },
+  { name: 'Transacciones', description: 'Procesamiento de transacciones financieras internacionales' },
+  { name: 'Pagos', description: 'Sistema de pagos y cobros digitales' },
+  { name: 'Descuentos', description: 'Gestión de descuentos y promociones' },
+  { name: 'Alaiza IA', description: 'Inteligencia artificial para tus servicios financieros' },
+  { name: 'Seguros', description: 'Productos y servicios de seguros' },
 ];
 
 // Índice de la pregunta de servicios (0-indexed) - Pregunta 20
@@ -685,23 +685,28 @@ export default function Home() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
                         {SERVICES.map((service) => (
                           <label
-                            key={service}
-                            className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                              selectedServices.includes(service)
+                            key={service.name}
+                            className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                              selectedServices.includes(service.name)
                                 ? 'bg-purple-500/20 border-purple-500 text-white'
                                 : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
                             } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <input
                               type="checkbox"
-                              checked={selectedServices.includes(service)}
-                              onChange={() => handleServiceToggle(service)}
+                              checked={selectedServices.includes(service.name)}
+                              onChange={() => handleServiceToggle(service.name)}
                               disabled={isExiting}
-                              className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-purple-500 cursor-pointer"
+                              className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-purple-500 cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
                             />
-                            <span className="text-sm sm:text-base md:text-lg font-medium select-none">
-                              {service}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm sm:text-base md:text-lg font-medium select-none">
+                                {service.name}
+                              </span>
+                              <span className="text-xs sm:text-sm text-white/60 select-none leading-tight">
+                                {service.description}
+                              </span>
+                            </div>
                           </label>
                         ))}
                       </div>
