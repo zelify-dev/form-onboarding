@@ -7,6 +7,7 @@ interface AnimatedQuestionProps {
   isExiting: boolean;
   isGoingBack?: boolean;
   isFirstQuestion?: boolean;
+  animationsEnabled?: boolean;
   onAnimationComplete: () => void;
 }
 
@@ -65,6 +66,7 @@ export default function AnimatedQuestion({
   isExiting,
   isGoingBack = false,
   isFirstQuestion = false,
+  animationsEnabled = true,
   onAnimationComplete,
 }: AnimatedQuestionProps) {
   const containerRef = useRef<HTMLHeadingElement>(null);
@@ -81,6 +83,41 @@ export default function AnimatedQuestion({
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    // Si las animaciones están desactivadas, usar solo fade in/out simple
+    if (!animationsEnabled) {
+      const container = containerRef.current;
+      
+      if (isExiting) {
+        // Fade out simple
+        container.style.transition = 'opacity 0.3s ease-out';
+        container.style.opacity = '0';
+        
+        const timer = setTimeout(() => {
+          onAnimationCompleteRef.current();
+        }, 300);
+        timeoutsRef.current.push(timer);
+      } else {
+        // Fade in simple
+        container.style.opacity = '0';
+        container.style.transition = 'opacity 0.3s ease-in';
+        
+        // Forzar reflow
+        void container.offsetHeight;
+        
+        container.style.opacity = '1';
+        
+        const timer = setTimeout(() => {
+          onAnimationCompleteRef.current();
+        }, 300);
+        timeoutsRef.current.push(timer);
+      }
+      
+      return () => {
+        timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+        timeoutsRef.current = [];
+      };
+    }
 
     // Filtrar solo los spans que contienen letras individuales (no los contenedores de palabras)
     const allSpans = containerRef.current.querySelectorAll("span[data-letter]");
@@ -151,7 +188,7 @@ export default function AnimatedQuestion({
         const isMobile = screenWidth < 768;
         
         // Calcular el centro de la pantalla completa (no del contenedor)
-        const screenCenterX = screenWidth/1.58;
+        const screenCenterX = screenWidth/1.48;
         const screenCenterY = screenHeight / 2;
         
         // Calcular el centro del contenedor (necesario para convertir posiciones absolutas a relativas)
@@ -247,10 +284,12 @@ export default function AnimatedQuestion({
           
           // Calcular delay basado en la posición dentro del grupo
           // Las letras aparecen en orden desde su extremo correspondiente
-          const phase1Delay = positionInGroup * LATERAL_PHASE1_DELAY_PER_LETTER; // Delay basado en posición en el grupo
+          const phase1Delay = positionInGroup * 5; // Delay basado en posición en el grupo (10ms por letra - rápido)
+          const phase1Duration = 0; // Tiempo flotando en laterales (0.1s - rápido)
           
           // Fase 2: Viajar hacia el centro
-          const phase2Delay = phase1Delay + LATERAL_PHASE1_DURATION * 1000;
+          const phase2Delay = phase1Delay + phase1Duration * 500;
+          const phase2Duration = 0.3; // Tiempo viajando al centro (0.8s - rápido para construir la pregunta)
           
           // Estado inicial: fuera de pantalla en los laterales
           letter.style.position = 'absolute';
@@ -342,7 +381,7 @@ export default function AnimatedQuestion({
       timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
       timeoutsRef.current = [];
     };
-  }, [question, isExiting, isFirstQuestion, config]);
+  }, [question, isExiting, isFirstQuestion, config, animationsEnabled]);
 
   // Dividir el texto en palabras para evitar que se corten
   const palabras = question.split(/(\s+)/);

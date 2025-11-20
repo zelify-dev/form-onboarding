@@ -6,21 +6,23 @@ import Navbar from "./components/Navbar";
 import ProgressBar from "./components/ProgressBar";
 import AnimatedQuestion from "./components/AnimatedQuestion";
 import AnimatedHalftoneBackground from "./components/AnimatedHalftoneBackground";
+import HexagonLoader from "./components/HexagonLoader";
+import AnimationToggle from "./components/AnimationToggle";
 
 // Array de preguntas
 const QUESTIONS = [
-  '1.Ingresa tu nombre y apellido',
+  '1. Ingresa tu nombre y apellido',
   '2. Ingresa tu correo electrónico de contacto',
-  '3.Ingresa tu número de celular de contacto',
+  '3. Ingresa tu número de celular de contacto',
   '4. ¿A qué institución financiera o empresa perteneces?',
   '5. ¿Cuál es tu rol dentro de la organización? Cuéntame un poco más sobre tus responsabilidades.',
   '6. ¿Cuál es la actividad principal de la institución y qué productos o servicios financieros ofrecen actualmente?',
-  '7. ¿Cuál es el mayor problema que enfrentan actualmente en sus procesos financieros o tecnológicos?',
+  '7. ¿Qué desafío principal enfrentan hoy en sus procesos operativos o tecnológicos?',
   '⁠8. Háblame de tus clientes: ¿A qué segmento atienden, a quién sirven directamente, cómo es su cliente ideal y cuántos clientes tienen actualmente?',
   '9. ¿Qué tan digitalizada consideras que está tu institución? (bajo, medio, alto)',
   '10. Cuéntame sobre su infraestructura tecnológica: ¿Tienen equipo interno o tercerizan, qué soluciones desarrollan, con qué proveedores externos trabajan y qué integraciones desean implementar?',
   '11. ¿Cuál es la visión de tu institución a largo plazo y qué tipo de soluciones tecnológicas consideran implementar?',
-  '12. ¿Tienen presupuesto asignado para soluciones tecnológicas?',
+  '12. ¿Cual es el porcentaje de presupuesto asignado para soluciones tecnológicas?',
   '⁠13. ¿Qué conexiones API tienen actualmente con el core bancario, manejan webhooks o eventos en tiempo real, cómo procesan transacciones y pagos, y cuentan con wallet o canal móvil/web?',
   '14. ¿Cuentan con alguna normativa o lineamiento del Banco Central que condicione las integraciones? (Ejemplo: límites, formatos, requerimientos técnicos, seguridad, etc.)',
   '15. ¿Cómo gestionan el registro y apertura de cuentas digitales, qué validaciones de identidad y listas negras realizan, y qué servicios o proveedores usan para esa verificación?',
@@ -191,6 +193,7 @@ export default function Home() {
   const [submissionStatus, setSubmissionStatus] = useState<"next" | "decline" | null>(null);
   const [showStatusTab, setShowStatusTab] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -532,6 +535,9 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
+      {/* Loader de carga cuando se está enviando el formulario */}
+      {isSubmitting && <HexagonLoader />}
+      
       {/* Gradiente animado de fondo */}
       <div className="absolute inset-0 animated-gradient" />
       {/* Fondo de halftone animado */}
@@ -569,6 +575,7 @@ export default function Home() {
                       isExiting={false}
                       isGoingBack={false}
                       isFirstQuestion={false}
+                      animationsEnabled={animationsEnabled}
                       onAnimationComplete={() => {}}
                     />
                   ) : submissionStatus === "next" ? (
@@ -579,6 +586,7 @@ export default function Home() {
                         isExiting={false}
                         isGoingBack={false}
                         isFirstQuestion={false}
+                        animationsEnabled={animationsEnabled}
                         onAnimationComplete={() => {}}
                       />
                       <div className="mt-4 sm:mt-6 md:mt-8">
@@ -637,6 +645,7 @@ export default function Home() {
                       isExiting={false}
                       isGoingBack={false}
                       isFirstQuestion={false}
+                      animationsEnabled={animationsEnabled}
                       onAnimationComplete={() => {}}
                     />
                   )}
@@ -651,6 +660,7 @@ export default function Home() {
                     isExiting={isExiting}
                     isGoingBack={isGoingBack}
                     isFirstQuestion={currentQuestionIndex === 0}
+                    animationsEnabled={animationsEnabled}
                     onAnimationComplete={handleAnimationComplete}
                   />
                 )}
@@ -761,6 +771,7 @@ export default function Home() {
             )}
           </div>
         </div>
+       
       </div>
 
       {/* Pestaña de notificación cuando el status es "next" */}
@@ -814,6 +825,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Toggle de animaciones en la parte inferior izquierda */}
+      {!isCompleted && <AnimationToggle onToggle={setAnimationsEnabled} />}
     </div>
   );
 }
