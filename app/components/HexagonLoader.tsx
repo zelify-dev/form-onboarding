@@ -48,8 +48,8 @@ const PROGRESS_STROKE_WIDTH = "3"; // Grosor de la línea de progreso
 const GLOW_INTENSITY = "3"; // Intensidad del glow (3 = suave, 5 = intenso, 7 = muy intenso)
 
 // Animación
-const ANIMATION_DURATION = "10s"; // Duración de la animación (más = más lento)
-const ANIMATION_TIMING = "linear"; // Tipo de animación: "linear", "ease-in-out", "ease-in", "ease-out"
+const ANIMATION_DURATION = "20s"; // Duración de la animación (más = más lento)
+const ANIMATION_TIMING = "ease-in-out"; // Tipo de animación: "linear", "ease-in-out", "ease-in", "ease-out"
 
 // Calcular el perímetro real del hexágono para que la velocidad coincida con la duración
 // Puntos del hexágono: (60,10) (100,30) (100,70) (60,90) (20,70) (20,30)

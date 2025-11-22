@@ -77,18 +77,36 @@ const SERVICES = [
   { name: 'Conexión', description: 'Integración y conexión con sistemas externos' },
   { name: 'Tarjetas', description: 'Emisión y gestión de tarjetas de débito' },
   { name: 'Transferencias', description: 'Transferencias bancarias y transacciones' },
-  { name: 'Transacciones', description: 'Procesamiento de transacciones financieras internacionales' },
+  { name: 'Transacciones Internacionales', description: 'Procesamiento de transacciones financieras internacionales' },
   { name: 'Pagos', description: 'Sistema de pagos y cobros digitales' },
   { name: 'Descuentos', description: 'Gestión de descuentos y promociones' },
   { name: 'Alaiza IA', description: 'Inteligencia artificial para tus servicios financieros' },
   { name: 'Seguros', description: 'Productos y servicios de seguros' },
 ];
 
+// Mapeo de servicios a IDs de Google Drive para PDFs
+const SERVICE_PDF_MAP: Record<string, string> = {
+  'Autenticación': '1ffoU2f6wHz6kqn0NrjAQ7OmZqsF_jn9o',
+  'Identidad': '1a8Ar83DqHceKgqi0GWiUj7dNcZn7vIZG',
+  'AML (prevención de lavado de dinero)': '1jU-Vwpk5YIM-OXaOVyxQMJ9K3sfqvXU0',
+  'Conexión': '1mF7YspEelOty7ZVND5H59JnRBvk5onLB',
+  'Tarjetas': '1V3ab0Hdfv7mEphQ-TP51v5vH6qgghIVy',
+  'Transferencias': '1Rke52INq0-8HTNq9QYUViuV_OF3BsEdh',
+  'Transacciones Internacionales': '17bq3iCtNceKYHfVEpHkWOGOqGVqo7zy_',
+  'Pagos': '13xwu94QqnzeQVf_lpItJnHlZlf7xqLd0',
+  'Descuentos': '1lHVKOLQkIzX2baHffmFEe4SenuW-Ouw5',
+  'Alaiza IA': '1NnCmE7LFzxSqvOgaJ_76TRlRHzqSnc79',
+  'Seguros': '1ZlwIFFr5i-4U3_VKEFSCjVvI0W6f51FI',
+};
+
 // Índice de la pregunta de servicios (0-indexed) - Pregunta 20
 const SERVICES_QUESTION_INDEX = 19;
 
 // Índice de la pregunta de presupuesto (0-indexed) - Pregunta 12
 const BUDGET_QUESTION_INDEX = 11;
+
+// Índice de la pregunta de institución financiera (0-indexed) - Pregunta 4
+const INSTITUTION_QUESTION_INDEX = 3;
 
 // Clave para localStorage
 const STORAGE_KEY = "form-onboarding-answers";
@@ -197,6 +215,8 @@ export default function Home() {
   const [showStatusTab, setShowStatusTab] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [preGeneratedPDF, setPreGeneratedPDF] = useState<Blob | null>(null);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -291,6 +311,7 @@ export default function Home() {
   }, [answers]);
 
   // Función para enviar las respuestas al endpoint
+  // TEMPORALMENTE COMENTADO PARA PRUEBAS LOCALES
   const submitAnswers = useCallback(async (finalAnswers: string[]) => {
     setIsSubmitting(true);
     
@@ -310,7 +331,7 @@ export default function Home() {
         timestamp: data.submittedAt
       });
 
-      // Enviar al endpoint
+      // Enviar al endpoint de producción
       const response = await fetch("https://mailing-production-65d6.up.railway.app/ai/evaluate-business-profile", {
         method: "POST",
         headers: {
@@ -324,9 +345,8 @@ export default function Home() {
       }
 
       const result = await response.json();
-      console.log("✅ [ENVÍO] Respuestas enviadas exitosamente:", result);
       
-      // Manejar el status de la respuesta
+      // El loader se ocultará cuando termine la generación del PDF también
       if (result.status === "next" || result.status === "decline") {
         setSubmissionStatus(result.status);
         if (result.status === "next") {
@@ -342,13 +362,151 @@ export default function Home() {
           console.error("Error al limpiar localStorage:", error);
         }
       }
+      
+      // NO establecer setIsSubmitting(false) aquí, se hará cuando termine el PDF también
     } catch (error) {
       console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
-      // Aquí podrías agregar un estado para mostrar un mensaje de error al usuario
-    } finally {
       setIsSubmitting(false);
+      // Aquí podrías agregar un estado para mostrar un mensaje de error al usuario
     }
   }, []);
+
+  // Función auxiliar para obtener servicios seleccionados en el orden correcto
+  const getOrderedSelectedServices = useCallback((servicesList: string[]): string[] => {
+    // Filtrar solo los servicios que están en SERVICES y tienen PDF disponible
+    return SERVICES
+      .map(service => service.name)
+      .filter(serviceName => 
+        servicesList.includes(serviceName) && SERVICE_PDF_MAP[serviceName]
+      );
+  }, []);
+
+  // Función auxiliar para obtener el nombre del archivo PDF
+  const getPDFFileName = useCallback((institutionName: string): string => {
+    // Limpiar el nombre de la institución para usarlo en el nombre del archivo
+    const cleanName = institutionName
+      .trim()
+      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remover caracteres especiales
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+      .toLowerCase();
+    
+    return `propuesta-servicios-${cleanName || 'empresa'}.pdf`;
+  }, []);
+
+  // Función para generar PDF en segundo plano (retorna promesa para poder esperarla)
+  const generatePDFInBackground = useCallback(async (servicesList: string[], institutionName: string = ''): Promise<void> => {
+    try {
+      // Obtener servicios en el orden correcto
+      const orderedServices = getOrderedSelectedServices(servicesList);
+      
+      if (orderedServices.length === 0) {
+        return;
+      }
+
+      console.log("📄 [PDF] Generando PDF en segundo plano para servicios:", orderedServices);
+
+      // Obtener los IDs de los PDFs en el orden correcto
+      const fileIds = orderedServices.map(serviceName => SERVICE_PDF_MAP[serviceName]);
+
+      // Llamar a la API route para combinar los PDFs
+      const response = await fetch('/api/combine-pdfs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileIds, fileName: getPDFFileName(institutionName) }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al generar PDF: ${response.status}`);
+      }
+
+      // Guardar el PDF generado
+      const blob = await response.blob();
+      setPreGeneratedPDF(blob);
+      
+      console.log(" PDF exitosamente plano");
+    } catch (error) {
+      console.error("[PDF] Error al generar PDF plano:", error);
+      // No mostrar alerta, solo loggear el error
+      throw error; // Re-lanzar el error para que se pueda manejar
+    }
+  }, [getOrderedSelectedServices, getPDFFileName]);
+
+  // Función para generar PDF combinado de los servicios seleccionados
+  const generateCombinedPDF = useCallback(async () => {
+    // Obtener el nombre de la institución de la pregunta 4
+    const institutionName = answers[INSTITUTION_QUESTION_INDEX] || '';
+    const fileName = getPDFFileName(institutionName);
+    
+    // Si ya tenemos el PDF pre-generado, usarlo directamente
+    if (preGeneratedPDF) {
+      const url = URL.createObjectURL(preGeneratedPDF);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // Si no hay PDF pre-generado, generarlo ahora
+    setIsGeneratingPDF(true);
+    
+    try {
+      // Obtener servicios seleccionados desde answers o selectedServices
+      const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
+      const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : selectedServices;
+      
+      // Obtener servicios en el orden correcto
+      const orderedServices = getOrderedSelectedServices(services);
+      
+      if (orderedServices.length === 0) {
+        alert('No hay servicios seleccionados con PDFs disponibles para combinar.');
+        setIsGeneratingPDF(false);
+        return;
+      }
+
+
+      // Obtener los IDs de los PDFs en el orden correcto
+      const fileIds = orderedServices.map(serviceName => SERVICE_PDF_MAP[serviceName]);
+
+      // Llamar a la API route para combinar los PDFs (evita problemas de CORS)
+      const response = await fetch('/api/combine-pdfs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileIds, fileName }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al generar PDF: ${response.status}`);
+      }
+
+      // Obtener el PDF como blob
+      const blob = await response.blob();
+      
+      // Crear URL y descargar
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log("[PDF] PDF combinado generado y descargado exitosamente");
+    } catch (error) {
+      console.error(" [PDF] Error al generar PDF combinado:", error);
+      alert('Error al generar el PDF combinado. Por favor, intenta nuevamente.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  }, [selectedServices, answers, preGeneratedPDF, getOrderedSelectedServices, getPDFFileName]);
 
   // Enviar respuestas cuando se complete el formulario (solo una vez)
   useEffect(() => {
@@ -370,11 +528,36 @@ export default function Home() {
       }
       
       // Pequeño delay para asegurar que todas las respuestas estén guardadas
-      timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = setTimeout(async () => {
         const answersToSend = currentQuestionIndex < QUESTIONS.length 
           ? finalAnswers 
           : answersRef.current;
-        submitAnswers(answersToSend);
+        
+        try {
+          // Iniciar generación de PDF y envío a API en paralelo
+          const savedAnswer = finalAnswers[SERVICES_QUESTION_INDEX] || "";
+          const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
+          const institutionName = finalAnswers[INSTITUTION_QUESTION_INDEX] || "";
+          
+          // Ejecutar ambas operaciones en paralelo y esperar a que ambas terminen
+          const pdfPromise = services.length > 0 
+            ? generatePDFInBackground(services, institutionName).catch(err => {
+                console.error("Error al generar PDF, continuando sin PDF:", err);
+              })
+            : Promise.resolve();
+          
+          const apiPromise = submitAnswers(answersToSend);
+          
+          // Esperar a que ambas operaciones terminen antes de ocultar el loader
+          await Promise.all([pdfPromise, apiPromise]);
+          
+          // Ocultar el loader solo cuando ambas operaciones hayan terminado
+          setIsSubmitting(false);
+        } catch (error) {
+          console.error("❌ [ENVÍO] Error en el proceso:", error);
+          setIsSubmitting(false);
+        }
+        
         timeoutRef.current = null;
       }, 500);
       
@@ -386,7 +569,7 @@ export default function Home() {
         }
       };
     }
-  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers]);
+  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers, generatePDFInBackground]);
 
   const totalSteps = QUESTIONS.length;
   const currentStep = currentQuestionIndex + 1;
@@ -575,9 +758,10 @@ export default function Home() {
 
         {/* Contenedor de pregunta y respuesta - centrado verticalmente */}
         <div className="flex-1 flex items-center justify-center py-2 sm:py-4 md:py-8">
+        {/* <HexagonLoader /> */}
           <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
-            {isCompleted ? (
-              /* Mensaje según el status de la respuesta */
+            {isCompleted && !isSubmitting ? (
+              /* Mensaje según el status de la respuesta - solo se muestra cuando el loader se oculta */
               showQuestion && (
                 <>
                   {submissionStatus === "decline" ? (
@@ -627,26 +811,58 @@ export default function Home() {
                             </svg>
                             Visitar Documentación
                           </a>
-                          <a
-                            href={PROPOSAL_DOWNLOAD_URL}
-                            download
-                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-green-500 hover:bg-green-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-green-500/50 hover:shadow-green-500/70"
+                          <button
+                            onClick={generateCombinedPDF}
+                            disabled={isGeneratingPDF || (() => {
+                              const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
+                              const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : selectedServices;
+                              return services.filter(service => SERVICE_PDF_MAP[service]).length === 0;
+                            })()}
+                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70"
+                            title={preGeneratedPDF ? "PDF listo para descargar (pre-generado)" : isGeneratingPDF ? "Generando PDF..." : undefined}
                           >
-                            <svg
-                              className="w-5 h-5 sm:w-6 sm:h-6"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                            Descargar Propuesta
-                          </a>
+                            {preGeneratedPDF ? (
+                              <>
+                                <svg
+                                  className="w-5 h-5 sm:w-6 sm:h-6"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                Generar Propuesta (Listo)
+                              </>
+                            ) : (
+                              <>
+                                <svg
+                                  className="animate-spin w-5 h-5 sm:w-6 sm:h-6"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  />
+                                </svg>
+                                Generando...
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -718,7 +934,10 @@ export default function Home() {
                     </div>
                   ) : currentQuestionIndex === BUDGET_QUESTION_INDEX ? (
                     /* Radio buttons para pregunta de presupuesto */
-                    <div className="w-full flex justify-center">
+                    <div className="w-full flex flex-col items-center">
+                      <p className="text-white/50 text-sm sm:text-base mb-4">
+                        Selecciona una opción
+                      </p>
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         {['Sí', 'No'].map((option) => (
                           <label
@@ -744,11 +963,6 @@ export default function Home() {
                           </label>
                         ))}
                       </div>
-                      {currentAnswer.trim() === "" && (
-                        <p className="text-white/50 text-sm sm:text-base mt-4">
-                          Selecciona una opción
-                        </p>
-                      )}
                     </div>
                   ) : (
                     /* Textarea para otras preguntas */
@@ -825,8 +1039,8 @@ export default function Home() {
        
       </div>
 
-      {/* Pestaña de notificación cuando el status es "next" */}
-      {showStatusTab && submissionStatus === "next" && (
+      {/* Pestaña de notificación cuando el status es "next" - solo se muestra cuando el loader se oculta */}
+      {showStatusTab && submissionStatus === "next" && !isSubmitting && (
         <div className="fixed bottom-0 right-0 z-50 animate-slide-up">
           <div className="bg-green-500 text-white px-6 sm:px-8 md:px-10 py-4 sm:py-5 md:py-6 rounded-tl-2xl shadow-2xl max-w-sm sm:max-w-md md:max-w-lg">
             <div className="flex items-center justify-between gap-4">
