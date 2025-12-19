@@ -11,52 +11,96 @@ import AnimationToggle from "./components/AnimationToggle";
 
 // Array de preguntas
 const QUESTIONS = [
-  '1. Ingresa tu nombre y apellido',
-  '2. Ingresa tu correo electrónico de contacto',
-  '3. Ingresa tu número de celular de contacto',
-  '4. ¿A qué institución financiera o empresa perteneces?',
-  '5. ¿Cuál es tu rol dentro de la organización? Cuéntame un poco más sobre tus responsabilidades.',
-  '6. ¿Cuál es la actividad principal de la institución y qué productos o servicios financieros ofrecen actualmente?',
-  '7. ¿Qué desafío principal enfrentan hoy en sus procesos operativos o tecnológicos?',
-  '⁠8. Háblame de tus clientes: ¿A qué segmento atienden, a quién sirven directamente, cómo es su cliente ideal y cuántos clientes tienen actualmente?',
-  '9. ¿Qué tan digitalizada consideras que está tu institución? (bajo, medio, alto)',
-  '10. Cuéntame sobre su infraestructura tecnológica: ¿Tienen equipo interno o tercerizan, qué soluciones desarrollan, con qué proveedores externos trabajan y qué integraciones desean implementar?',
-  '11. ¿Cuál es la visión de tu institución a largo plazo y qué tipo de soluciones tecnológicas consideran implementar?',
-  '12. ¿Cuentan con presupuesto asignado para soluciones tecnológicas?',
-  '⁠13. ¿Qué conexiones API tienen actualmente con el core bancario, manejan webhooks o eventos en tiempo real, cómo procesan transacciones y pagos, y cuentan con wallet o canal móvil/web?',
-  '14. ¿Qué productos o soluciones digitales utilizan actualmente en sus servicios o canales digitales?',
-  '15. ¿Qué medidas o controles antifraude emplean en sus procesos digitales actualmente?',
-  '16. ¿Cuentan con ambientes de prueba y producción? ¿Cómo gestionan el acceso y qué tan actualizada está su documentación técnica?',
-  '17. ¿Qué problemas presentan actualmente en los procesos de registro, validación de identidad y validación de listas negras?',
-  '18. ¿Su aplicativo tiene transferencia interbancaria por SPI? ¿Qué otro mecanismo usa?',
-  '19. ¿Emiten tarjetas de débito o crédito?',
-  '20. ¿Que servicios te interesarian?',
-  '21. ¿Quién te refirió con nosotros?',
+  "1. Nombre y apellido",
+  "2. Cargo y responsabilidades",
+  "3. Institución / Empresa",
+  "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
+  "5. País(es) donde opera",
+  "6. Actividad principal de la institución",
+  "7. Productos o servicios financieros actuales",
+  "8. Segmento de clientes atendido",
+  "9. Número aproximado de clientes activos",
+  "10. Nivel de digitalización actual (bajo / medio / alto)",
+  "11. Problema principal que desean resolver",
+  "12. Objetivo de negocio a 6–12 meses",
+  "13. Consecuencia de no ejecutar este proyecto",
+  "14. Funcionalidades requeridas para el MVP",
+  "15. Funcionalidades previstas para fases futuras",
+  "16. Fecha objetivo de salida a producción",
+  "17. Core bancario o sistema transaccional actual",
+  "18. ¿El core expone APIs REST?",
+  "19. ¿Existen ambientes de sandbox y producción?",
+  "20. Proveedores tecnológicos críticos actuales",
+  "21. Canales digitales activos (app, web, POS, otros)",
+  "22. ¿Utilizan webhooks o eventos en tiempo real?",
+  "23. Integraciones externas críticas (core, pagos, identidad, regulador)",
+  "24. Método actual de autenticación de usuarios",
+  "25. ¿Utilizan tokens de sesión (JWT u otro)?",
+  "26. ¿Implementan doble factor de autenticación (2FA)?",
+  "27. ¿Recolectan información de dispositivo y geolocalización?",
+  "28. ¿Permiten onboarding 100% digital?",
+  "29. Proceso actual de validación de identidad",
+  "30. ¿Ejecutan validación AML/listas negras en el flujo?",
+  "31. Periodicidad del control AML (registro / continuo)",
+  "32. ¿Manejan wallet o saldo digital?",
+  "33. Tipos de transferencias soportadas (P2P, interbancarias, SPI)",
+  "34. ¿El core maneja saldo disponible vs saldo contable?",
+  "35. ¿Las transacciones se procesan en tiempo real?",
+  "36. ¿Emiten tarjetas (débito / crédito / prepago)?",
+  "37. Regulador principal",
+  "38. ¿Requieren contrato digital y T&C?",
+  "39. Usuarios estimados primer año",
+  "40. Transacciones mensuales estimadas",
+  "41. ¿Cuentan con presupuesto asignado?",
+  "42. Responsable interno del proyecto",
+  "43. ¿Quién te refirió con nosotros?",
 ];
 
 // Array de placeholders para cada pregunta
 const PLACEHOLDERS = [
-  'Ej: Rodrigo Pérez',
-  'Ej: rodrigo.perez@banco.com',
-  'Ej: +593 99 123 4567',
-  'Ej: Banco XYZ',
-  'Ej: Director de TI, encargado de la infraestructura tecnológica.',
-  'Ej: Banco que ofrece cuentas de ahorro, crédito personal y seguros.',
-  'Ej: Dependencia de sistemas legacy, demoras en las transacciones, falta de innovación tecnológica.',
-  'Ej: Atendemos principalmente a empresas B2B y clientes finales de clase media-alta. Tenemos aproximadamente 10,000 clientes activos.',
-  'Ej: Alta digitalización, con múltiples canales de comunicación y APIs integradas.',
-  'Ej: Dependencia en el core bancario, aplicativos mobiles, APIs, etc.',
-  'Ej: Buscamos lograr independencia tecnológica y optimizar costos operativos.',
-  'Ej: Sí, contamos con un porcentaje del presupuesto destinado a soluciones tecnológicas.',
-  'Ej: Utilizamos conexiones API para integrar sistemas bancarios. El core maneja webhooks para transacciones en tiempo real. Contamos con aplicativo móvil y portal web.',
-  'Ej: Aplicativo, sistema antifraude, portal web…',
-  'Ej: Validación de identidad con proveedores privados, consultas en listas nacionales e internacionales…',
-  'Ej: Usamos un sistema de Sandbox para pruebas, y nuestra documentación técnica está actualizada hasta enero de 2025.',
-  'Ej: Los problemas incluyen demoras en la validación de identidad y falta de integración de listas negras.',
-  'Ej: Sí, ofrecemos transferencias interbancarias por SPI y mecanismos adicionales como pagos por QR.',
-  'Ej: Sí, emitimos tarjetas de débito y crédito para nuestros clientes.',
-  'Ej: Servicios de identidad, AML, tarjetas, transferencias, pagos, etc.',
-  'Ej: Fui referido por el ejecutivo Pedro Pérez de Zelify.',
+  "Ej: Ana García",
+  "Ej: Directora de Innovación, lidera proyectos digitales",
+  "Ej: Banco Andino",
+  "Ej: Fintech",
+  "Ej: Ecuador y Perú",
+  "Ej: Banca minorista y créditos de consumo",
+  "Ej: Cuentas corrientes, tarjetas de débito, microcréditos",
+  "Ej: PYMES y profesionales independientes",
+  "Ej: 150000 clientes activos",
+  "Ej: Digitalización media, procesos híbridos",
+  "Ej: Reducir tiempos de onboarding de clientes",
+  "Ej: Lanzar nueva app de onboarding digital",
+  "Ej: Continuarán las fugas de clientes y costos altos",
+  "Ej: Registro digital, validación de identidad y firma de contratos",
+  "Ej: Integrar préstamos digitales y scoring avanzado",
+  "Ej: Q4 2025",
+  "Ej: Temenos T24 conectado a middleware propio",
+  "Ej: Sí, contamos con APIs REST documentadas",
+  "Ej: Sí, tenemos sandbox para pruebas y ambiente productivo",
+  "Ej: AWS, Fiserv, proveedores locales de pagos",
+  "Ej: Banca web, app móvil y POS propios",
+  "Ej: Sí, usamos webhooks para eventos transaccionales",
+  "Ej: Core bancario, pasarela de pagos y proveedor de identidad",
+  "Ej: Login con usuario/contraseña reforzado con OTP",
+  "Ej: Sí, tokens JWT emitidos por nuestro IdP",
+  "Ej: Sí, enviamos OTP por SMS para 2FA",
+  "Ej: Capturamos huella del dispositivo y ubicación aproximada",
+  "Ej: Sí, el onboarding es 100% digital",
+  "Ej: Validación biométrica y consulta de listas oficiales",
+  "Ej: Revisamos listas AML en cada alta",
+  "Ej: Control continuo con monitoreo mensual",
+  "Ej: Sí, ofrecemos wallet con saldos en USD",
+  "Ej: P2P, interbancarias ACH y SPI",
+  "Ej: Sí, el core separa saldo disponible y contable",
+  "Ej: Sí, conciliamos en tiempo real",
+  "Ej: Emitimos tarjetas de débito y prepago",
+  "Ej: Superintendencia de Bancos de Ecuador",
+  "Ej: Sí, requerimos contrato digital y T&C firmados",
+  "Ej: 50000 usuarios durante el primer año",
+  "Ej: 200000 transacciones mensuales estimadas",
+  "Ej: Sí, tenemos presupuesto aprobado",
+  "Ej: María Gómez, líder de Transformación Digital",
+  "Ej: Referido por Pedro Pérez (Zelify)",
 ];
 
 const THANK_YOU_MESSAGE = "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
@@ -65,48 +109,18 @@ const DECLINE_MESSAGE = "Muchas gracias por tus respuestas. Estaremos revisando 
 
 const DOCS_URL = "https://docs.zelify.com";
 
-// ID del archivo de Google Drive para la propuesta
-const PROPOSAL_FILE_ID = "178RB8SelWt4Ya6tl0xF0OuUyvf2Hqu97";
-const PROPOSAL_DOWNLOAD_URL = `https://drive.google.com/uc?export=download&id=${PROPOSAL_FILE_ID}`;
+// Índice de la pregunta de presupuesto (0-indexed) - Pregunta 41
+const BUDGET_QUESTION_INDEX = 40;
 
-// Servicios disponibles para la pregunta de servicios
-const SERVICES = [
-  { name: 'Autenticación', description: 'Autenticación segura y gestión de accesos' },
-  { name: 'Identidad', description: 'Verificación y validación de identidad' },
-  { name: 'AML (prevención de lavado de dinero)', description: 'Prevención de lavado de activos/antifraude y cumplimiento' },
-  { name: 'Conexión', description: 'Integración y conexión con sistemas externos' },
-  { name: 'Tarjetas', description: 'Emisión y gestión de tarjetas de débito' },
-  { name: 'Transferencias', description: 'Transferencias bancarias y transacciones' },
-  { name: 'Transacciones Internacionales', description: 'Procesamiento de transacciones financieras internacionales' },
-  { name: 'Pagos', description: 'Sistema de pagos y cobros digitales' },
-  { name: 'Descuentos', description: 'Gestión de descuentos y promociones' },
-  { name: 'Alaiza IA', description: 'Inteligencia artificial para tus servicios financieros' },
-  { name: 'Seguros', description: 'Productos y servicios de seguros' },
+// Índice de la pregunta de países (0-indexed) - Pregunta 5
+const COUNTRY_QUESTION_INDEX = 4;
+
+const COUNTRY_OPTIONS = [
+  "Colombia",
+  "Ecuador",
+  "Estados Unidos",
+  "México",
 ];
-
-// Mapeo de servicios a IDs de Google Drive para PDFs
-const SERVICE_PDF_MAP: Record<string, string> = {
-  'Autenticación': '1ffoU2f6wHz6kqn0NrjAQ7OmZqsF_jn9o',
-  'Identidad': '1a8Ar83DqHceKgqi0GWiUj7dNcZn7vIZG',
-  'AML (prevención de lavado de dinero)': '1jU-Vwpk5YIM-OXaOVyxQMJ9K3sfqvXU0',
-  'Conexión': '1mF7YspEelOty7ZVND5H59JnRBvk5onLB',
-  'Tarjetas': '1V3ab0Hdfv7mEphQ-TP51v5vH6qgghIVy',
-  'Transferencias': '1Rke52INq0-8HTNq9QYUViuV_OF3BsEdh',
-  'Transacciones Internacionales': '17bq3iCtNceKYHfVEpHkWOGOqGVqo7zy_',
-  'Pagos': '13xwu94QqnzeQVf_lpItJnHlZlf7xqLd0',
-  'Descuentos': '1lHVKOLQkIzX2baHffmFEe4SenuW-Ouw5',
-  'Alaiza IA': '1NnCmE7LFzxSqvOgaJ_76TRlRHzqSnc79',
-  'Seguros': '1ZlwIFFr5i-4U3_VKEFSCjVvI0W6f51FI',
-};
-
-// Índice de la pregunta de servicios (0-indexed) - Pregunta 20
-const SERVICES_QUESTION_INDEX = 19;
-
-// Índice de la pregunta de presupuesto (0-indexed) - Pregunta 12
-const BUDGET_QUESTION_INDEX = 11;
-
-// Índice de la pregunta de institución financiera (0-indexed) - Pregunta 4
-const INSTITUTION_QUESTION_INDEX = 3;
 
 // Clave para localStorage
 const STORAGE_KEY = "form-onboarding-answers";
@@ -128,46 +142,8 @@ const isValidName = (name: string): boolean => {
   return words.every(word => word.length >= 2 && nameRegex.test(word)) && nameRegex.test(trimmed);
 };
 
-// Función para validar formato de email
-const isValidEmail = (email: string): boolean => {
-  const trimmed = email.trim();
-  if (trimmed.length === 0) return false;
-  
-  // Validación básica de formato de email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(trimmed)) return false;
-  
-  // Validar que no tenga espacios
-  if (trimmed.includes(' ')) return false;
-  
-  // Validar que el dominio tenga al menos 2 caracteres después del punto
-  const parts = trimmed.split('@');
-  if (parts.length !== 2) return false;
-  const domainParts = parts[1].split('.');
-  if (domainParts.length < 2 || domainParts[domainParts.length - 1].length < 2) return false;
-  
-  return true;
-};
-
-// Función para validar formato de número de celular
-// Acepta números con o sin código de país, con o sin espacios, guiones, paréntesis
-const isValidPhone = (phone: string): boolean => {
-  const trimmed = phone.trim();
-  if (trimmed.length === 0) return false;
-  
-  // Remover espacios, guiones, paréntesis y el signo + para validar
-  const cleaned = trimmed.replace(/[\s\-\(\)\+]/g, '');
-  
-  // Debe tener al menos algunos caracteres después de limpiar
-  if (cleaned.length === 0) return false;
-  
-  // Validar que tenga entre 7 y 15 dígitos (estándar internacional)
-  const phoneRegex = /^\d{7,15}$/;
-  return phoneRegex.test(cleaned);
-};
-
 // Función auxiliar para calcular el siguiente índice considerando lógica condicional
-const getNextQuestionIndex = (currentIndex: number, answer: string): number => {
+const getNextQuestionIndex = (currentIndex: number, _answer: string): number => {
   // Por ahora no hay lógica condicional, todas las preguntas se muestran en secuencia
   return currentIndex + 1;
 };
@@ -202,21 +178,18 @@ export default function Home() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
   const [answers, setAnswers] = useState<string[]>(loadAnswersFromStorage);
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
-  const [selectedServices, setSelectedServices] = useState<string[]>(() => {
-    // Cargar servicios seleccionados desde la respuesta guardada
-    const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
-    return savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(() => {
+    const savedAnswer = answers[COUNTRY_QUESTION_INDEX] || "";
+    return savedAnswer
+      ? savedAnswer.split(',').map((c) => c.trim()).filter((c) => c.length > 0)
+      : [];
   });
   const [submissionStatus, setSubmissionStatus] = useState<"next" | "decline" | null>(null);
   const [showStatusTab, setShowStatusTab] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [preGeneratedPDF, setPreGeneratedPDF] = useState<Blob | null>(null);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -239,31 +212,42 @@ export default function Home() {
 
   // Cargar la respuesta actual cuando cambia el índice de pregunta
   useEffect(() => {
-    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
-      // Si es la pregunta de servicios, cargar los servicios seleccionados
+    if (currentQuestionIndex === COUNTRY_QUESTION_INDEX) {
       const savedAnswer = answers[currentQuestionIndex] || "";
-      const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
-      setSelectedServices(services);
+      const countries = savedAnswer
+        ? savedAnswer.split(',').map((c) => c.trim()).filter((c) => c.length > 0)
+        : [];
+      setSelectedCountries((prev) => {
+        if (
+          prev.length === countries.length &&
+          prev.every((country, index) => country === countries[index])
+        ) {
+          return prev;
+        }
+        return countries;
+      });
       setCurrentAnswer(savedAnswer);
     } else {
       setCurrentAnswer(answers[currentQuestionIndex] || "");
     }
     // Limpiar errores al cambiar de pregunta
     setNameError("");
-    setEmailError("");
-    setPhoneError("");
   }, [currentQuestionIndex, answers]);
 
-  // Manejar selección de servicios
-  const handleServiceToggle = (service: string) => {
-    setSelectedServices(prev => {
-      const newServices = prev.includes(service)
-        ? prev.filter(s => s !== service)
-        : [...prev, service];
-      // Actualizar currentAnswer con los servicios seleccionados
-      const answerValue = newServices.join(', ');
+  // Manejar selección de países para la pregunta 5
+  const handleCountryToggle = (country: string) => {
+    setSelectedCountries((prev) => {
+      const newSelection = prev.includes(country)
+        ? prev.filter((c) => c !== country)
+        : [...prev, country];
+      const answerValue = newSelection.join(', ');
       setCurrentAnswer(answerValue);
-      return newServices;
+      setAnswers((prevAnswers) => {
+        const updated = [...prevAnswers];
+        updated[COUNTRY_QUESTION_INDEX] = answerValue;
+        return updated;
+      });
+      return newSelection;
     });
   };
 
@@ -279,28 +263,6 @@ export default function Home() {
         setNameError("Por favor ingresa tu nombre completo (nombre y apellido, mínimo 2 palabras)");
       } else {
         setNameError("");
-      }
-    }
-    
-    // Validar email en tiempo real (pregunta 2, índice 1)
-    if (currentQuestionIndex === 1) {
-      if (value.trim() === "") {
-        setEmailError("");
-      } else if (!isValidEmail(value)) {
-        setEmailError("Por favor ingresa un correo electrónico válido (ejemplo: nombre@dominio.com)");
-      } else {
-        setEmailError("");
-      }
-    }
-    
-    // Validar teléfono en tiempo real (pregunta 3, índice 2)
-    if (currentQuestionIndex === 2) {
-      if (value.trim() === "") {
-        setPhoneError("");
-      } else if (!isValidPhone(value)) {
-        setPhoneError("Por favor ingresa un número de celular válido (mínimo 7 dígitos, máximo 15)");
-      } else {
-        setPhoneError("");
       }
     }
   };
@@ -362,151 +324,13 @@ export default function Home() {
           console.error("Error al limpiar localStorage:", error);
         }
       }
-      
-      // NO establecer setIsSubmitting(false) aquí, se hará cuando termine el PDF también
     } catch (error) {
       console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
-      setIsSubmitting(false);
       // Aquí podrías agregar un estado para mostrar un mensaje de error al usuario
-    }
-  }, []);
-
-  // Función auxiliar para obtener servicios seleccionados en el orden correcto
-  const getOrderedSelectedServices = useCallback((servicesList: string[]): string[] => {
-    // Filtrar solo los servicios que están en SERVICES y tienen PDF disponible
-    return SERVICES
-      .map(service => service.name)
-      .filter(serviceName => 
-        servicesList.includes(serviceName) && SERVICE_PDF_MAP[serviceName]
-      );
-  }, []);
-
-  // Función auxiliar para obtener el nombre del archivo PDF
-  const getPDFFileName = useCallback((institutionName: string): string => {
-    // Limpiar el nombre de la institución para usarlo en el nombre del archivo
-    const cleanName = institutionName
-      .trim()
-      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remover caracteres especiales
-      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
-      .toLowerCase();
-    
-    return `propuesta-servicios-${cleanName || 'empresa'}.pdf`;
-  }, []);
-
-  // Función para generar PDF en segundo plano (retorna promesa para poder esperarla)
-  const generatePDFInBackground = useCallback(async (servicesList: string[], institutionName: string = ''): Promise<void> => {
-    try {
-      // Obtener servicios en el orden correcto
-      const orderedServices = getOrderedSelectedServices(servicesList);
-      
-      if (orderedServices.length === 0) {
-        return;
-      }
-
-      console.log("📄 [PDF] Generando PDF en segundo plano para servicios:", orderedServices);
-
-      // Obtener los IDs de los PDFs en el orden correcto
-      const fileIds = orderedServices.map(serviceName => SERVICE_PDF_MAP[serviceName]);
-
-      // Llamar a la API route para combinar los PDFs
-      const response = await fetch('/api/combine-pdfs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fileIds, fileName: getPDFFileName(institutionName) }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error al generar PDF: ${response.status}`);
-      }
-
-      // Guardar el PDF generado
-      const blob = await response.blob();
-      setPreGeneratedPDF(blob);
-      
-      console.log(" PDF exitosamente plano");
-    } catch (error) {
-      console.error("[PDF] Error al generar PDF plano:", error);
-      // No mostrar alerta, solo loggear el error
-      throw error; // Re-lanzar el error para que se pueda manejar
-    }
-  }, [getOrderedSelectedServices, getPDFFileName]);
-
-  // Función para generar PDF combinado de los servicios seleccionados
-  const generateCombinedPDF = useCallback(async () => {
-    // Obtener el nombre de la institución de la pregunta 4
-    const institutionName = answers[INSTITUTION_QUESTION_INDEX] || '';
-    const fileName = getPDFFileName(institutionName);
-    
-    // Si ya tenemos el PDF pre-generado, usarlo directamente
-    if (preGeneratedPDF) {
-      const url = URL.createObjectURL(preGeneratedPDF);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    // Si no hay PDF pre-generado, generarlo ahora
-    setIsGeneratingPDF(true);
-    
-    try {
-      // Obtener servicios seleccionados desde answers o selectedServices
-      const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
-      const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : selectedServices;
-      
-      // Obtener servicios en el orden correcto
-      const orderedServices = getOrderedSelectedServices(services);
-      
-      if (orderedServices.length === 0) {
-        alert('No hay servicios seleccionados con PDFs disponibles para combinar.');
-        setIsGeneratingPDF(false);
-        return;
-      }
-
-
-      // Obtener los IDs de los PDFs en el orden correcto
-      const fileIds = orderedServices.map(serviceName => SERVICE_PDF_MAP[serviceName]);
-
-      // Llamar a la API route para combinar los PDFs (evita problemas de CORS)
-      const response = await fetch('/api/combine-pdfs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fileIds, fileName }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error al generar PDF: ${response.status}`);
-      }
-
-      // Obtener el PDF como blob
-      const blob = await response.blob();
-      
-      // Crear URL y descargar
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      console.log("[PDF] PDF combinado generado y descargado exitosamente");
-    } catch (error) {
-      console.error(" [PDF] Error al generar PDF combinado:", error);
-      alert('Error al generar el PDF combinado. Por favor, intenta nuevamente.');
     } finally {
-      setIsGeneratingPDF(false);
+      setIsSubmitting(false);
     }
-  }, [selectedServices, answers, preGeneratedPDF, getOrderedSelectedServices, getPDFFileName]);
+  }, []);
 
   // Enviar respuestas cuando se complete el formulario (solo una vez)
   useEffect(() => {
@@ -534,28 +358,9 @@ export default function Home() {
           : answersRef.current;
         
         try {
-          // Iniciar generación de PDF y envío a API en paralelo
-          const savedAnswer = finalAnswers[SERVICES_QUESTION_INDEX] || "";
-          const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : [];
-          const institutionName = finalAnswers[INSTITUTION_QUESTION_INDEX] || "";
-          
-          // Ejecutar ambas operaciones en paralelo y esperar a que ambas terminen
-          const pdfPromise = services.length > 0 
-            ? generatePDFInBackground(services, institutionName).catch(err => {
-                console.error("Error al generar PDF, continuando sin PDF:", err);
-              })
-            : Promise.resolve();
-          
-          const apiPromise = submitAnswers(answersToSend);
-          
-          // Esperar a que ambas operaciones terminen antes de ocultar el loader
-          await Promise.all([pdfPromise, apiPromise]);
-          
-          // Ocultar el loader solo cuando ambas operaciones hayan terminado
-          setIsSubmitting(false);
+          await submitAnswers(answersToSend);
         } catch (error) {
           console.error("❌ [ENVÍO] Error en el proceso:", error);
-          setIsSubmitting(false);
         }
         
         timeoutRef.current = null;
@@ -569,7 +374,7 @@ export default function Home() {
         }
       };
     }
-  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers, generatePDFInBackground]);
+  }, [isCompleted, isSubmitting, currentQuestionIndex, currentAnswer, submitAnswers]);
 
   const totalSteps = QUESTIONS.length;
   const currentStep = currentQuestionIndex + 1;
@@ -578,16 +383,10 @@ export default function Home() {
     .filter((step) => step > 0);
 
   const handleNext = () => {
-    // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
-    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
-      if (selectedServices.length === 0) return;
-    } 
-    // Para la pregunta de presupuesto, verificar que se haya seleccionado una opción
-    else if (currentQuestionIndex === BUDGET_QUESTION_INDEX) {
-      if (currentAnswer.trim() === "") return;
-    } 
-    else {
-      if (currentAnswer.trim() === "") return;
+    if (currentQuestionIndex === COUNTRY_QUESTION_INDEX) {
+      if (selectedCountries.length === 0) return;
+    } else if (currentAnswer.trim() === "") {
+      return;
     }
 
     // Validar nombre y apellido si es la pregunta 1 (índice 0)
@@ -599,29 +398,10 @@ export default function Home() {
       setNameError("");
     }
 
-    // Validar email si es la pregunta 2 (índice 1)
-    if (currentQuestionIndex === 1) {
-      if (!isValidEmail(currentAnswer)) {
-        setEmailError("Por favor ingresa un correo electrónico válido (ejemplo: nombre@dominio.com)");
-        return;
-      }
-      setEmailError("");
-    }
-
-    // Validar teléfono si es la pregunta 3 (índice 2)
-    if (currentQuestionIndex === 2) {
-      if (!isValidPhone(currentAnswer)) {
-        setPhoneError("Por favor ingresa un número de celular válido (mínimo 7 dígitos, máximo 15)");
-        return;
-      }
-      setPhoneError("");
-    }
-
     // Guardar respuesta
     const newAnswers = [...answers];
-    // Para la pregunta de servicios, guardar los servicios seleccionados como string
-    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
-      newAnswers[currentQuestionIndex] = selectedServices.join(', ');
+    if (currentQuestionIndex === COUNTRY_QUESTION_INDEX) {
+      newAnswers[currentQuestionIndex] = selectedCountries.join(', ');
     } else {
       newAnswers[currentQuestionIndex] = currentAnswer;
     }
@@ -717,16 +497,11 @@ export default function Home() {
   // Calcular el estado disabled del botón de manera consistente
   const isNextButtonDisabled = useMemo(() => {
     if (!mounted) return true; // Deshabilitar hasta que esté montado para evitar errores de hidratación
-    // Para la pregunta de servicios, verificar que al menos uno esté seleccionado
-    if (currentQuestionIndex === SERVICES_QUESTION_INDEX) {
-      return isExiting || selectedServices.length === 0 || nameError !== "" || emailError !== "" || phoneError !== "";
+    if (currentQuestionIndex === COUNTRY_QUESTION_INDEX) {
+      return isExiting || selectedCountries.length === 0 || nameError !== "";
     }
-    // Para la pregunta de presupuesto, verificar que se haya seleccionado una opción
-    if (currentQuestionIndex === BUDGET_QUESTION_INDEX) {
-      return isExiting || currentAnswer.trim() === "" || nameError !== "" || emailError !== "" || phoneError !== "";
-    }
-    return isExiting || currentAnswer.trim() === "" || nameError !== "" || emailError !== "" || phoneError !== "";
-  }, [mounted, isExiting, currentAnswer, selectedServices, currentQuestionIndex, nameError, emailError, phoneError]);
+    return isExiting || currentAnswer.trim() === "" || nameError !== "";
+  }, [mounted, isExiting, currentAnswer, currentQuestionIndex, selectedCountries, nameError]);
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
@@ -811,58 +586,6 @@ export default function Home() {
                             </svg>
                             Visitar Documentación
                           </a>
-                          <button
-                            onClick={generateCombinedPDF}
-                            disabled={isGeneratingPDF || (() => {
-                              const savedAnswer = answers[SERVICES_QUESTION_INDEX] || "";
-                              const services = savedAnswer ? savedAnswer.split(',').map(s => s.trim()).filter(s => s) : selectedServices;
-                              return services.filter(service => SERVICE_PDF_MAP[service]).length === 0;
-                            })()}
-                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70"
-                            title={preGeneratedPDF ? "PDF listo para descargar (pre-generado)" : isGeneratingPDF ? "Generando PDF..." : undefined}
-                          >
-                            {preGeneratedPDF ? (
-                              <>
-                                <svg
-                                  className="w-5 h-5 sm:w-6 sm:h-6"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                                Generar Propuesta (Listo)
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  className="animate-spin w-5 h-5 sm:w-6 sm:h-6"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                                Generando...
-                              </>
-                            )}
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -895,40 +618,38 @@ export default function Home() {
 
                 {/* Input según el tipo de pregunta */}
                 <div className="w-full">
-                  {currentQuestionIndex === SERVICES_QUESTION_INDEX ? (
-                    /* Checkboxes para servicios */
+                  {currentQuestionIndex === COUNTRY_QUESTION_INDEX ? (
+                    /* Checkboxes para países */
                     <div className="w-full">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-                        {SERVICES.map((service) => (
+                      <p className="text-white/60 text-sm sm:text-base mb-4">
+                        Selecciona uno o varios países
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                        {COUNTRY_OPTIONS.map((country) => (
                           <label
-                            key={service.name}
-                            className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                              selectedServices.includes(service.name)
+                            key={country}
+                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                              selectedCountries.includes(country)
                                 ? 'bg-purple-500/20 border-purple-500 text-white'
                                 : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
                             } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <input
                               type="checkbox"
-                              checked={selectedServices.includes(service.name)}
-                              onChange={() => handleServiceToggle(service.name)}
+                              checked={selectedCountries.includes(country)}
+                              onChange={() => handleCountryToggle(country)}
                               disabled={isExiting}
-                              className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-purple-500 cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
+                              className="w-4 h-4 sm:w-5 sm:h-5 accent-purple-500 cursor-pointer"
                             />
-                            <div className="flex flex-col gap-1">
-                              <span className="text-sm sm:text-base md:text-lg font-medium select-none">
-                                {service.name}
-                              </span>
-                              <span className="text-xs sm:text-sm text-white/60 select-none leading-tight">
-                                {service.description}
-                              </span>
-                            </div>
+                            <span className="text-sm sm:text-base font-medium select-none">
+                              {country}
+                            </span>
                           </label>
                         ))}
                       </div>
-                      {selectedServices.length === 0 && (
+                      {selectedCountries.length === 0 && (
                         <p className="text-white/50 text-sm sm:text-base mt-4">
-                          Selecciona al menos un servicio
+                          Selecciona al menos un país
                         </p>
                       )}
                     </div>
@@ -971,7 +692,7 @@ export default function Home() {
                       value={currentAnswer}
                       onChange={(e) => handleAnswerChange(e.target.value)}
                       onKeyDown={handleKeyPress}
-                      className={`w-full bg-transparent text-white text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError || emailError || phoneError ? 'placeholder-red-400/70' : ''}`}
+                      className={`w-full bg-transparent text-white text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError ? 'placeholder-red-400/70' : ''}`}
                       placeholder={PLACEHOLDERS[currentQuestionIndex]}
                       disabled={isExiting}
                       rows={1}
@@ -981,16 +702,6 @@ export default function Home() {
                   {nameError && (
                     <p className="text-red-400 text-sm sm:text-base mt-2">
                       {nameError}
-                    </p>
-                  )}
-                  {emailError && (
-                    <p className="text-red-400 text-sm sm:text-base mt-2">
-                      {emailError}
-                    </p>
-                  )}
-                  {phoneError && (
-                    <p className="text-red-400 text-sm sm:text-base mt-2">
-                      {phoneError}
                     </p>
                   )}
                 </div>
