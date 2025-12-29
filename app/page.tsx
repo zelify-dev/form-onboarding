@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Navbar from "./components/Navbar";
-import ProgressBar from "./components/ProgressBar";
+import FocusedProgressBar from "./components/FocusedProgressBar";
 import AnimatedQuestion from "./components/AnimatedQuestion";
 import AnimatedHalftoneBackground from "./components/AnimatedHalftoneBackground";
 import HexagonLoader from "./components/HexagonLoader";
 import AnimationToggle from "./components/AnimationToggle";
+import TokenWallet from "./components/TokenWallet";
 
 // Array de preguntas
 const QUESTIONS = [
@@ -130,13 +131,13 @@ const STORAGE_KEY = "form-onboarding-answers";
 const isValidName = (name: string): boolean => {
   const trimmed = name.trim();
   if (trimmed.length < 3) return false; // Mínimo 3 caracteres
-  
+
   // Dividir por espacios y filtrar vacíos
   const words = trimmed.split(/\s+/).filter(word => word.length > 0);
-  
+
   // Debe tener al menos 2 palabras (nombre y apellido)
   if (words.length < 2) return false;
-  
+
   // Cada palabra debe tener al menos 2 caracteres y contener solo letras y caracteres especiales comunes
   const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
   return words.every(word => word.length >= 2 && nameRegex.test(word)) && nameRegex.test(trimmed);
@@ -178,6 +179,12 @@ export default function Home() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
+  // Token System State
+  const [tokenBalance, setTokenBalance] = useState(100);
+  const [lastAddedTokens, setLastAddedTokens] = useState(0);
+  // Rastreo de tokens otorgados por pregunta para evitar duplicados y permitir ajustes
+  // Key: Question Index, Value: Tokens awarded
+  const [awardedTokens, setAwardedTokens] = useState<Record<number, number>>({});
   const [answers, setAnswers] = useState<string[]>(loadAnswersFromStorage);
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
   const [selectedCountries, setSelectedCountries] = useState<string[]>(() => {
@@ -193,12 +200,12 @@ export default function Home() {
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Marcar como montado después del primer render
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   // Guardar respuestas en localStorage cada vez que cambien
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -254,7 +261,7 @@ export default function Home() {
   // Validar y actualizar respuesta cuando el usuario escribe
   const handleAnswerChange = (value: string) => {
     setCurrentAnswer(value);
-    
+
     // Validar nombre y apellido en tiempo real (pregunta 1, índice 0)
     if (currentQuestionIndex === 0) {
       if (value.trim() === "") {
@@ -276,7 +283,7 @@ export default function Home() {
   // TEMPORALMENTE COMENTADO PARA PRUEBAS LOCALES
   const submitAnswers = useCallback(async (finalAnswers: string[]) => {
     setIsSubmitting(true);
-    
+
     try {
       // Estructurar los datos en formato JSON
       const data = {
@@ -307,7 +314,7 @@ export default function Home() {
       }
 
       const result = await response.json();
-      
+
       // El loader se ocultará cuando termine la generación del PDF también
       if (result.status === "next" || result.status === "decline") {
         setSubmissionStatus(result.status);
@@ -315,7 +322,7 @@ export default function Home() {
           setShowStatusTab(true);
         }
       }
-      
+
       // Limpiar localStorage después de enviar exitosamente
       if (typeof window !== "undefined") {
         try {
@@ -337,7 +344,7 @@ export default function Home() {
     if (isCompleted && !isSubmitting && !hasSubmittedRef.current) {
       // Marcar como enviado inmediatamente para evitar múltiples envíos
       hasSubmittedRef.current = true;
-      
+
       // Guardar la última respuesta antes de enviar
       const finalAnswers = [...answersRef.current];
       if (currentQuestionIndex < QUESTIONS.length) {
@@ -345,27 +352,27 @@ export default function Home() {
         setAnswers(finalAnswers);
         answersRef.current = finalAnswers;
       }
-      
+
       // Limpiar timeout anterior si existe
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      
+
       // Pequeño delay para asegurar que todas las respuestas estén guardadas
       timeoutRef.current = setTimeout(async () => {
-        const answersToSend = currentQuestionIndex < QUESTIONS.length 
-          ? finalAnswers 
+        const answersToSend = currentQuestionIndex < QUESTIONS.length
+          ? finalAnswers
           : answersRef.current;
-        
+
         try {
           await submitAnswers(answersToSend);
         } catch (error) {
           console.error("❌ [ENVÍO] Error en el proceso:", error);
         }
-        
+
         timeoutRef.current = null;
       }, 500);
-      
+
       // Cleanup function para cancelar el timeout si el componente se desmonta
       return () => {
         if (timeoutRef.current) {
@@ -406,6 +413,12 @@ export default function Home() {
       newAnswers[currentQuestionIndex] = currentAnswer;
     }
     setAnswers(newAnswers);
+
+    // Otorgar tokens por la respuesta (excepto si son países o presupuestos simples, ahí damos base)
+    // Para países/radio buttons, la longitud es corta o fija, así que el algorimo se adapta solo.
+    // Solo otorgamos tokens si estamos AVANZANDO a una pregunta nueva no respondida previamente (o si editamos).
+    // Simplificación: Siempre premiamos el esfuerzo de "Dar Siguiente".
+    updateTokens(currentAnswer);
 
     // Calcular siguiente índice considerando lógica condicional
     const nextIndex = getNextQuestionIndex(currentQuestionIndex, currentAnswer);
@@ -503,17 +516,65 @@ export default function Home() {
     return isExiting || currentAnswer.trim() === "" || nameError !== "";
   }, [mounted, isExiting, currentAnswer, currentQuestionIndex, selectedCountries, nameError]);
 
+  // Función para calcular recompensa basada en la calidad de la respuesta
+  const calculateReward = (answer: string): number => {
+    // Recompensa base
+    const BASE_REWARD = 10;
+
+    // Bonus por longitud (1 token por cada 5 caracteres, max 50)
+    const lengthBonus = Math.min(Math.floor(answer.length / 5), 50);
+
+    // Bonus por palabras clave (calidad simple)
+    // Detectar si usa palabras conectores o explicativas
+    const complexWords = ["porque", "para", "mediante", "actualmente", "proyecto", "objetivo"];
+    const qualityBonus = complexWords.some(w => answer.toLowerCase().includes(w)) ? 10 : 0;
+
+    return BASE_REWARD + lengthBonus + qualityBonus;
+  };
+
+  const updateTokens = (answer: string) => {
+    // Calcular recompensa actual basada en la respuesta
+    const currentReward = calculateReward(answer);
+
+    // Obtener recompensa previa otorgada para esta pregunta (si existe, sino 0)
+    const previousReward = awardedTokens[currentQuestionIndex] || 0;
+
+    // Calcular la DIFERENCIA
+    // Ej: Antes di 10, ahora es mejor y doy 15. Diff = +5.
+    // Ej: Antes di 20, ahora acortaron y doy 10. Diff = -10.
+    const difference = currentReward - previousReward;
+
+    // Solo actualizar si hay diferencia (para evitar rerenders o animaciones innecesarias con 0)
+    if (difference !== 0) {
+      setTokenBalance(prev => prev + difference);
+      setLastAddedTokens(difference); // Esto activará la animación (+5 o -5)
+
+      // Actualizar el registro para esta pregunta
+      setAwardedTokens(prev => ({
+        ...prev,
+        [currentQuestionIndex]: currentReward
+      }));
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
+      {/* Sistema de Tokens (Billetera) */}
+      <TokenWallet
+        balance={tokenBalance}
+        addedAmount={lastAddedTokens}
+        onAnimationComplete={() => setLastAddedTokens(0)}
+      />
+
       {/* Loader de carga cuando se está enviando el formulario */}
       {isSubmitting && <HexagonLoader />}
-      
+
       {/* Gradiente animado de fondo */}
       <div className="absolute inset-0 animated-gradient" />
       {/* Fondo de halftone animado */}
-      <AnimatedHalftoneBackground 
-        isDark={true} 
-        fullScreen={true} 
+      <AnimatedHalftoneBackground
+        isDark={true}
+        fullScreen={true}
         intensity={0.6}
         brightness={0.8}
         className="z-0"
@@ -522,18 +583,17 @@ export default function Home() {
         <Navbar />
         {!isCompleted && (
           <div className="pt-2 pb-1 sm:pt-3 sm:pb-2 md:pt-4 md:pb-2 lg:pt-5 lg:pb-3">
-            <ProgressBar
+            <FocusedProgressBar
               totalSteps={totalSteps}
               currentStep={currentStep}
               completedSteps={completedSteps}
-              viewingStep={currentStep}
             />
           </div>
         )}
 
         {/* Contenedor de pregunta y respuesta - centrado verticalmente */}
         <div className="flex-1 flex items-center justify-center py-2 sm:py-4 md:py-8">
-        {/* <HexagonLoader /> */}
+          {/* <HexagonLoader /> */}
           <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
             {isCompleted && !isSubmitting ? (
               /* Mensaje según el status de la respuesta - solo se muestra cuando el loader se oculta */
@@ -547,7 +607,7 @@ export default function Home() {
                       isGoingBack={false}
                       isFirstQuestion={false}
                       animationsEnabled={animationsEnabled}
-                      onAnimationComplete={() => {}}
+                      onAnimationComplete={() => { }}
                     />
                   ) : submissionStatus === "next" ? (
                     /* Mensaje para next con enlaces a documentación */
@@ -558,7 +618,7 @@ export default function Home() {
                         isGoingBack={false}
                         isFirstQuestion={false}
                         animationsEnabled={animationsEnabled}
-                        onAnimationComplete={() => {}}
+                        onAnimationComplete={() => { }}
                       />
                       <div className="mt-4 sm:mt-6 md:mt-8">
                         <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 font-medium">
@@ -597,7 +657,7 @@ export default function Home() {
                       isGoingBack={false}
                       isFirstQuestion={false}
                       animationsEnabled={animationsEnabled}
-                      onAnimationComplete={() => {}}
+                      onAnimationComplete={() => { }}
                     />
                   )}
                 </>
@@ -628,11 +688,10 @@ export default function Home() {
                         {COUNTRY_OPTIONS.map((country) => (
                           <label
                             key={country}
-                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                              selectedCountries.includes(country)
-                                ? 'bg-purple-500/20 border-purple-500 text-white'
-                                : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
-                            } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${selectedCountries.includes(country)
+                              ? 'bg-purple-500/20 border-purple-500 text-white'
+                              : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
+                              } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <input
                               type="checkbox"
@@ -663,11 +722,10 @@ export default function Home() {
                         {['Sí', 'No'].map((option) => (
                           <label
                             key={option}
-                            className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                              currentAnswer === option
-                                ? 'bg-purple-500/20 border-purple-500 text-white'
-                                : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
-                            } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 ${currentAnswer === option
+                              ? 'bg-purple-500/20 border-purple-500 text-white'
+                              : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10'
+                              } ${isExiting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <input
                               type="radio"
@@ -726,7 +784,7 @@ export default function Home() {
                       <span className="hidden sm:inline">Anterior</span>
                     </button>
                   )}
-                  
+
                   {/* Botón para avanzar */}
                   <button
                     onClick={handleNext}
@@ -747,7 +805,7 @@ export default function Home() {
             )}
           </div>
         </div>
-       
+
       </div>
 
       {/* Pestaña de notificación cuando el status es "next" - solo se muestra cuando el loader se oculta */}
