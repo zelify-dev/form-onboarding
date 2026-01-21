@@ -169,7 +169,7 @@ export default function AnimatedHalftoneBackground({
           fullScreen ? "" : "rounded-3xl"
         }`}
         style={{
-          background: `radial-gradient(circle at center, rgba(0,0,0,0) 60%, ${fadeColor} 100%)`,
+          background: `radial-gradient(circle at center, rgba(130, 37, 37, 0) 60%, ${fadeColor} 100%)`,
         }}
       />
       {children}

@@ -1,11 +1,13 @@
 import Image from "next/image";
 
+import iconAlaiza from "../assets/icons/iconAlaiza.svg";
+
 export default function Navbar() {
   return (
     <nav className="flex justify-between items-center bg-transparent w-full">
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 pt-3 pl-3 sm:pt-4 sm:pl-4 md:pt-6 md:pl-6 lg:pt-8 lg:pl-8 xl:pt-10 xl:pl-10">
         <Image
-          src="/iconAlaiza.svg"
+          src={iconAlaiza}
           alt="Alaiza AI Logo"
           width={32}
           height={32}

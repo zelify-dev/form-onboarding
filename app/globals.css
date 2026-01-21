@@ -58,3 +58,63 @@ body {
 .animate-slide-up {
   animation: slideUp 0.5s ease-out forwards;
 }
+
+/* Border Beam Effect */
+.border-beam-container {
+  position: relative;
+  overflow: hidden; /* Ensure beam stays inside */
+}
+
+.border-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: inset 0 0 0 2px transparent; /* Placeholder */
+}
+
+.group:hover .border-beam::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  /* Simulate beam moving around border using conic gradient + masking or simpler rotating border */
+  /* Implementing simpler 'rotating border' approach compatible with random shapes is hard in generic CSS without SVG/offset-path. 
+     A simpler visually similar effect: rotating conic gradient behind the border area. */
+     
+  background: conic-gradient(from var(--angle, 0deg), transparent 70%, rgba(168, 85, 247, 1) 100%);
+  animation: rotate 4s linear infinite;
+  
+  /* Mask to only show border */
+  -webkit-mask: 
+     linear-gradient(#fff 0 0) content-box, 
+     linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude; 
+  padding: 2px; /* width of beam */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.group:hover .border-beam::after {
+  opacity: 1;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
