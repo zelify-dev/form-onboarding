@@ -11,6 +11,8 @@ import AnimationToggle from "./AnimationToggle";
 import TokenWallet from "./TokenWallet";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
+import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
+import { supabase } from "../lib/supabase";
 
 type OnboardingFormProps = {
   config: FormConfig;
@@ -111,25 +113,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const isBudgetQuestion = (index: number) =>
     budgetQuestionIndex >= 0 && index === budgetQuestionIndex;
 
-  const loadAnswersFromStorage = (): string[] => {
-    if (typeof window === "undefined") return Array(questions.length).fill("");
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const loadedAnswers = Array(questions.length).fill("");
-        parsed.forEach((answer: string, index: number) => {
-          if (index < questions.length) {
-            loadedAnswers[index] = answer;
-          }
-        });
-        return loadedAnswers;
-      }
-    } catch (error) {
-      console.error("Error al cargar respuestas desde localStorage:", error);
-    }
-    return Array(questions.length).fill("");
-  };
+  // No longer loading from localStorage on init
+  const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(""));
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
@@ -141,7 +126,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const [tokenBalance, setTokenBalance] = useState(100);
   const [lastAddedTokens, setLastAddedTokens] = useState(0);
   const [awardedTokens, setAwardedTokens] = useState<Record<number, number>>({});
-  const [answers, setAnswers] = useState<string[]>(loadAnswersFromStorage);
+
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
   // Estado genérico para manejar selecciones de preguntas select
   const [selectSelections, setSelectSelections] = useState<Record<number, string[]>>(() => {
@@ -183,20 +168,28 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Detectar si es formulario técnico
+  const isTechnicalForm = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('onboarding_role') === 'technical';
+  }, []);
+
+  // Detectar si es formulario comercial
+  const isCommercialForm = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('onboarding_role') === 'commercial';
+  }, []);
+
+  // Estado para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(answers));
-      } catch (error) {
-        console.error("Error al guardar respuestas en localStorage:", error);
-      }
-    }
-  }, [answers, storageKey]);
+
 
   useEffect(() => {
     if (isCountryQuestion(currentQuestionIndex)) {
@@ -495,7 +488,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           timestamp: data.submittedAt,
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+        // Para formulario técnico, no esperar tiempo de procesamiento
+        if (!isTechnicalForm) {
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+        }
+        
         const response = {
           ok: true,
           json: async () => ({ status: "next" }),
@@ -510,20 +507,14 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           }
         }
 
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.removeItem(storageKey);
-          } catch (error) {
-            console.error("Error al limpiar localStorage:", error);
-          }
-        }
+
       } catch (error) {
         console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [questions, storageKey],
+    [questions, storageKey, isTechnicalForm],
   );
 
   useEffect(() => {
@@ -541,20 +532,31 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         clearTimeout(timeoutRef.current);
       }
 
+      // Para formulario técnico, establecer estado inmediatamente sin delay
+      if (isTechnicalForm) {
+        setSubmissionStatus("next");
+        setShowStatusTab(true);
+        setIsSubmitting(false);
+        return;
+      }
+
       timeoutRef.current = setTimeout(async () => {
         const answersToSend = currentQuestionIndex < questions.length ? finalAnswers : answersRef.current;
 
         try {
           await submitAnswers(answersToSend);
 
-          const savedAnswer = answersToSend[servicesQuestionIndex] || "";
-          const services = savedAnswer ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s) : [];
-          const institutionName = answersToSend[2] || "";
+          // Solo generar PDF si NO es formulario técnico
+          if (!isTechnicalForm) {
+            const savedAnswer = answersToSend[servicesQuestionIndex] || "";
+            const services = savedAnswer ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s) : [];
+            const institutionName = answersToSend[2] || "";
 
-          if (services.length > 0) {
-            generatePDFInBackground(services, institutionName).catch((err) => {
-              console.error("Error al generar PDF en segundo plano:", err);
-            });
+            if (services.length > 0) {
+              generatePDFInBackground(services, institutionName).catch((err) => {
+                console.error("Error al generar PDF en segundo plano:", err);
+              });
+            }
           }
         } catch (error) {
           console.error("❌ [ENVÍO] Error en el proceso:", error);
@@ -579,7 +581,70 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     generatePDFInBackground,
     questions.length,
     servicesQuestionIndex,
+    isTechnicalForm,
   ]);
+
+
+  // Sync with Supabase on answer change
+  useEffect(() => {
+    const companyId = localStorage.getItem("onboarding_company_id");
+    const role = localStorage.getItem("onboarding_role");
+
+    if (companyId && role && answers.some(a => a !== "")) {
+      const handler = setTimeout(async () => {
+        try {
+          await supabase
+            .from('form_submissions')
+            .upsert(
+              {
+                company_id: companyId,
+                role: role,
+                answers: JSON.stringify(answers),
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: 'company_id, role' }
+            );
+        } catch (err) {
+          console.error("Error syncing to Supabase:", err);
+        }
+      }, 1000); // Debounce saves
+
+      return () => clearTimeout(handler);
+    }
+  }, [answers]);
+
+  // Load from Supabase on mount
+  useEffect(() => {
+    const fetchSupabaseData = async () => {
+      const companyId = localStorage.getItem("onboarding_company_id");
+      const role = localStorage.getItem("onboarding_role");
+
+      if (companyId && role) {
+        const { data, error } = await supabase
+          .from('form_submissions')
+          .select('answers')
+          .eq('company_id', companyId)
+          .eq('role', role)
+          .single();
+
+        if (data && data.answers) {
+          try {
+            // Handle if answers is string (JSON) or object (JSONB auto-parsed)
+            const parsed = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers;
+            // Verify it's an array
+            if (Array.isArray(parsed)) {
+              setAnswers(parsed);
+              if (parsed[0]) setCurrentAnswer(parsed[0]);
+            }
+          } catch (e) {
+            console.error("Error parsing Supabase answers", e);
+          }
+        }
+      }
+    };
+
+    fetchSupabaseData();
+  }, []);
 
   const totalSteps = questions.length;
   const currentStep = currentQuestionIndex + 1;
@@ -626,7 +691,13 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
     if (nextIndex >= questions.length) {
       setIsCompleted(true);
-      setIsExiting(true);
+      // Para formulario técnico, no usar animaciones
+      if (isTechnicalForm) {
+        setIsExiting(false);
+        setShowQuestion(true);
+      } else {
+        setIsExiting(true);
+      }
       setIsGoingBack(false);
     } else {
       setIsGoingBack(false);
@@ -712,6 +783,223 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     return isExiting || currentAnswer.trim() === "" || nameError !== "";
   }, [mounted, isExiting, currentAnswer, currentQuestionIndex, selectedCountries, selectedServices, nameError, selectSelections]);
 
+  // Verificar si es la última pregunta
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+  // Función para verificar si ambos formularios están completos
+  const checkBothFormsComplete = async (): Promise<{ bothComplete: boolean; missingForms: string[] }> => {
+    const companyId = localStorage.getItem("onboarding_company_id");
+    if (!companyId) {
+      console.log("❌ [VALIDACIÓN] No hay company_id");
+      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
+    }
+
+    try {
+      // Obtener ambos formularios
+      const { data: submissions, error } = await supabase
+        .from('form_submissions')
+        .select('role, answers')
+        .eq('company_id', companyId)
+        .in('role', ['commercial', 'technical']);
+
+      if (error) {
+        console.error("❌ [VALIDACIÓN] Error checking forms:", error);
+        return { bothComplete: false, missingForms: ['commercial', 'technical'] };
+      }
+
+      console.log("📋 [VALIDACIÓN] Submissions encontradas:", submissions?.length || 0);
+
+      const commercialSubmission = submissions?.find(s => s.role === 'commercial');
+      const technicalSubmission = submissions?.find(s => s.role === 'technical');
+
+      const missingForms: string[] = [];
+      
+      // Verificar formulario comercial - usar la longitud real del array de preguntas del formulario comercial
+      const expectedCommercialQuestions = COMERCIAL_FORM.questions.length;
+      
+      if (!commercialSubmission || !commercialSubmission.answers) {
+        console.log("❌ [VALIDACIÓN] Formulario comercial no existe o no tiene respuestas");
+        missingForms.push('commercial');
+      } else {
+        let commercialAnswers: string[] = [];
+        try {
+          commercialAnswers = typeof commercialSubmission.answers === 'string' 
+            ? JSON.parse(commercialSubmission.answers) 
+            : commercialSubmission.answers;
+          
+          if (!Array.isArray(commercialAnswers)) {
+            console.log("❌ [VALIDACIÓN] Respuestas comerciales no son un array:", commercialAnswers);
+            missingForms.push('commercial');
+          } else {
+            const answerCount = commercialAnswers.length;
+            // Verificar que todas las preguntas hasta el número esperado tengan respuestas no vacías
+            const filledAnswers = commercialAnswers
+              .slice(0, expectedCommercialQuestions)
+              .filter((a: any) => {
+                if (a === null || a === undefined) return false;
+                const str = String(a).trim();
+                return str !== '' && str !== 'null' && str !== 'undefined';
+              }).length;
+            
+            console.log(`📊 [VALIDACIÓN] Comercial: ${filledAnswers}/${expectedCommercialQuestions} preguntas respondidas (total en array: ${answerCount})`);
+            console.log(`📊 [VALIDACIÓN] Respuestas comerciales:`, commercialAnswers.slice(0, 5), '...');
+            
+            // Verificar que tenga al menos el número esperado de respuestas y que todas estén llenas
+            const commercialComplete = answerCount >= expectedCommercialQuestions &&
+              filledAnswers === expectedCommercialQuestions;
+            
+            if (!commercialComplete) {
+              console.log(`❌ [VALIDACIÓN] Formulario comercial incompleto: ${filledAnswers}/${expectedCommercialQuestions} (array length: ${answerCount})`);
+              // Mostrar qué preguntas están vacías
+              const emptyIndices: number[] = [];
+              for (let i = 0; i < expectedCommercialQuestions; i++) {
+                const answer = commercialAnswers[i];
+                if (!answer || String(answer).trim() === '' || String(answer).trim() === 'null' || String(answer).trim() === 'undefined') {
+                  emptyIndices.push(i + 1);
+                }
+              }
+              if (emptyIndices.length > 0) {
+                console.log(`❌ [VALIDACIÓN] Preguntas vacías en comercial:`, emptyIndices.slice(0, 10));
+              }
+              missingForms.push('commercial');
+            } else {
+              console.log("✅ [VALIDACIÓN] Formulario comercial completo");
+            }
+          }
+        } catch (parseError) {
+          console.error("❌ [VALIDACIÓN] Error parseando respuestas comerciales:", parseError);
+          missingForms.push('commercial');
+        }
+      }
+
+      // Verificar formulario técnico - necesitamos obtener el número correcto de preguntas
+      // Para el técnico, usamos 13 como está definido en TECH_QUESTIONS
+      const expectedTechnicalQuestions = 13;
+      
+      if (!technicalSubmission || !technicalSubmission.answers) {
+        console.log("❌ [VALIDACIÓN] Formulario técnico no existe o no tiene respuestas");
+        missingForms.push('technical');
+      } else {
+        let technicalAnswers: string[] = [];
+        try {
+          technicalAnswers = typeof technicalSubmission.answers === 'string' 
+            ? JSON.parse(technicalSubmission.answers) 
+            : technicalSubmission.answers;
+          
+          if (!Array.isArray(technicalAnswers)) {
+            console.log("❌ [VALIDACIÓN] Respuestas técnicas no son un array:", technicalAnswers);
+            missingForms.push('technical');
+          } else {
+            const answerCount = technicalAnswers.length;
+            const filledAnswers = technicalAnswers
+              .slice(0, expectedTechnicalQuestions)
+              .filter((a: any) => {
+                if (a === null || a === undefined) return false;
+                const str = String(a).trim();
+                return str !== '' && str !== 'null' && str !== 'undefined';
+              }).length;
+            
+            console.log(`📊 [VALIDACIÓN] Técnico: ${filledAnswers}/${expectedTechnicalQuestions} preguntas respondidas (total en array: ${answerCount})`);
+            
+            const technicalComplete = answerCount >= expectedTechnicalQuestions &&
+              filledAnswers === expectedTechnicalQuestions;
+            
+            if (!technicalComplete) {
+              console.log(`❌ [VALIDACIÓN] Formulario técnico incompleto: ${filledAnswers}/${expectedTechnicalQuestions} (array length: ${answerCount})`);
+              missingForms.push('technical');
+            } else {
+              console.log("✅ [VALIDACIÓN] Formulario técnico completo");
+            }
+          }
+        } catch (parseError) {
+          console.error("❌ [VALIDACIÓN] Error parseando respuestas técnicas:", parseError);
+          missingForms.push('technical');
+        }
+      }
+
+      console.log(`📋 [VALIDACIÓN] Resultado final: ${missingForms.length === 0 ? '✅ Ambos completos' : '❌ Faltan: ' + missingForms.join(', ')}`);
+
+      return {
+        bothComplete: missingForms.length === 0,
+        missingForms
+      };
+    } catch (error) {
+      console.error("❌ [VALIDACIÓN] Error checking forms:", error);
+      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
+    }
+  };
+
+  // Función para manejar el clic en Finalizar
+  const handleFinalize = async () => {
+    // Guardar la respuesta actual antes de verificar
+    const newAnswers = [...answers];
+    if (isCountryQuestion(currentQuestionIndex)) {
+      newAnswers[currentQuestionIndex] = selectedCountries.join(", ");
+    } else if (isServicesQuestion(currentQuestionIndex)) {
+      newAnswers[currentQuestionIndex] = selectedServices.join(", ");
+    } else if (isSelectQuestion(currentQuestionIndex)) {
+      const selections = selectSelections[currentQuestionIndex] || [];
+      newAnswers[currentQuestionIndex] = selections.join(", ");
+    } else {
+      newAnswers[currentQuestionIndex] = currentAnswer;
+    }
+    setAnswers(newAnswers);
+    answersRef.current = newAnswers;
+
+    // Guardar en Supabase antes de verificar
+    const companyId = localStorage.getItem("onboarding_company_id");
+    const role = localStorage.getItem("onboarding_role");
+    if (companyId && role) {
+      try {
+        await supabase
+          .from('form_submissions')
+          .upsert(
+            {
+              company_id: companyId,
+              role: role,
+              answers: JSON.stringify(newAnswers),
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'company_id, role' }
+          );
+      } catch (err) {
+        console.error("Error saving to Supabase:", err);
+      }
+    }
+
+    // Esperar un momento para asegurar que el guardado se complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Verificar si ambos formularios están completos
+    const { bothComplete, missingForms } = await checkBothFormsComplete();
+
+    if (!bothComplete) {
+      // Mostrar mensaje de error más claro y específico
+      let errorMessage = "";
+      if (missingForms.length === 2) {
+        errorMessage = "Faltan preguntas por responder en el perfil comercial y en el perfil técnico. Por favor, completa todas las preguntas de ambos formularios antes de finalizar.";
+      } else if (missingForms.includes('commercial')) {
+        errorMessage = "Faltan preguntas por responder en el perfil comercial. Por favor, completa todas las preguntas del formulario comercial antes de finalizar.";
+      } else if (missingForms.includes('technical')) {
+        errorMessage = "Faltan preguntas por responder en el perfil técnico. Por favor, completa todas las preguntas del formulario técnico antes de finalizar.";
+      }
+      console.log("⚠️ [FINALIZAR] Mensaje de error:", errorMessage);
+      console.log("⚠️ [FINALIZAR] Formularios faltantes:", missingForms);
+      setValidationMessage(errorMessage);
+      return;
+    }
+
+    // Si ambos están completos, proceder con la finalización
+    setValidationMessage(null);
+    setShowConfirmModal(false);
+    setIsCompleted(true);
+    setIsExiting(false);
+    setShowQuestion(true);
+    
+    // Activar el submit para mostrar la pantalla de agradecimiento
+    hasSubmittedRef.current = false;
+  };
+
   const calculateReward = (answer: string): number => {
     const BASE_REWARD = 10;
     const lengthBonus = Math.min(Math.floor(answer.length / 5), 50);
@@ -741,7 +1029,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
       <TokenWallet balance={tokenBalance} addedAmount={lastAddedTokens} onAnimationComplete={() => setLastAddedTokens(0)} />
 
-      {isSubmitting && <HexagonLoader />}
+      {isSubmitting && !isTechnicalForm && <HexagonLoader />}
 
       <div className="absolute inset-0 animated-gradient" />
       <AnimatedHalftoneBackground isDark={true} fullScreen={true} intensity={0.6} brightness={0.8} className="z-0" />
@@ -753,8 +1041,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           </div>
         )}
 
-        <div className="flex-1 flex items-center justify-center py-2 sm:py-4 md:py-8">
-          <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+        <div className="flex-1 flex items-start justify-center py-2 sm:py-4 md:py-8 overflow-y-auto">
+          <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl pb-24 sm:pb-28 md:pb-32">
             {isCompleted && !isSubmitting ? (
               showQuestion && (
                 <>
@@ -767,94 +1055,132 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                       animationsEnabled={animationsEnabled}
                       onAnimationComplete={() => { }}
                     />
-                  ) : submissionStatus === "next" ? (
-                    <div className="flex flex-col gap-6 sm:gap-8 md:gap-10">
-                      <AnimatedQuestion
-                        question={THANK_YOU_MESSAGE}
-                        isExiting={false}
-                        isGoingBack={false}
-                        isFirstQuestion={false}
-                        animationsEnabled={animationsEnabled}
-                        onAnimationComplete={() => { }}
-                      />
-                      <div className="mt-4 sm:mt-6 md:mt-8">
-                        <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 font-medium">
-                          Mientras tanto, te invitamos a visitar nuestro sitio de documentación para conocer más sobre nuestros
-                          servicios:
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5">
-                          <a
-                            href={DOCS_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-purple-500 hover:bg-purple-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
-                          >
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                              />
-                            </svg>
-                            Visitar Documentación
-                          </a>
-                          <button
-                            onClick={generateCombinedPDF}
-                            disabled={
-                              isGeneratingPDF ||
-                              (() => {
-                                const savedAnswer = answers[servicesQuestionIndex] || "";
-                                const services = savedAnswer
-                                  ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s)
-                                  : selectedServices;
-                                return services.filter((service) => SERVICE_PDF_MAP[service]).length === 0;
-                              })()
-                            }
-                            className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70"
-                            title={
-                              preGeneratedPDF
-                                ? "PDF listo para descargar (pre-generado)"
-                                : isGeneratingPDF
-                                  ? "Generando PDF..."
-                                  : undefined
-                            }
-                          >
-                            {preGeneratedPDF ? (
-                              <>
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                Generar Propuesta (Listo)
-                              </>
-                            ) : (
-                              <>
-                                <svg className="animate-spin w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  />
-                                </svg>
-                                {isGeneratingPDF ? "Generando..." : "Generar Propuesta"}
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
+                  ) : submissionStatus === "next" && showStatusTab ? (
+                    <div className="w-full">
+                      {(() => {
+                        const role = typeof window !== 'undefined' ? localStorage.getItem('onboarding_role') : null;
+                        const isTechnical = role === 'technical';
+
+                        if (isTechnical) {
+                          return (
+                            <div className="w-full">
+                              <h2 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 text-center">
+                                ¡Muchas gracias por completar el cuestionario técnico!
+                              </h2>
+                              <div className="flex flex-col sm:flex-row gap-4 w-full mt-8">
+                                <button
+                                  onClick={() => {
+                                    setIsCompleted(false);
+                                    setCurrentQuestionIndex(0);
+                                    setShowQuestion(true);
+                                    setIsExiting(false);
+                                    setSubmissionStatus(null);
+                                    setShowStatusTab(false);
+                                    hasSubmittedRef.current = false;
+                                  }}
+                                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-4 px-6 rounded-xl font-medium transition-all duration-300"
+                                >
+                                  Volver a la pregunta 1
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    localStorage.removeItem("onboarding_role");
+                                    localStorage.removeItem("onboarding_company_id");
+                                    window.location.href = "/";
+                                  }}
+                                  className="flex-1 bg-red-500/80 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all duration-300"
+                                >
+                                  Salir
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <AnimatedQuestion
+                              question={THANK_YOU_MESSAGE}
+                              isExiting={false}
+                              isGoingBack={false}
+                              isFirstQuestion={false}
+                              animationsEnabled={animationsEnabled}
+                              onAnimationComplete={() => { }}
+                            />
+                            <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 mt-8">
+                              <div className="mt-4 sm:mt-6 md:mt-8">
+                                <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 font-medium">
+                                  Mientras tanto, te invitamos a visitar nuestro sitio de documentación para conocer más sobre nuestros
+                                  servicios:
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5">
+                                  <a
+                                    href={DOCS_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-purple-500 hover:bg-purple-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+                                  >
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                      />
+                                    </svg>
+                                    Visitar Documentación
+                                  </a>
+                                  <button
+                                    onClick={generateCombinedPDF}
+                                    disabled={
+                                      isGeneratingPDF ||
+                                      (() => {
+                                        const savedAnswer = answers[servicesQuestionIndex] || "";
+                                        const services = savedAnswer
+                                          ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s)
+                                          : selectedServices;
+                                        return services.filter((service) => SERVICE_PDF_MAP[service]).length === 0;
+                                      })()
+                                    }
+                                    className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70"
+                                    title={
+                                      preGeneratedPDF
+                                        ? "PDF listo para descargar (pre-generado)"
+                                        : isGeneratingPDF
+                                          ? "Generando PDF..."
+                                          : undefined
+                                    }
+                                  >
+                                    {preGeneratedPDF ? (
+                                      <>
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Generar Propuesta (Listo)
+                                      </>
+                                    ) : (
+                                      <>
+                                        {isGeneratingPDF ? (
+                                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                          </svg>
+                                        )}
+                                        Generar Propuesta
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
-                  ) : (
-                    <AnimatedQuestion
-                      question={THANK_YOU_MESSAGE}
-                      isExiting={false}
-                      isGoingBack={false}
-                      isFirstQuestion={false}
-                      animationsEnabled={animationsEnabled}
-                      onAnimationComplete={() => { }}
-                    />
-                  )}
+                  ) : null}
                 </>
+
               )
             ) : (
               <>
@@ -968,20 +1294,23 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                               {selectConfig.multiple ? "Selecciona una o varias opciones" : "Selecciona una opción"}
                             </p>
                             <div
-                              className={
-                                hasDescriptions
-                                  ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5"
-                                  : selectConfig.multiple
-                                    ? "grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
-                                    : "flex flex-col sm:flex-row gap-4 sm:gap-6"
-                              }
+                              className={`overflow-y-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] pr-2 -mr-2 ${hasDescriptions
+                                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 md:gap-3.5"
+                                : selectConfig.multiple
+                                  ? "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"
+                                  : "flex flex-col sm:flex-row gap-3 sm:gap-4"
+                              }`}
+                              style={{
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: 'rgba(168, 85, 247, 0.5) transparent'
+                              }}
                             >
                               {selectConfig.options.map((option) => {
                                 const isSelected = currentSelections.includes(option.label);
                                 return (
                                   <label
                                     key={option.label}
-                                    className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${isSelected
+                                    className={`flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${isSelected
                                       ? "bg-purple-500/20 border-purple-500 text-white"
                                       : "bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10"
                                       } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -993,16 +1322,16 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                       onChange={() => handleSelectToggle(currentQuestionIndex, option.label)}
                                       disabled={isExiting}
                                       className={`${selectConfig.multiple
-                                        ? "w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-purple-500 cursor-pointer mt-0.5 sm:mt-1 flex-shrink-0"
-                                        : "w-5 h-5 sm:w-6 sm:h-6 accent-purple-500 cursor-pointer"
+                                        ? "w-4 h-4 sm:w-4 sm:h-4 accent-purple-500 cursor-pointer mt-0.5 flex-shrink-0"
+                                        : "w-4 h-4 sm:w-5 sm:h-5 accent-purple-500 cursor-pointer"
                                         }`}
                                     />
-                                    <div className="flex flex-col gap-1">
-                                      <span className="text-sm sm:text-base md:text-lg font-medium select-none">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-xs sm:text-sm md:text-base font-medium select-none leading-tight">
                                         {option.label}
                                       </span>
                                       {option.description && (
-                                        <span className="text-xs sm:text-sm text-white/60 select-none leading-tight">
+                                        <span className="text-xs text-white/60 select-none leading-tight">
                                           {option.description}
                                         </span>
                                       )}
@@ -1053,27 +1382,38 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                     </button>
                   )}
 
-                  <button
-                    onClick={handleNext}
-                    disabled={isNextButtonDisabled}
-                    className={`flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? "ml-auto" : ""
-                      }`}
-                  >
-                    <Image
-                      src={iconAlaiza}
-                      alt="Alaiza AI Logo"
-                      width={20}
-                      height={20}
-                      className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
-                    />
-                    &gt;
-                  </button>
+                  {isCommercialForm && isLastQuestion ? (
+                    <button
+                      onClick={() => setShowConfirmModal(true)}
+                      disabled={isNextButtonDisabled}
+                      className={`flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? "ml-auto" : ""
+                        }`}
+                    >
+                      Finalizar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNext}
+                      disabled={isNextButtonDisabled}
+                      className={`flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-1 sm:py-1.5 md:py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 ${currentQuestionIndex === 0 ? "ml-auto" : ""
+                        }`}
+                    >
+                      <Image
+                        src={iconAlaiza}
+                        alt="Alaiza AI Logo"
+                        width={20}
+                        height={20}
+                        className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 brightness-0 invert"
+                      />
+                      &gt;
+                    </button>
+                  )}
                 </div>
               </>
             )}
-          </div>
-        </div>
-      </div>
+          </div >
+        </div >
+      </div >
 
       {showStatusTab && submissionStatus === "next" && !isSubmitting && (
         <div className="fixed bottom-0 right-0 z-50 animate-slide-up">
@@ -1108,6 +1448,62 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       )}
 
       {!isCompleted && <AnimationToggle onToggle={setAnimationsEnabled} />}
-    </div>
+
+      {/* Botón "Finalizar" fijo en la parte inferior solo para formulario comercial - visible en todas las preguntas */}
+      {!isCompleted && isCommercialForm && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent pt-4 pb-4 sm:pb-6 px-3 sm:px-6 md:px-8 lg:px-10">
+          <div className="max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto flex justify-center">
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              disabled={isNextButtonDisabled}
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 lg:px-12 py-3 sm:py-3.5 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+            >
+              Finalizar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para formulario comercial */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-white/20 rounded-2xl p-6 sm:p-8 md:p-10 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">
+              ¿Estás seguro de finalizar este cuestionario?
+            </h3>
+            <p className="text-white/80 text-base sm:text-lg mb-6 sm:mb-8 text-center">
+              Se va a generar una propuesta comercial en base a tus respuestas.
+            </p>
+            
+            {validationMessage && (
+              <div className="mb-4 sm:mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <p className="text-red-300 text-sm sm:text-base text-center leading-relaxed">
+                  {validationMessage}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button
+                onClick={handleFinalize}
+                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 disabled:bg-purple-500/50 disabled:cursor-not-allowed"
+                disabled={!!validationMessage}
+              >
+                Sí, estoy seguro
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setValidationMessage(null);
+                }}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div >
   );
 }

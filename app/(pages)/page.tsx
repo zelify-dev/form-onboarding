@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabase";
 import AnimatedHalftoneBackground from "../components/AnimatedHalftoneBackground";
 import Navbar from "../components/Navbar";
+import ContactForm from "../components/ContactForm";
+import { sendAccessRequestEmail } from "../lib/api";
 import { BriefcaseIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
-  const [view, setView] = useState<"selection" | "auth">("selection");
+  const [view, setView] = useState<"selection" | "auth" | "contact">("selection");
   const [selectedProfile, setSelectedProfile] = useState<"tech" | "commercial" | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -39,27 +42,66 @@ export default function Home() {
     // If we wanted to auto-route, we could do it here, but the request says "show code input".
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  // Import supabase client outside component or ensure it's imported at top
+  // But wait, I need to add the import first. I'll do this in a separate chunk or file update.
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const normalized = code.trim().toLowerCase();
+    setError("");
+    const normalized = code.trim(); // Codes are case sensitive in DB usually, but let's check. 
+    // My DB generation uses uppercase alphanumeric.
 
-    const routes: Record<string, string> = {
-      tech: "/tecnologico",
-      commercial: "/comercial",
-    };
-
-    // Optional: Validate that the code matches the selected profile relative to expected codes?
-    // For now, keep original logic which maps code directly to route.
-
-    const target = routes[normalized];
-
-    if (!target) {
-      setError("Codigo invalido. Intenta con uno valido.");
+    if (!normalized) {
+      setError("Por favor ingresa un código.");
       return;
     }
 
-    setError("");
-    router.push(target);
+    try {
+      const { data, error } = await supabase
+        .from('access_codes')
+        .select('role, company_id')
+        .eq('code', normalized)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        console.error("Error validating code:", error?.message || "Code not found");
+        setError("Código inválido o no encontrado.");
+        return;
+      }
+
+      // Valid code!
+      // Store company_id and role for the form to use
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("onboarding_company_id", data.company_id);
+        localStorage.setItem("onboarding_role", data.role);
+      }
+
+      // Check if the code role matches the selected profile?
+      // Optionally strict check:
+      // Map selectedProfile to database role for comparison
+      const normalizedProfile = selectedProfile === "tech" ? "technical" : "commercial";
+
+      if (data.role !== normalizedProfile) {
+        const requiredProfile = data.role === "technical" ? "Tecnológico" : "de Negocio";
+        const currentProfile = selectedProfile === "tech" ? "Tecnológico" : "de Negocio";
+        setError(`Verifica si el código es el correcto ó puede que estes en el perfil  incorrecto selecciona el acceso en el perfil adecuado para usar tu clave`);
+        return;
+      }
+      // Current logic seems to allow entering any code, but we should probably respect the code's role.
+      // Let's route based on the code's role, overriding the manual selection if needed, 
+      // OR just validate it matches.
+
+      let targetPath = "";
+      if (data.role === "technical") targetPath = "/tecnologico";
+      else if (data.role === "commercial") targetPath = "/comercial";
+
+      router.push(targetPath);
+
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("Ocurrió un error al verificar el código.");
+    }
   };
 
   const handleChange = (value: string) => {
@@ -153,7 +195,7 @@ export default function Home() {
                     </motion.button>
                   </div>
                 </div>
-              ) : (
+              ) : view === "auth" ? (
                 <motion.div
                   key="auth-container"
                   layoutId={`card-${selectedProfile}`}
@@ -194,17 +236,18 @@ export default function Home() {
                       <button
                         type="submit"
                         className="w-full rounded-2xl bg-purple-500 py-3 text-base sm:text-lg font-semibold text-white shadow-lg shadow-purple-500/40 transition hover:bg-purple-600"
-                      
+
                       >
                         Continuar
                       </button>
 
-                      <a
-                        href="mailto:soporte@alaiza.com?subject=Solicitud%20de%20C%C3%B3digo%20de%20Acceso"
-                        className="text-white/60 text-sm hover:text-white transition-colors text-center underline decoration-white/30 underline-offset-4 block mt-4 mb-2"
+                      <button
+                        type="button"
+                        onClick={() => setView("contact")}
+                        className="text-white/60 text-sm hover:text-white transition-colors text-center underline decoration-white/30 underline-offset-4 block mt-4 mb-2 w-full"
                       >
                         Solicitar código de acceso
-                      </a>
+                      </button>
 
                       <button
                         type="button"
@@ -214,6 +257,54 @@ export default function Home() {
                         ← Cambiar perfil
                       </button>
                     </form>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="contact-container"
+                  layoutId={`card-${selectedProfile}`}
+                  className="w-full max-w-md border p-8 shadow-2xl overflow-hidden relative z-20"
+                  style={commonCardStyle}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                    className="flex flex-col h-full"
+                  >
+                    <div className="flex flex-col gap-2 text-center mb-6">
+                      <h1 className="text-2xl sm:text-3xl font-semibold text-white">Solicitar Acceso</h1>
+                      <p className="text-white/60 text-sm">
+                        Envíanos tus datos y te contactaremos.
+                      </p>
+                    </div>
+
+                    <ContactForm
+                      onCancel={() => setView("auth")}
+                      onSubmit={async (data) => {
+                        console.log("🚀 INICIANDO ENVÍO DE CORREO...");
+                        console.log("Datos del formulario:", data);
+                        try {
+                          const response = await sendAccessRequestEmail(data);
+                          console.log("✅ RESPUESTA DEL API:", JSON.stringify(response, null, 2));
+
+                          if (response && (response.success || response.messageId)) {
+                            alert("¡Solicitud enviada con éxito! Te contactaremos pronto.");
+                            setView("auth");
+                          } else {
+                            console.warn("⚠️ RESPUESTA INESPERADA:", response);
+                            alert("Solicitud enviada, revisa la consola para ver la respuesta del servidor.");
+                            setView("auth");
+                          }
+
+                        } catch (err) {
+                          console.error("❌ ERROR CRÍTICO AL ENVIAR:", err);
+                          alert("Error de conexión. Revisa la consola.");
+                        }
+                      }}
+                    />
                   </motion.div>
                 </motion.div>
               )}

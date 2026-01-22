@@ -1,11 +1,28 @@
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 
-export default function Navbar() {
+export default function Navbar({ showExitButton = true }: { showExitButton?: boolean }) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear session
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("onboarding_company_id");
+      localStorage.removeItem("onboarding_role");
+      // Optional: Clear form answers if desired, but maybe user wants to resume later?
+      // For security "Exit", better to clear sensitive access.
+    }
+    router.push("/");
+  };
+
   return (
-    <nav className="flex justify-between items-center bg-transparent w-full">
-      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 pt-3 pl-3 sm:pt-4 sm:pl-4 md:pt-6 md:pl-6 lg:pt-8 lg:pl-8 xl:pt-10 xl:pl-10">
+    <nav className="flex justify-between items-center bg-transparent w-full pr-4 sm:pr-8 pt-3 sm:pt-4 md:pt-6 lg:pt-8 xl:pt-10">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 pl-3 sm:pl-4 md:pl-6 lg:pl-8 xl:pl-10">
         <Image
           src={iconAlaiza}
           alt="Alaiza AI Logo"
@@ -17,6 +34,16 @@ export default function Navbar() {
           Al<span className="text-purple-500">ai</span>za
         </span>
       </div>
+
+      {showExitButton && (
+        <button
+          onClick={handleLogout}
+          className="group p-2 rounded-full hover:bg-white/10 transition-colors"
+          title="Salir"
+        >
+          <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-white group-hover:text-red-500 transition-colors" />
+        </button>
+      )}
     </nav>
   );
 }
