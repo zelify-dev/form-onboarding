@@ -315,10 +315,13 @@ export async function generateProposal(
 ) {
     try {
         // Combinar preguntas comerciales y técnicas, evitando duplicados
+        // IMPORTANTE: Las preguntas comerciales tienen prioridad. Si una pregunta técnica
+        // tiene el mismo texto normalizado que una comercial, se omite la técnica y se usa
+        // el valor del comercial (ej: nombre, cargo, empresa, etc.)
         const allQuestions: Array<{ questionNumber: number; question: string; answer: string }> = [];
         const seenQuestions = new Set<string>();
 
-        // Primero agregar todas las preguntas comerciales
+        // Primero agregar todas las preguntas comerciales (tienen prioridad)
         commercialQuestions.forEach((question, index) => {
             const normalizedQuestion = question.trim().toLowerCase();
             if (!seenQuestions.has(normalizedQuestion)) {
@@ -332,6 +335,8 @@ export async function generateProposal(
         });
 
         // Luego agregar preguntas técnicas que no estén duplicadas
+        // Si una pregunta técnica es duplicada (ej: "1. Nombre y apellido"), se omite
+        // porque ya se agregó la versión comercial con prioridad
         if (technicalAnswers && technicalQuestions) {
             technicalQuestions.forEach((question, index) => {
                 const normalizedQuestion = question.trim().toLowerCase();
