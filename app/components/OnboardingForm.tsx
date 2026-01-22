@@ -1339,47 +1339,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                     </svg>
                                     Visitar Documentación
                                   </a>
-                                  <button
-                                    onClick={generateCombinedPDF}
-                                    disabled={
-                                      isGeneratingPDF ||
-                                      (() => {
-                                        const savedAnswer = answers[servicesQuestionIndex] || "";
-                                        const services = savedAnswer
-                                          ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s)
-                                          : selectedServices;
-                                        return services.filter((service) => SERVICE_PDF_MAP[service]).length === 0;
-                                      })()
-                                    }
-                                    className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70"
-                                    title={
-                                      preGeneratedPDF
-                                        ? "PDF listo para descargar (pre-generado)"
-                                        : isGeneratingPDF
-                                          ? "Generando PDF..."
-                                          : undefined
-                                    }
-                                  >
-                                    {preGeneratedPDF ? (
-                                      <>
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Generar Propuesta (Listo)
-                                      </>
-                                    ) : (
-                                      <>
-                                        {isGeneratingPDF ? (
-                                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                          </svg>
-                                        )}
-                                        Generar Propuesta
-                                      </>
-                                    )}
-                                  </button>
                                 </div>
                               </div>
                             </div>
