@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import AnimatedHalftoneBackground from "../components/AnimatedHalftoneBackground";
@@ -16,6 +16,23 @@ export default function Home() {
   const [selectedProfile, setSelectedProfile] = useState<"tech" | "commercial" | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+
+  // Verificar si el usuario ya está autenticado y redirigir automáticamente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const companyId = localStorage.getItem("onboarding_company_id");
+      const userRole = localStorage.getItem("onboarding_role");
+
+      // Si hay sesión activa, redirigir al formulario correspondiente
+      if (companyId && userRole) {
+        if (userRole === "commercial") {
+          router.replace("/comercial");
+        } else if (userRole === "technical") {
+          router.replace("/tecnologico");
+        }
+      }
+    }
+  }, [router]);
 
   // Variables numéricas para controlar el estilo de la tarjeta (Card Style Specs)
   const cardSpecs = {
