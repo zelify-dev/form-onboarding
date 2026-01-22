@@ -13,6 +13,7 @@ import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
 import { supabase } from "../lib/supabase";
+import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from "../lib/api";
 
 type OnboardingFormProps = {
   config: FormConfig;
@@ -67,7 +68,7 @@ const THANK_YOU_MESSAGE =
   "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
 
 const DECLINE_MESSAGE =
-  "Muchas gracias por tus respuestas. Estaremos revisando la información proporcionada, nos pondremos en contacto.";
+  "Gracias por tus respuestas. Evaluaremos tus preguntas y nos pondremos en contacto contigo lo más pronto posible.";
 
 const DOCS_URL = "https://docs.zelify.com";
 
@@ -989,15 +990,90 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       return;
     }
 
-    // Si ambos están completos, proceder con la finalización
+    // Si ambos están completos, proceder con el flujo final
     setValidationMessage(null);
     setShowConfirmModal(false);
-    setIsCompleted(true);
-    setIsExiting(false);
-    setShowQuestion(true);
     
-    // Activar el submit para mostrar la pantalla de agradecimiento
-    hasSubmittedRef.current = false;
+    // Mostrar estado de carga
+    setIsSubmitting(true);
+    
+    try {
+      // 1. Evaluar perfil comercial
+      console.log("📤 [FINALIZAR] Evaluando perfil comercial...");
+      const evaluationResult = await evaluateBusinessProfile(newAnswers, questions);
+      
+      if (evaluationResult.status !== "next") {
+        console.log("ℹ️ [FINALIZAR] Perfil comercial evaluado, no procede con propuesta:", evaluationResult.status);
+        // Mostrar pantalla de agradecimiento simple
+        setSubmissionStatus("decline");
+        setIsCompleted(true);
+        setIsExiting(false);
+        setShowQuestion(true);
+        setIsSubmitting(false);
+        setShowConfirmModal(false);
+        return;
+      }
+      
+      // 2. Generar propuesta (PDF)
+      console.log("📄 [FINALIZAR] Generando propuesta comercial...");
+      const proposalResult = await generateProposal(newAnswers, questions);
+      
+      if (!proposalResult.pdfUrl) {
+        console.error("❌ [FINALIZAR] No se recibió URL del PDF");
+        setValidationMessage("Error al generar la propuesta. Por favor, intenta nuevamente.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log("✅ [FINALIZAR] PDF generado:", proposalResult.pdfUrl);
+      
+      // 3. Obtener información de la compañía y el nombre del formulario
+      const companyData = await supabase
+        .from('companies')
+        .select('contact_email, contact_name')
+        .eq('id', companyId)
+        .single();
+      
+      if (companyData.error || !companyData.data) {
+        console.error("❌ [FINALIZAR] Error obteniendo datos de la compañía:", companyData.error);
+        setValidationMessage("Error al obtener información de la compañía.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Obtener el nombre del formulario (primera pregunta)
+      const formName = newAnswers[0] || companyData.data.contact_name || "Cliente";
+      const recipientEmail = companyData.data.contact_email;
+      
+      if (!recipientEmail) {
+        console.error("❌ [FINALIZAR] No hay email de contacto en la compañía");
+        setValidationMessage("No se encontró un email de contacto para enviar la propuesta.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // 4. Enviar correo con la propuesta
+      console.log("📧 [FINALIZAR] Enviando correo con propuesta...");
+      await sendProposalEmail({
+        recipientEmail,
+        recipientName: formName,
+        pdfUrl: proposalResult.pdfUrl,
+      });
+      
+      console.log("✅ [FINALIZAR] Correo enviado exitosamente");
+      
+      // 5. Finalizar y mostrar pantalla de agradecimiento
+      setIsCompleted(true);
+      setIsExiting(false);
+      setShowQuestion(true);
+      setIsSubmitting(false);
+      hasSubmittedRef.current = false;
+      
+    } catch (error) {
+      console.error("❌ [FINALIZAR] Error en el flujo final:", error);
+      setValidationMessage("Ocurrió un error al procesar tu solicitud. Por favor, intenta nuevamente.");
+      setIsSubmitting(false);
+    }
   };
 
   const calculateReward = (answer: string): number => {
@@ -1047,14 +1123,23 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
               showQuestion && (
                 <>
                   {submissionStatus === "decline" ? (
-                    <AnimatedQuestion
-                      question={DECLINE_MESSAGE}
-                      isExiting={false}
-                      isGoingBack={false}
-                      isFirstQuestion={false}
-                      animationsEnabled={animationsEnabled}
-                      onAnimationComplete={() => { }}
-                    />
+                    <div className="w-full">
+                      <h2 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 text-center">
+                        {DECLINE_MESSAGE}
+                      </h2>
+                      <div className="flex justify-center mt-8">
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem("onboarding_role");
+                            localStorage.removeItem("onboarding_company_id");
+                            window.location.href = "/";
+                          }}
+                          className="bg-red-500/80 hover:bg-red-600 text-white py-4 px-8 rounded-xl font-medium transition-all duration-300"
+                        >
+                          Salir
+                        </button>
+                      </div>
+                    </div>
                   ) : submissionStatus === "next" ? (
                     <div className="w-full">
                       {(() => {
