@@ -123,22 +123,21 @@ const TECH_QUESTIONS = [
   "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
   "5. Productos o servicios financieros actuales",
   "6. ¿Tienen app móvil y qué servicios digitales prestan a través de la app?",
-  "7. Problema principal que desean resolver en la digitalización tecnológica de su institución financiera",
   "8. Problema principal que desean resolver en la digitalización tecnológica de su institución financiera",
   "9. Funcionalidades requeridas para el MVP\n\nPuede elegir varias opciones.",
   // Sección 2 (Técnico)
-  "1. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
-  "2. ¿Principales proveedores tecnológicos para servicios digitales?",
-  "3. ¿Utilizan webhooks o eventos en tiempo real?",
-  "4. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
-  "5. ¿Implementan doble factor de autenticación (2FA)?",
-  "6. ¿Recolectan información de dispositivo y geolocalización?",
-  "7. Describa el proceso actual de validación de identidad en caso de que aplique.",
-  "8. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
-  "9. ¿Manejan billetera móvil?",
-  "10. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
-  "12. ¿Emiten tarjetas?",
-  "13. ¿Quién te refirió con nosotros?",
+  "10. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
+  "11. ¿Principales proveedores tecnológicos para servicios digitales?",
+  "12. ¿Utilizan webhooks o eventos en tiempo real?",
+  "13. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
+  "14. ¿Implementan doble factor de autenticación (2FA)?",
+  "15. ¿Recolectan información de dispositivo y geolocalización?",
+  "16. Describa el proceso actual de validación de identidad en caso de que aplique.",
+  "17. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
+  "18. ¿Manejan billetera móvil?",
+  "19. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
+  "20. ¿Emiten tarjetas?",
+  "21. ¿Quién te refirió con nosotros?",
 ];
 
 const TECH_PLACEHOLDERS = [
@@ -162,11 +161,8 @@ const TECH_PLACEHOLDERS = [
   // 6. App móvil y servicios digitales
   "Ej: App móvil para consultas de saldo, transferencias y pagos",
 
-  // 7. Problema principal a resolver (1)
+  // 8. Problema principal a resolver
   "Ej: Reducir tiempos y fricción en el onboarding de clientes",
-
-  // 8. Problema principal a resolver (duplicada)
-  "Ej: Mejorar experiencia digital y eficiencia operativa",
 
   // 9. Funcionalidades requeridas para el MVP
   "Ej: Auth, Identity, AML y Transfers",
@@ -231,31 +227,31 @@ const COMERCIAL_QUESTIONS = [
   "11. ¿Tiene core bancario? Si es sí, ¿cuál es el core bancario actual y qué módulos tiene?",
 
   // Sección 5 — MVP
-  "13. Funcionalidades requeridas para el MVP",
+  "12. Funcionalidades requeridas para el MVP",
 
   // Sección 6 — Integraciones
-  "14. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
+  "13. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
 
   // Sección 7 — Pagos y tarjetas
-  "16. Tipos de transferencias interbancarias",
-  "17. ¿Emiten tarjetas (débito, crédito o prepago)?",
+  "14. Tipos de transferencias interbancarias",
+  "15. ¿Emiten tarjetas (débito, crédito o prepago)?",
 
   // Sección 8 — Métricas operativas
-  "18. TPV: Monto total transaccionado",
-  "19. TPN: Total de transacciones procesadas",
-  "20. TA: Número total de tarjetas activas",
-  "21. Número de depósitos al mes por cliente",
-  "22. Número de retiros al mes por cliente",
-  "23. Valor de retiro mensual por cliente",
-  "24. Valor de depósito mensual por cliente",
+  "16. TPV: Monto total transaccionado",
+  "17. TPN: Total de transacciones procesadas",
+  "18. TA: Número total de tarjetas activas",
+  "19. Número de depósitos al mes por cliente",
+  "20. Número de retiros al mes por cliente",
+  "21. Valor de retiro mensual por cliente",
+  "22. Valor de depósito mensual por cliente",
 
   // Sección 9 — Proyección
-  "25. Usuarios estimados primer y segundo año",
-  "26. Número de transferencias interbancarias mensuales estimadas",
+  "23. Usuarios estimados primer y segundo año",
+  "24. Número de transferencias interbancarias mensuales estimadas",
 
   // Sección 10 — Presupuesto y referencia
-  "27. Presupuesto asignado para digitalización",
-  "28. ¿Quién te refirió con nosotros?"
+  "25. Presupuesto asignado para digitalización",
+  "26. ¿Quién te refirió con nosotros?"
 ];
 
 
@@ -339,8 +335,8 @@ export const TECNOLOGICO_FORM: FormConfig = {
         { label: "Empresa" },
       ],
     },
-    // Pregunta 8 (índice 8): Funcionalidades requeridas para el MVP - Selección múltiple
-    8: {
+    // Pregunta 9 (índice 7): Funcionalidades requeridas para el MVP - Selección múltiple
+    7: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
@@ -388,7 +384,7 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "México" },
       ],
     },
-    //pregunta 10 (indice 10): Canales - Selección múltiple
+    // Pregunta 10 (índice 9): Canales digitales activos - Selección múltiple
     9: {
       multiple: true,
       options: [
@@ -397,8 +393,8 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "POS" },
       ],
     },
-    // Pregunta 12 (índice 12): Funcionalidades requeridas para el MVP - Selección múltiple
-    12: {
+    // Pregunta 12 (índice 11): Funcionalidades requeridas para el MVP - Selección múltiple
+    11: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
@@ -413,16 +409,18 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "Tarjetas", description: "Emisión y gestión de tarjetas de débito" },
       ],
     },
-    // Pregunta 16 (índice 16): ¿Emiten tarjetas? - Selección única
-    16: {
+    // NOTA: La pregunta 13 (índice 12) "Integraciones externas críticas..." NO debe estar aquí
+    // Debe ser un campo de texto, NO selección múltiple
+    // Pregunta 15 (índice 14): ¿Emiten tarjetas? - Selección única
+    14: {
       multiple: false,
       options: [
         { label: "Sí" },
         { label: "No" },
       ],
     },
-    // Pregunta 26 (índice 26): Presupuesto asignado - Selección única
-    26: {
+    // Pregunta 25 (índice 24): Presupuesto asignado - Selección única
+    24: {
       multiple: false,
       options: [
         { label: "Sí" },
