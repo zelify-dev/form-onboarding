@@ -274,7 +274,7 @@ const COMERCIAL_PLACEHOLDERS = [
 
   // Sección 3 — Estrategia y canales
   "Ej: Lanzar un neobanco, digitalizar procesos, escalar usuarios",
-  "Ej: App móvil, web, POS, corresponsales",
+  "Ej: App móvil, web, POS",
 
   // Sección 4 — Core y arquitectura
   "Ej: Sí, usamos  módulos de cuentas y pagos en transacciones nacionales e internacionles / No contamos con core",
@@ -395,7 +395,6 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "App móvil" },
         { label: "Web" },
         { label: "POS" },
-        { label: "Corresponsales" },
       ],
     },
     // Pregunta 12 (índice 12): Funcionalidades requeridas para el MVP - Selección múltiple
