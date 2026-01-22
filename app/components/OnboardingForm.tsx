@@ -1041,16 +1041,59 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       
       console.log("\n✅ [FINALIZAR] Status es 'next', continuando con generación de propuesta...");
       
-      // 2. Generar propuesta (PDF)
-      console.log("\n📄 [FINALIZAR] Paso 2: Generando propuesta comercial...");
+      // 2. Obtener respuestas técnicas de Supabase
+      console.log("\n📋 [FINALIZAR] Paso 2a: Obteniendo respuestas técnicas...");
+      let technicalAnswers: string[] = [];
+      let technicalQuestions: string[] = [];
+      
+      try {
+        const { data: techSubmission, error: techError } = await supabase
+          .from('form_submissions')
+          .select('answers')
+          .eq('company_id', companyId)
+          .eq('role', 'technical')
+          .single();
+
+        if (!techError && techSubmission && techSubmission.answers) {
+          try {
+            const parsedTechAnswers = typeof techSubmission.answers === 'string' 
+              ? JSON.parse(techSubmission.answers) 
+              : techSubmission.answers;
+            
+            if (Array.isArray(parsedTechAnswers)) {
+              technicalAnswers = parsedTechAnswers;
+              technicalQuestions = TECNOLOGICO_FORM.questions;
+              console.log("✅ [FINALIZAR] Respuestas técnicas obtenidas:", technicalAnswers.length, "respuestas");
+            } else {
+              console.log("⚠️ [FINALIZAR] Respuestas técnicas no son un array");
+            }
+          } catch (parseError) {
+            console.error("❌ [FINALIZAR] Error parseando respuestas técnicas:", parseError);
+          }
+        } else {
+          console.log("⚠️ [FINALIZAR] No se encontraron respuestas técnicas o hubo un error:", techError);
+        }
+      } catch (err) {
+        console.error("❌ [FINALIZAR] Error obteniendo respuestas técnicas:", err);
+      }
+
+      // 3. Generar propuesta (PDF) con respuestas comerciales y técnicas
+      console.log("\n📄 [FINALIZAR] Paso 2b: Generando propuesta comercial...");
       console.log("📄 [FINALIZAR] Enviando a: POST /ai/generate-proposal");
-      console.log("📄 [FINALIZAR] Payload:", {
-        questionsCount: questions.length,
-        answersCount: newAnswers.length,
+      console.log("📄 [FINALIZAR] Payload summary:", {
+        commercialQuestionsCount: questions.length,
+        commercialAnswersCount: newAnswers.length,
+        technicalQuestionsCount: technicalQuestions.length,
+        technicalAnswersCount: technicalAnswers.length,
         submittedAt: new Date().toISOString()
       });
       
-      const proposalResult = await generateProposal(newAnswers, questions);
+      const proposalResult = await generateProposal(
+        newAnswers, 
+        questions,
+        technicalAnswers.length > 0 ? technicalAnswers : undefined,
+        technicalQuestions.length > 0 ? technicalQuestions : undefined
+      );
       
       console.log("✅ [FINALIZAR] Respuesta recibida de generate-proposal:");
       console.log("   Message:", proposalResult.message);

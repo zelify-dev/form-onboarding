@@ -307,18 +307,54 @@ export async function evaluateBusinessProfile(answers: string[], questions: stri
     }
 }
 
-export async function generateProposal(answers: string[], questions: string[]) {
+export async function generateProposal(
+    commercialAnswers: string[], 
+    commercialQuestions: string[],
+    technicalAnswers?: string[],
+    technicalQuestions?: string[]
+) {
     try {
+        // Combinar preguntas comerciales y técnicas, evitando duplicados
+        const allQuestions: Array<{ questionNumber: number; question: string; answer: string }> = [];
+        const seenQuestions = new Set<string>();
+
+        // Primero agregar todas las preguntas comerciales
+        commercialQuestions.forEach((question, index) => {
+            const normalizedQuestion = question.trim().toLowerCase();
+            if (!seenQuestions.has(normalizedQuestion)) {
+                seenQuestions.add(normalizedQuestion);
+                allQuestions.push({
+                    questionNumber: allQuestions.length + 1,
+                    question: question,
+                    answer: commercialAnswers[index] || "",
+                });
+            }
+        });
+
+        // Luego agregar preguntas técnicas que no estén duplicadas
+        if (technicalAnswers && technicalQuestions) {
+            technicalQuestions.forEach((question, index) => {
+                const normalizedQuestion = question.trim().toLowerCase();
+                if (!seenQuestions.has(normalizedQuestion)) {
+                    seenQuestions.add(normalizedQuestion);
+                    allQuestions.push({
+                        questionNumber: allQuestions.length + 1,
+                        question: question,
+                        answer: technicalAnswers[index] || "",
+                    });
+                }
+            });
+        }
+
         const payload = {
-            questions: questions.map((question, index) => ({
-                questionNumber: index + 1,
-                question: question,
-                answer: answers[index] || "",
-            })),
+            questions: allQuestions,
             submittedAt: new Date().toISOString(),
         };
 
         console.log("📤 [API] generateProposal - URL:", `${API_BASE_URL}/ai/generate-proposal`);
+        console.log("📤 [API] generateProposal - Total preguntas combinadas:", allQuestions.length);
+        console.log("📤 [API] generateProposal - Preguntas comerciales incluidas:", commercialQuestions.length);
+        console.log("📤 [API] generateProposal - Preguntas técnicas incluidas:", technicalAnswers && technicalQuestions ? technicalQuestions.length : 0);
         console.log("📤 [API] generateProposal - Payload:", JSON.stringify(payload, null, 2));
 
         const response = await fetch(`${API_BASE_URL}/ai/generate-proposal`, {
