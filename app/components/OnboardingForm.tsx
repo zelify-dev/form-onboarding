@@ -1055,7 +1055,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                       animationsEnabled={animationsEnabled}
                       onAnimationComplete={() => { }}
                     />
-                  ) : submissionStatus === "next" && showStatusTab ? (
+                  ) : submissionStatus === "next" ? (
                     <div className="w-full">
                       {(() => {
                         const role = typeof window !== 'undefined' ? localStorage.getItem('onboarding_role') : null;
@@ -1180,7 +1180,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                     </div>
                   ) : null}
                 </>
-
               )
             ) : (
               <>

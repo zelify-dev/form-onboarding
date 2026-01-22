@@ -117,7 +117,7 @@ export default function Home() {
       <AnimatedHalftoneBackground isDark={true} fullScreen={true} intensity={0.6} brightness={0.8} className="z-0" />
 
       <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
-        <Navbar />
+        <Navbar showExitButton={false} />
         <div className="flex-1 flex items-center justify-center px-6 py-12">
 
           <LayoutGroup>
