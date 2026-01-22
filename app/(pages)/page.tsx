@@ -284,10 +284,42 @@ export default function Home() {
                     <ContactForm
                       onCancel={() => setView("auth")}
                       onSubmit={async (data) => {
-                        console.log("🚀 INICIANDO ENVÍO DE CORREO...");
-                        console.log("Datos del formulario:", data);
+                        console.log("🚀 INICIANDO PROCESO DE REGISTRO Y ENVÍO DE CORREO...");
+                        console.log("📋 Datos del formulario:", data);
                         try {
-                          const response = await sendAccessRequestEmail(data);
+                          // 1. Primero, crear la compañía y obtener los códigos
+                          console.log("\n📝 Paso 1: Creando compañía y generando códigos...");
+                          const { data: codesData, error: codesError } = await supabase.rpc(
+                            'register_company_and_get_codes',
+                            {
+                              _company_name: data.company,
+                              _contact_email: data.email,
+                              _contact_name: data.name
+                            }
+                          );
+
+                          if (codesError || !codesData) {
+                            console.error("❌ Error al crear compañía:", codesError);
+                            alert("Error al registrar la compañía. Por favor, intenta nuevamente.");
+                            return;
+                          }
+
+                          console.log("✅ Compañía creada exitosamente");
+                          console.log("📋 Company ID:", codesData.company_id);
+                          console.log("🔑 Códigos generados (NO se muestran en frontend)");
+                          
+                          // Los códigos NO se muestran en el frontend, solo se usan para el correo
+                          const commercialCode = codesData.commercial_code;
+                          const technicalCode = codesData.technical_code;
+
+                          // 2. Enviar correo con los códigos incluidos
+                          console.log("\n📧 Paso 2: Enviando correo con códigos de acceso...");
+                          const response = await sendAccessRequestEmail({
+                            ...data,
+                            commercialCode,
+                            technicalCode
+                          });
+                          
                           console.log("✅ RESPUESTA DEL API:", JSON.stringify(response, null, 2));
 
                           if (response && (response.success || response.messageId)) {
@@ -300,7 +332,7 @@ export default function Home() {
                           }
 
                         } catch (err) {
-                          console.error("❌ ERROR CRÍTICO AL ENVIAR:", err);
+                          console.error("❌ ERROR CRÍTICO:", err);
                           alert("Error de conexión. Revisa la consola.");
                         }
                       }}

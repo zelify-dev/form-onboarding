@@ -1116,10 +1116,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       // 4. Enviar correo con la propuesta
       console.log("\n📧 [FINALIZAR] Paso 4: Enviando correo con propuesta...");
       console.log("📧 [FINALIZAR] Enviando a: POST /email/send");
-      console.log("📧 [FINALIZAR] Datos del correo:");
-      console.log("   To:", recipientEmail);
-      console.log("   Nombre:", formName);
-      console.log("   PDF URL:", proposalResult.url);
+      console.log("\n📧 [FINALIZAR] ===== DATOS DEL CORREO A ENVIAR =====");
+      console.log("📧 [FINALIZAR] CORREO DESTINATARIO:", recipientEmail);
+      console.log("📧 [FINALIZAR] NOMBRE DESTINATARIO:", formName);
+      console.log("📧 [FINALIZAR] PDF URL (link del documento):", proposalResult.url);
+      console.log("📧 [FINALIZAR] ========================================");
       
       const emailResult = await sendProposalEmail({
         recipientEmail,
@@ -1129,7 +1130,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       
       console.log("✅ [FINALIZAR] Respuesta del envío de correo:");
       console.log("   Resultado:", JSON.stringify(emailResult, null, 2));
-      console.log("\n✅ [FINALIZAR] Correo enviado exitosamente");
+      console.log("\n✅ [FINALIZAR] ===== CORREO ENVIADO EXITOSAMENTE =====");
+      console.log("✅ [FINALIZAR] CORREO DESTINATARIO:", recipientEmail);
+      console.log("✅ [FINALIZAR] NOMBRE DESTINATARIO:", formName);
+      console.log("✅ [FINALIZAR] PDF URL enviado:", proposalResult.url);
+      console.log("✅ [FINALIZAR] ==========================================");
       
       // 5. Finalizar y mostrar pantalla de agradecimiento
       console.log("\n🎉 [FINALIZAR] Paso 5: Finalizando y mostrando pantalla de agradecimiento");

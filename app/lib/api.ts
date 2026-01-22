@@ -36,6 +36,8 @@ export async function sendAccessRequestEmail(data: {
     phone: string;
     company: string;
     role: string;
+    commercialCode?: string;
+    technicalCode?: string;
 }) {
     const subject = "Solicitud de Códigos de Acceso Alaiza Onboarding";
 
@@ -179,6 +181,27 @@ export async function sendAccessRequestEmail(data: {
               </div>
             </div>
           </div>
+          ${data.commercialCode && data.technicalCode ? `
+          <div class="info-section" style="margin-top: 32px; padding-top: 32px; border-top: 2px solid #e5e7eb;">
+            <div style="background-color: #f3f4f6; padding: 24px; border-radius: 8px; margin-bottom: 16px;">
+              <div style="font-weight: 600; color: #111827; font-size: 14px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Códigos de Acceso Generados
+              </div>
+              <div class="info-item" style="background-color: #ffffff; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                <div class="info-label">Código Perfil Comercial</div>
+                <div class="info-value" style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: 600; color: #7c3aed; letter-spacing: 2px;">
+                  ${data.commercialCode}
+                </div>
+              </div>
+              <div class="info-item" style="background-color: #ffffff; padding: 16px; border-radius: 6px;">
+                <div class="info-label">Código Perfil Técnico</div>
+                <div class="info-value" style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: 600; color: #7c3aed; letter-spacing: 2px;">
+                  ${data.technicalCode}
+                </div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
         </div>
         <div class="footer">
           <p class="footer-text">
@@ -200,7 +223,16 @@ Teléfono: ${data.phone}
 Empresa: ${data.company}
 Perfil: ${data.role === 'commercial' ? 'Perfil Comercial (Negocio)' : 'Perfil Técnico (Tecnológico)'}
 
+${data.commercialCode && data.technicalCode ? `
 ───────────────────────────────────────────────────────
+CÓDIGOS DE ACCESO GENERADOS
+───────────────────────────────────────────────────────
+
+Código Perfil Comercial: ${data.commercialCode}
+Código Perfil Técnico: ${data.technicalCode}
+
+───────────────────────────────────────────────────────
+` : ''}
 Solicitud generada desde el formulario de onboarding de Alaiza
 Fecha: ${new Date().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
 ───────────────────────────────────────────────────────
@@ -434,6 +466,9 @@ Este correo fue generado automáticamente desde el sistema de onboarding de Zeli
 
     try {
         console.log("📤 [API] sendProposalEmail - URL:", `${API_BASE_URL}/email/send`);
+        console.log("📧 [API] sendProposalEmail - CORREO DESTINATARIO:", data.recipientEmail);
+        console.log("📧 [API] sendProposalEmail - NOMBRE DESTINATARIO:", data.recipientName);
+        console.log("📧 [API] sendProposalEmail - PDF URL:", data.pdfUrl);
         console.log("📤 [API] sendProposalEmail - Payload:", JSON.stringify({
             to: payload.to,
             subject: payload.subject,
@@ -460,6 +495,8 @@ Este correo fue generado automáticamente desde el sistema de onboarding de Zeli
 
         const result = await response.json();
         console.log("✅ [API] sendProposalEmail - Respuesta:", JSON.stringify(result, null, 2));
+        console.log("✅ [API] sendProposalEmail - CORREO ENVIADO EXITOSAMENTE A:", data.recipientEmail);
+        console.log("✅ [API] sendProposalEmail - PDF URL incluido en el correo:", data.pdfUrl);
         return result;
     } catch (error) {
         console.error("❌ [API] sendProposalEmail - Exception:", error);
