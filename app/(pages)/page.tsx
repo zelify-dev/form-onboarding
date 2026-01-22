@@ -284,11 +284,8 @@ export default function Home() {
                     <ContactForm
                       onCancel={() => setView("auth")}
                       onSubmit={async (data) => {
-                        console.log("🚀 INICIANDO PROCESO DE REGISTRO Y ENVÍO DE CORREO...");
-                        console.log("📋 Datos del formulario:", data);
                         try {
                           // 1. Primero, crear la compañía y obtener los códigos
-                          console.log("\n📝 Paso 1: Creando compañía y generando códigos...");
                           const { data: codesData, error: codesError } = await supabase.rpc(
                             'register_company_and_get_codes',
                             {
@@ -298,42 +295,43 @@ export default function Home() {
                             }
                           );
 
-                          if (codesError || !codesData) {
-                            console.error("❌ Error al crear compañía:", codesError);
-                            alert("Error al registrar la compañía. Por favor, intenta nuevamente.");
+                          if (codesError) {
+                            alert(`Error al registrar la compañía: ${codesError.message || 'Error desconocido'}. Por favor, intenta nuevamente.`);
                             return;
                           }
 
-                          console.log("✅ Compañía creada exitosamente");
-                          console.log("📋 Company ID:", codesData.company_id);
-                          console.log("🔑 Códigos generados (NO se muestran en frontend)");
+                          if (!codesData) {
+                            alert("Error al registrar la compañía: No se recibieron datos. Por favor, intenta nuevamente.");
+                            return;
+                          }
                           
                           // Los códigos NO se muestran en el frontend, solo se usan para el correo
                           const commercialCode = codesData.commercial_code;
                           const technicalCode = codesData.technical_code;
 
+                          if (!commercialCode || !technicalCode) {
+                            alert("Error: Los códigos no se generaron correctamente. Por favor, intenta nuevamente.");
+                            return;
+                          }
+
                           // 2. Enviar correo con los códigos incluidos
-                          console.log("\n📧 Paso 2: Enviando correo con códigos de acceso...");
                           const response = await sendAccessRequestEmail({
                             ...data,
                             commercialCode,
                             technicalCode
                           });
-                          
-                          console.log("✅ RESPUESTA DEL API:", JSON.stringify(response, null, 2));
 
                           if (response && (response.success || response.messageId)) {
                             alert("¡Solicitud enviada con éxito! Te contactaremos pronto.");
                             setView("auth");
                           } else {
-                            console.warn("⚠️ RESPUESTA INESPERADA:", response);
                             alert("Solicitud enviada, revisa la consola para ver la respuesta del servidor.");
                             setView("auth");
                           }
 
                         } catch (err) {
-                          console.error("❌ ERROR CRÍTICO:", err);
-                          alert("Error de conexión. Revisa la consola.");
+                          console.error("Error al procesar solicitud:", err);
+                          alert(`Error de conexión: ${err instanceof Error ? err.message : 'Error desconocido'}. Por favor, intenta nuevamente.`);
                         }
                       }}
                     />
