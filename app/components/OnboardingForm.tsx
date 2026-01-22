@@ -998,12 +998,36 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     setIsSubmitting(true);
     
     try {
+      console.log("🚀 [FINALIZAR] ===== INICIANDO FLUJO DE FINALIZACIÓN =====");
+      console.log("📋 [FINALIZAR] Company ID:", companyId);
+      console.log("📋 [FINALIZAR] Role:", role);
+      console.log("📋 [FINALIZAR] Total respuestas:", newAnswers.length);
+      console.log("📋 [FINALIZAR] Total preguntas:", questions.length);
+      
       // 1. Evaluar perfil comercial
-      console.log("📤 [FINALIZAR] Evaluando perfil comercial...");
+      console.log("\n📤 [FINALIZAR] Paso 1: Evaluando perfil comercial...");
+      console.log("📤 [FINALIZAR] Enviando a: POST /ai/evaluate-business-profile");
+      console.log("📤 [FINALIZAR] Payload:", {
+        questionsCount: questions.length,
+        answersCount: newAnswers.length,
+        submittedAt: new Date().toISOString()
+      });
+      
       const evaluationResult = await evaluateBusinessProfile(newAnswers, questions);
       
+      console.log("✅ [FINALIZAR] Respuesta recibida de evaluate-business-profile:");
+      console.log("   Status:", evaluationResult.status);
+      console.log("   Percentage:", evaluationResult.percentage);
+      console.log("   Criteria Met:", evaluationResult.criteriaMet);
+      console.log("   Criteria Partial:", evaluationResult.criteriaPartial);
+      console.log("   Criteria Not Met:", evaluationResult.criteriaNotMet);
+      console.log("   Message:", evaluationResult.message || "Sin mensaje");
+      console.log("   Email Message ID:", evaluationResult.emailMessageId || "Sin ID");
+      console.log("   Respuesta completa:", JSON.stringify(evaluationResult, null, 2));
+      
       if (evaluationResult.status !== "next") {
-        console.log("ℹ️ [FINALIZAR] Perfil comercial evaluado, no procede con propuesta:", evaluationResult.status);
+        console.log("\n⚠️ [FINALIZAR] Status NO es 'next', mostrando pantalla de agradecimiento simple");
+        console.log("⚠️ [FINALIZAR] Status recibido:", evaluationResult.status);
         // Mostrar pantalla de agradecimiento simple
         setSubmissionStatus("decline");
         setIsCompleted(true);
@@ -1011,31 +1035,62 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         setShowQuestion(true);
         setIsSubmitting(false);
         setShowConfirmModal(false);
+        console.log("✅ [FINALIZAR] Pantalla de agradecimiento simple mostrada");
         return;
       }
       
+      console.log("\n✅ [FINALIZAR] Status es 'next', continuando con generación de propuesta...");
+      
       // 2. Generar propuesta (PDF)
-      console.log("📄 [FINALIZAR] Generando propuesta comercial...");
+      console.log("\n📄 [FINALIZAR] Paso 2: Generando propuesta comercial...");
+      console.log("📄 [FINALIZAR] Enviando a: POST /ai/generate-proposal");
+      console.log("📄 [FINALIZAR] Payload:", {
+        questionsCount: questions.length,
+        answersCount: newAnswers.length,
+        submittedAt: new Date().toISOString()
+      });
+      
       const proposalResult = await generateProposal(newAnswers, questions);
       
-      if (!proposalResult.pdfUrl) {
-        console.error("❌ [FINALIZAR] No se recibió URL del PDF");
+      console.log("✅ [FINALIZAR] Respuesta recibida de generate-proposal:");
+      console.log("   Message:", proposalResult.message);
+      console.log("   URL:", proposalResult.url);
+      console.log("   S3 URL:", proposalResult.s3Url);
+      console.log("   File Name:", proposalResult.fileName);
+      console.log("   Client:", proposalResult.client);
+      console.log("   Mapped Modules:", proposalResult.mappedModules);
+      console.log("   Inferred Modules:", proposalResult.inferredModules);
+      console.log("   Merged Modules:", proposalResult.mergedModules);
+      console.log("   Respuesta completa:", JSON.stringify(proposalResult, null, 2));
+      
+      if (!proposalResult.url) {
+        console.error("\n❌ [FINALIZAR] No se recibió URL del PDF en la respuesta");
         setValidationMessage("Error al generar la propuesta. Por favor, intenta nuevamente.");
         setIsSubmitting(false);
         return;
       }
       
-      console.log("✅ [FINALIZAR] PDF generado:", proposalResult.pdfUrl);
+      console.log("\n✅ [FINALIZAR] PDF generado exitosamente");
+      console.log("   URL:", proposalResult.url);
       
       // 3. Obtener información de la compañía y el nombre del formulario
+      console.log("\n📊 [FINALIZAR] Paso 3: Obteniendo información de la compañía...");
+      console.log("📊 [FINALIZAR] Consultando Supabase: companies table");
+      console.log("📊 [FINALIZAR] Company ID:", companyId);
+      
       const companyData = await supabase
         .from('companies')
         .select('contact_email, contact_name')
         .eq('id', companyId)
         .single();
       
+      console.log("📊 [FINALIZAR] Respuesta de Supabase:");
+      console.log("   Error:", companyData.error || "Ninguno");
+      console.log("   Data:", JSON.stringify(companyData.data, null, 2));
+      
       if (companyData.error || !companyData.data) {
-        console.error("❌ [FINALIZAR] Error obteniendo datos de la compañía:", companyData.error);
+        console.error("\n❌ [FINALIZAR] Error obteniendo datos de la compañía");
+        console.error("   Error:", companyData.error);
         setValidationMessage("Error al obtener información de la compañía.");
         setIsSubmitting(false);
         return;
@@ -1045,32 +1100,53 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       const formName = newAnswers[0] || companyData.data.contact_name || "Cliente";
       const recipientEmail = companyData.data.contact_email;
       
+      console.log("\n📋 [FINALIZAR] Datos obtenidos:");
+      console.log("   Nombre del formulario (primera respuesta):", newAnswers[0]);
+      console.log("   Nombre de contacto (company):", companyData.data.contact_name);
+      console.log("   Nombre a usar:", formName);
+      console.log("   Email destinatario:", recipientEmail);
+      
       if (!recipientEmail) {
-        console.error("❌ [FINALIZAR] No hay email de contacto en la compañía");
+        console.error("\n❌ [FINALIZAR] No hay email de contacto en la compañía");
         setValidationMessage("No se encontró un email de contacto para enviar la propuesta.");
         setIsSubmitting(false);
         return;
       }
       
       // 4. Enviar correo con la propuesta
-      console.log("📧 [FINALIZAR] Enviando correo con propuesta...");
-      await sendProposalEmail({
+      console.log("\n📧 [FINALIZAR] Paso 4: Enviando correo con propuesta...");
+      console.log("📧 [FINALIZAR] Enviando a: POST /email/send");
+      console.log("📧 [FINALIZAR] Datos del correo:");
+      console.log("   To:", recipientEmail);
+      console.log("   Nombre:", formName);
+      console.log("   PDF URL:", proposalResult.url);
+      
+      const emailResult = await sendProposalEmail({
         recipientEmail,
         recipientName: formName,
-        pdfUrl: proposalResult.pdfUrl,
+        pdfUrl: proposalResult.url,
       });
       
-      console.log("✅ [FINALIZAR] Correo enviado exitosamente");
+      console.log("✅ [FINALIZAR] Respuesta del envío de correo:");
+      console.log("   Resultado:", JSON.stringify(emailResult, null, 2));
+      console.log("\n✅ [FINALIZAR] Correo enviado exitosamente");
       
       // 5. Finalizar y mostrar pantalla de agradecimiento
+      console.log("\n🎉 [FINALIZAR] Paso 5: Finalizando y mostrando pantalla de agradecimiento");
       setIsCompleted(true);
       setIsExiting(false);
       setShowQuestion(true);
       setIsSubmitting(false);
       hasSubmittedRef.current = false;
       
+      console.log("\n✅ [FINALIZAR] ===== FLUJO COMPLETADO EXITOSAMENTE =====");
+      
     } catch (error) {
-      console.error("❌ [FINALIZAR] Error en el flujo final:", error);
+      console.error("\n❌ [FINALIZAR] ===== ERROR EN EL FLUJO =====");
+      console.error("❌ [FINALIZAR] Tipo de error:", error instanceof Error ? error.constructor.name : typeof error);
+      console.error("❌ [FINALIZAR] Mensaje:", error instanceof Error ? error.message : String(error));
+      console.error("❌ [FINALIZAR] Stack:", error instanceof Error ? error.stack : "No disponible");
+      console.error("❌ [FINALIZAR] Error completo:", error);
       setValidationMessage("Ocurrió un error al procesar tu solicitud. Por favor, intenta nuevamente.");
       setIsSubmitting(false);
     }

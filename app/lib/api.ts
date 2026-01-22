@@ -2,12 +2,23 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://exemptiv
 
 type EvaluateBusinessProfileResponse = {
     status: "next" | "decline";
+    percentage: number;
+    criteriaMet: number;
+    criteriaPartial: number;
+    criteriaNotMet: number;
     message?: string;
+    emailMessageId?: string;
 };
 
 type GenerateProposalResponse = {
-    pdfUrl: string;
-    message?: string;
+    message: string;
+    url: string;
+    s3Url: string;
+    fileName: string;
+    client: string;
+    mappedModules: string[];
+    inferredModules: string[];
+    mergedModules: string[];
 };
 
 type EmailPayload = {
@@ -232,7 +243,11 @@ export async function evaluateBusinessProfile(answers: string[], questions: stri
                 question: question,
                 answer: answers[index] || "",
             })),
+            submittedAt: new Date().toISOString(),
         };
+
+        console.log("📤 [API] evaluateBusinessProfile - URL:", `${API_BASE_URL}/ai/evaluate-business-profile`);
+        console.log("📤 [API] evaluateBusinessProfile - Payload:", JSON.stringify(payload, null, 2));
 
         const response = await fetch(`${API_BASE_URL}/ai/evaluate-business-profile`, {
             method: "POST",
@@ -242,15 +257,20 @@ export async function evaluateBusinessProfile(answers: string[], questions: stri
             body: JSON.stringify(payload),
         });
 
+        console.log("📥 [API] evaluateBusinessProfile - Status:", response.status);
+        console.log("📥 [API] evaluateBusinessProfile - Status Text:", response.statusText);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Error evaluating business profile:", response.status, errorText);
+            console.error("❌ [API] evaluateBusinessProfile - Error:", response.status, errorText);
             throw new Error(`Error al evaluar perfil comercial: ${response.statusText}`);
         }
 
-        return await response.json() as EvaluateBusinessProfileResponse;
+        const result = await response.json() as EvaluateBusinessProfileResponse;
+        console.log("✅ [API] evaluateBusinessProfile - Respuesta:", JSON.stringify(result, null, 2));
+        return result;
     } catch (error) {
-        console.error("Failed to evaluate business profile:", error);
+        console.error("❌ [API] evaluateBusinessProfile - Exception:", error);
         throw error;
     }
 }
@@ -263,7 +283,11 @@ export async function generateProposal(answers: string[], questions: string[]) {
                 question: question,
                 answer: answers[index] || "",
             })),
+            submittedAt: new Date().toISOString(),
         };
+
+        console.log("📤 [API] generateProposal - URL:", `${API_BASE_URL}/ai/generate-proposal`);
+        console.log("📤 [API] generateProposal - Payload:", JSON.stringify(payload, null, 2));
 
         const response = await fetch(`${API_BASE_URL}/ai/generate-proposal`, {
             method: "POST",
@@ -273,15 +297,20 @@ export async function generateProposal(answers: string[], questions: string[]) {
             body: JSON.stringify(payload),
         });
 
+        console.log("📥 [API] generateProposal - Status:", response.status);
+        console.log("📥 [API] generateProposal - Status Text:", response.statusText);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Error generating proposal:", response.status, errorText);
+            console.error("❌ [API] generateProposal - Error:", response.status, errorText);
             throw new Error(`Error al generar propuesta: ${response.statusText}`);
         }
 
-        return await response.json() as GenerateProposalResponse;
+        const result = await response.json() as GenerateProposalResponse;
+        console.log("✅ [API] generateProposal - Respuesta:", JSON.stringify(result, null, 2));
+        return result;
     } catch (error) {
-        console.error("Failed to generate proposal:", error);
+        console.error("❌ [API] generateProposal - Exception:", error);
         throw error;
     }
 }
@@ -404,6 +433,14 @@ Este correo fue generado automáticamente desde el sistema de onboarding de Zeli
     };
 
     try {
+        console.log("📤 [API] sendProposalEmail - URL:", `${API_BASE_URL}/email/send`);
+        console.log("📤 [API] sendProposalEmail - Payload:", JSON.stringify({
+            to: payload.to,
+            subject: payload.subject,
+            htmlLength: payload.html.length,
+            textLength: payload.text.length
+        }, null, 2));
+
         const response = await fetch(`${API_BASE_URL}/email/send`, {
             method: "POST",
             headers: {
@@ -412,15 +449,20 @@ Este correo fue generado automáticamente desde el sistema de onboarding de Zeli
             body: JSON.stringify(payload),
         });
 
+        console.log("📥 [API] sendProposalEmail - Status:", response.status);
+        console.log("📥 [API] sendProposalEmail - Status Text:", response.statusText);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Error sending proposal email:", response.status, errorText);
+            console.error("❌ [API] sendProposalEmail - Error:", response.status, errorText);
             throw new Error(`Error al enviar el correo: ${response.statusText}`);
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log("✅ [API] sendProposalEmail - Respuesta:", JSON.stringify(result, null, 2));
+        return result;
     } catch (error) {
-        console.error("Failed to send proposal email:", error);
+        console.error("❌ [API] sendProposalEmail - Exception:", error);
         throw error;
     }
 }
