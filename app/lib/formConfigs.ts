@@ -122,7 +122,7 @@ const TECH_QUESTIONS = [
   "3. Institución / Empresa",
   "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
   "5. Productos o servicios financieros actuales",
-  "9. Funcionalidades requeridas para el MVP\n\nPuede elegir varias opciones.",
+  "9. Funcionalidades requeridas para el MVP\n\n  Puede elegir varias opciones.",
   // Sección 2 (Técnico)
   "10. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
   "11. ¿Principales proveedores tecnológicos para servicios digitales?",
