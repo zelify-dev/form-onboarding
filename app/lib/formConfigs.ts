@@ -383,8 +383,10 @@ export const COMERCIAL_FORM: FormConfig = {
     },
     // NOTA: La pregunta 14 (índice 13) "Integraciones externas críticas..." NO debe estar aquí
     // Debe ser un campo de texto, NO selección múltiple
-    // Pregunta 15 (índice 14): ¿Emiten tarjetas? - Selección única
-    14: {
+    // NOTA: La pregunta 15 (índice 14) "Tipos de transferencias interbancarias" NO debe estar aquí
+    // Debe ser un campo de texto, NO selección
+    // Pregunta 16 (índice 15): ¿Emiten tarjetas? - Selección única
+    15: {
       multiple: false,
       options: [
         { label: "Sí" },
