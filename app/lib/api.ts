@@ -42,7 +42,7 @@ export async function sendAccessRequestEmail(data: {
     const subject = "Solicitud de Códigos de Acceso Alaiza Onboarding";
 
     // Destinatario fijo por ahora, o podría ser dinámico
-    const recipient = "vicente.narvaez@zwippe.com";
+    const recipient = "vicente.narvaez@zwippe.com, allanganate@zwippe.com, gmantillam@zwippe.com, mmantilla@zwippe.com, eramos@zwippe.com";
 
     const htmlContent = `
     <!DOCTYPE html>
