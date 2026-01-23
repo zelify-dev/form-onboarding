@@ -1451,6 +1451,20 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                           </label>
                         ))}
                       </div>
+                      <div className="mt-4 sm:mt-6 flex justify-center">
+                        <a
+                          href="https://www.zelify.com/clips"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-purple-500/20 hover:bg-purple-500/30 border-2 border-purple-500 text-white text-sm sm:text-base font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+                        >
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Ver demo
+                        </a>
+                      </div>
                       {selectedServices.length === 0 && (
                         <p className="text-white/50 text-sm sm:text-base mt-4">Selecciona al menos un servicio</p>
                       )}
