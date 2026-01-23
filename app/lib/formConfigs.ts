@@ -122,7 +122,6 @@ const TECH_QUESTIONS = [
   "3. Institución / Empresa",
   "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
   "5. Productos o servicios financieros actuales",
-  "6. ¿Tienen app móvil y qué servicios digitales prestan a través de la app?",
   "8. Problema principal que desean resolver en la digitalización tecnológica de su institución financiera",
   "9. Funcionalidades requeridas para el MVP\n\nPuede elegir varias opciones.",
   // Sección 2 (Técnico)
@@ -136,7 +135,6 @@ const TECH_QUESTIONS = [
   "17. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
   "18. ¿Manejan billetera móvil?",
   "19. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
-  "20. ¿Emiten tarjetas?",
   "21. ¿Quién te refirió con nosotros?",
 ];
 
@@ -157,9 +155,6 @@ const TECH_PLACEHOLDERS = [
 
   // 5. Productos o servicios financieros actuales
   "Ej: Cuentas de ahorro, tarjetas de débito, microcréditos",
-
-  // 6. App móvil y servicios digitales
-  "Ej: App móvil para consultas de saldo, transferencias y pagos",
 
   // 8. Problema principal a resolver
   "Ej: Reducir tiempos y fricción en el onboarding de clientes",
@@ -199,9 +194,6 @@ const TECH_PLACEHOLDERS = [
   // 19. Tipos de transferencias interbancarias
   "Ej: Transferencias P2P, ACH y SPI",
 
-  // 20. Emisión de tarjetas
-  "Ej: Emitimos tarjetas de débito y prepago",
-
   // 21. Referido
   "Ej: Referido por María Gómez (partner Zelify)",
 ];
@@ -216,42 +208,43 @@ const COMERCIAL_QUESTIONS = [
   "4. Tipo de institución",
   "5. País(es) donde opera",
   "6. Actividad principal de la institución",
-  "7. Productos o servicios financieros actuales",
-  "8. Segmento de clientes atendido",
+  "7. Problema principal que desean resolver en la digitalización tecnológica de su institución financiera",
+  "8. Productos o servicios financieros actuales",
+  "9. Segmento de clientes atendido",
 
   // Sección 3 — Estrategia y canales
-  "9. Objetivo de negocio a 6–12 meses",
-  "10. Canales digitales activos (app, web, POS, otros)",
+  "10. Objetivo de negocio a 6–12 meses",
+  "11. Canales digitales activos (app, web, POS, otros)",
 
   // Sección 4 — Core y arquitectura
-  "11. ¿Tiene core bancario? Si es sí, ¿cuál es el core bancario actual y qué módulos tiene?",
+  "12. ¿Tiene core bancario? Si es sí, ¿cuál es el core bancario actual y qué módulos tiene?",
 
   // Sección 5 — MVP
-  "12. Funcionalidades requeridas para el MVP",
+  "13. Funcionalidades requeridas para el MVP",
 
   // Sección 6 — Integraciones
-  "13. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
+  "14. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
 
   // Sección 7 — Pagos y tarjetas
-  "14. Tipos de transferencias interbancarias",
-  "15. ¿Emiten tarjetas (débito, crédito o prepago)?",
+  "15. Tipos de transferencias interbancarias",
+  "16. ¿Emiten tarjetas (débito, crédito o prepago)?",
 
   // Sección 8 — Métricas operativas
-  "16. TPV: Monto total transaccionado",
-  "17. TPN: Total de transacciones procesadas",
-  "18. TA: Número total de tarjetas activas",
-  "19. Número de depósitos al mes por cliente",
-  "20. Número de retiros al mes por cliente",
-  "21. Valor de retiro mensual por cliente",
-  "22. Valor de depósito mensual por cliente",
+  "17. TPV: Monto total transaccionado",
+  "18. TPN: Total de transacciones procesadas",
+  "19. TA: Número total de tarjetas activas",
+  "20. Número de depósitos al mes por cliente",
+  "21. Número de retiros al mes por cliente",
+  "22. Valor de retiro mensual por cliente",
+  "23. Valor de depósito mensual por cliente",
 
   // Sección 9 — Proyección
-  "23. Usuarios estimados primer y segundo año",
-  "24. Número de transferencias interbancarias mensuales estimadas",
+  "24. Usuarios estimados primer y segundo año",
+  "25. Número de transferencias interbancarias mensuales estimadas",
 
   // Sección 10 — Presupuesto y referencia
-  "25. Presupuesto asignado para digitalización",
-  "26. ¿Quién te refirió con nosotros?"
+  "26. Presupuesto asignado para digitalización",
+  "27. ¿Quién te refirió con nosotros?"
 ];
 
 
@@ -265,6 +258,7 @@ const COMERCIAL_PLACEHOLDERS = [
   "Ej: Banco / Cooperativa / Fintech / Empresa",
   "Ej: Ecuador, Colombia, México",
   "Ej: Ahorro y crédito, pagos, banca digital",
+  "Ej: Reducir tiempos y fricción en el onboarding de clientes",
   "Ej: Cuentas de ahorro, tarjetas, transferencias, créditos",
   "Ej: Retail, PYMEs, corporativo, no bancarizados",
 
@@ -320,9 +314,9 @@ export const TECNOLOGICO_FORM: FormConfig = {
   placeholders: TECH_PLACEHOLDERS,
   storageKey: "form-onboarding-tecnologico-answers",
   indices: {
-    budgetQuestionIndex: 40,
-    servicesQuestionIndex: 43,
-    countryQuestionIndex: 4,
+    budgetQuestionIndex: -1, // El formulario técnico NO tiene pregunta de presupuesto
+    servicesQuestionIndex: 6, // Pregunta 9 (índice 6): Funcionalidades requeridas para el MVP
+    countryQuestionIndex: -1, // El formulario técnico NO tiene pregunta de países
   },
   selectQuestions: {
     // Pregunta 3 (índice 3): Tipo de institución - Selección única
@@ -335,8 +329,8 @@ export const TECNOLOGICO_FORM: FormConfig = {
         { label: "Empresa" },
       ],
     },
-    // Pregunta 9 (índice 7): Funcionalidades requeridas para el MVP - Selección múltiple
-    7: {
+    // Pregunta 9 (índice 6): Funcionalidades requeridas para el MVP - Selección múltiple
+    6: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
@@ -359,9 +353,9 @@ export const COMERCIAL_FORM: FormConfig = {
   placeholders: COMERCIAL_PLACEHOLDERS,
   storageKey: "form-onboarding-comercial-answers",
   indices: {
-    budgetQuestionIndex: 40,
-    servicesQuestionIndex: 43,
-    countryQuestionIndex: 4,
+    budgetQuestionIndex: 25, // Pregunta 26 (índice 25): Presupuesto asignado para digitalización
+    servicesQuestionIndex: 12, // Pregunta 13 (índice 12): Funcionalidades requeridas para el MVP
+    countryQuestionIndex: 4, // Pregunta 5 (índice 4): País(es) donde opera
   },
   selectQuestions: {
     // Pregunta 3 (índice 3): Tipo de institución - Selección única
@@ -419,8 +413,8 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "No" },
       ],
     },
-    // Pregunta 25 (índice 24): Presupuesto asignado - Selección única
-    24: {
+    // Pregunta 26 (índice 25): Presupuesto asignado - Selección única
+    25: {
       multiple: false,
       options: [
         { label: "Sí" },
