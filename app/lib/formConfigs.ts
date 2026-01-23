@@ -364,8 +364,10 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "POS" },
       ],
     },
-    // Pregunta 12 (índice 11): Funcionalidades requeridas para el MVP - Selección múltiple
-    11: {
+    // NOTA: La pregunta 12 (índice 11) "¿Tiene core bancario?..." NO debe estar aquí
+    // Debe ser un campo de texto, NO selección múltiple
+    // Pregunta 13 (índice 12): Funcionalidades requeridas para el MVP - Selección múltiple
+    12: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
@@ -379,7 +381,7 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "Tarjetas", description: "Emisión y gestión de tarjetas de débito" },
       ],
     },
-    // NOTA: La pregunta 13 (índice 12) "Integraciones externas críticas..." NO debe estar aquí
+    // NOTA: La pregunta 14 (índice 13) "Integraciones externas críticas..." NO debe estar aquí
     // Debe ser un campo de texto, NO selección múltiple
     // Pregunta 15 (índice 14): ¿Emiten tarjetas? - Selección única
     14: {
