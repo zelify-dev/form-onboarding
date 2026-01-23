@@ -122,7 +122,6 @@ const TECH_QUESTIONS = [
   "3. Institución / Empresa",
   "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
   "5. Productos o servicios financieros actuales",
-  "8. Problema principal que desean resolver en la digitalización tecnológica de su institución financiera",
   "9. Funcionalidades requeridas para el MVP\n\nPuede elegir varias opciones.",
   // Sección 2 (Técnico)
   "10. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
@@ -155,9 +154,6 @@ const TECH_PLACEHOLDERS = [
 
   // 5. Productos o servicios financieros actuales
   "Ej: Cuentas de ahorro, tarjetas de débito, microcréditos",
-
-  // 8. Problema principal a resolver
-  "Ej: Reducir tiempos y fricción en el onboarding de clientes",
 
   // 9. Funcionalidades requeridas para el MVP
   "Ej: Auth, Identity, AML y Transfers",
@@ -315,11 +311,11 @@ export const TECNOLOGICO_FORM: FormConfig = {
   storageKey: "form-onboarding-tecnologico-answers",
   indices: {
     budgetQuestionIndex: -1, // El formulario técnico NO tiene pregunta de presupuesto
-    servicesQuestionIndex: 6, // Pregunta 9 (índice 6): Funcionalidades requeridas para el MVP
+    servicesQuestionIndex: 5, // Pregunta 9 (índice 5): Funcionalidades requeridas para el MVP
     countryQuestionIndex: -1, // El formulario técnico NO tiene pregunta de países
   },
   selectQuestions: {
-    // Pregunta 3 (índice 3): Tipo de institución - Selección única
+    // Pregunta 4 (índice 3): Tipo de institución - Selección única
     3: {
       multiple: false,
       options: [
@@ -329,8 +325,8 @@ export const TECNOLOGICO_FORM: FormConfig = {
         { label: "Empresa" },
       ],
     },
-    // Pregunta 9 (índice 6): Funcionalidades requeridas para el MVP - Selección múltiple
-    6: {
+    // Pregunta 9 (índice 5): Funcionalidades requeridas para el MVP - Selección múltiple
+    5: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
