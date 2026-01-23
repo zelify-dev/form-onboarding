@@ -38,10 +38,13 @@ export default function Navbar({ showExitButton = true }: { showExitButton?: boo
       {showExitButton && (
         <button
           onClick={handleLogout}
-          className="group p-2 rounded-full hover:bg-white/10 transition-colors"
+          className="group flex items-center gap-2 px-3 py-2 rounded-full hover:bg-white/10 transition-colors"
           title="Salir"
         >
-          <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-white group-hover:text-red-500 transition-colors" />
+          <ArrowRightStartOnRectangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:text-red-500 transition-colors" />
+          <span className="text-white text-sm sm:text-base font-medium group-hover:text-red-500 transition-colors">
+            Salir
+          </span>
         </button>
       )}
     </nav>
