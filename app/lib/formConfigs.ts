@@ -355,8 +355,8 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "México" },
       ],
     },
-    // Pregunta 10 (índice 9): Canales digitales activos - Selección múltiple
-    9: {
+    // Pregunta 11 (índice 10): Canales digitales activos - Selección múltiple
+    10: {
       multiple: true,
       options: [
         { label: "App móvil" },
