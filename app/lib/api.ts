@@ -267,18 +267,56 @@ Fecha: ${new Date().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'sho
     }
 }
 
-export async function evaluateBusinessProfile(answers: string[], questions: string[]) {
+export async function evaluateBusinessProfile(
+    commercialAnswers: string[], 
+    commercialQuestions: string[],
+    technicalAnswers?: string[],
+    technicalQuestions?: string[]
+) {
     try {
-        const payload = {
-            questions: questions.map((question, index) => ({
-                questionNumber: index + 1,
+        // Combinar preguntas comerciales y técnicas
+        // EXCLUIMOS específicamente las preguntas técnicas que el usuario indique (por ahora: índice 0 = nombre del técnico)
+        const allQuestions: Array<{ questionNumber: number; question: string; answer: string }> = [];
+        
+        // Índices de preguntas técnicas a excluir (por ahora solo el nombre, índice 0)
+        const excludedTechnicalIndices = new Set<number>([0]);
+
+        // Agregar todas las preguntas comerciales
+        commercialQuestions.forEach((question, index) => {
+            allQuestions.push({
+                questionNumber: allQuestions.length + 1,
                 question: question,
-                answer: answers[index] || "",
-            })),
+                answer: commercialAnswers[index] || "",
+            });
+        });
+
+        // Agregar preguntas técnicas (excluyendo las especificadas)
+        if (technicalAnswers && technicalQuestions) {
+            technicalQuestions.forEach((question, index) => {
+                // Excluir preguntas técnicas según los índices especificados
+                if (excludedTechnicalIndices.has(index)) {
+                    return; // Saltar esta pregunta técnica
+                }
+                
+                allQuestions.push({
+                    questionNumber: allQuestions.length + 1,
+                    question: question,
+                    answer: technicalAnswers[index] || "",
+                });
+            });
+        }
+
+        const payload = {
+            questions: allQuestions,
             submittedAt: new Date().toISOString(),
         };
 
         console.log("📤 [API] evaluateBusinessProfile - URL:", `${API_BASE_URL}/ai/evaluate-business-profile`);
+        console.log("📤 [API] evaluateBusinessProfile - Total preguntas combinadas:", allQuestions.length);
+        console.log("📤 [API] evaluateBusinessProfile - Preguntas comerciales incluidas:", commercialQuestions.length);
+        console.log("📤 [API] evaluateBusinessProfile - Preguntas técnicas totales:", technicalAnswers && technicalQuestions ? technicalQuestions.length : 0);
+        console.log("📤 [API] evaluateBusinessProfile - Preguntas técnicas excluidas:", excludedTechnicalIndices.size);
+        console.log("📤 [API] evaluateBusinessProfile - Preguntas técnicas incluidas:", technicalAnswers && technicalQuestions ? technicalQuestions.length - excludedTechnicalIndices.size : 0);
         console.log("📤 [API] evaluateBusinessProfile - Payload:", JSON.stringify(payload, null, 2));
 
         const response = await fetch(`${API_BASE_URL}/ai/evaluate-business-profile`, {
