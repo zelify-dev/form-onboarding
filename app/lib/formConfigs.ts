@@ -119,22 +119,20 @@ const TECH_QUESTIONS = [
   // Sección 1
   "1. Nombre y apellido",
   "2. Cargo y responsabilidades",
-  "3. Institución / Empresa",
-  "4. Tipo de institución (Banco, Cooperativa, Fintech, Empresa)",
-  "5. Productos o servicios financieros actuales",
-  "9. Funcionalidades requeridas para el MVP\n\n  Puede elegir varias opciones.",
+  "3. Productos o servicios financieros actuales",
+  "4. Funcionalidades requeridas para el MVP \n\n  Puede elegir varias opciones.",
   // Sección 2 (Técnico)
-  "10. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
-  "11. ¿Principales proveedores tecnológicos para servicios digitales?",
-  "12. ¿Utilizan webhooks o eventos en tiempo real?",
-  "13. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
-  "14. ¿Implementan doble factor de autenticación (2FA)?",
-  "15. ¿Recolectan información de dispositivo y geolocalización?",
-  "16. Describa el proceso actual de validación de identidad en caso de que aplique.",
-  "17. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
-  "18. ¿Manejan billetera móvil?",
-  "19. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
-  "21. ¿Quién te refirió con nosotros?",
+  "5. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
+  "6. ¿Principales proveedores tecnológicos para servicios digitales?",
+  "7. ¿Utilizan webhooks o eventos en tiempo real?",
+  "8. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
+  "9. ¿Implementan doble factor de autenticación (2FA)?",
+  "10. ¿Recolectan información de dispositivo y geolocalización?",
+  "11. Describa el proceso actual de validación de identidad en caso de que aplique.",
+  "12. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
+  "13. ¿Manejan billetera móvil?",
+  "14. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
+  "15. ¿Quién te refirió con nosotros?",
 ];
 
 const TECH_PLACEHOLDERS = [
@@ -146,51 +144,45 @@ const TECH_PLACEHOLDERS = [
   // 2. Cargo y responsabilidades
   "Ej: Director de Tecnología, responsable de infraestructura y desarrollo",
 
-  // 3. Institución / Empresa
-  "Ej: Banco Andino",
-
-  // 4. Tipo de institución
-  "Ej: Fintech",
-
-  // 5. Productos o servicios financieros actuales
+  // 3. Productos o servicios financieros actuales
   "Ej: Cuentas de ahorro, tarjetas de débito, microcréditos",
 
-  // 9. Funcionalidades requeridas para el MVP
+  // 4. Funcionalidades requeridas para el MVP
   "Ej: Auth, Identity, AML y Transfers",
 
   // Sección 2 — Técnico
 
-  // 10. Integraciones vía API REST
+  // 5. Integraciones vía API REST
   "Ej: Sí, hemos realizado integraciones vía APIs REST con terceros",
 
-  // 11. Proveedores tecnológicos principales
+  // 6. Proveedores tecnológicos principales
   "Ej: AWS, Fiserv y proveedores locales de pagos",
 
-  // 12. Uso de webhooks o eventos en tiempo real
+  // 7. Uso de webhooks o eventos en tiempo real
   "Ej: Sí, usamos webhooks para notificaciones transaccionales, ademas de notificiónes de inicio de sesión",
 
-  // 13. Método de autenticación y manejo de sesión
+  // 8. Método de autenticación y manejo de sesión
   "Ej: Usuario y contraseña con refuerzo OTP",
 
-  // 14. Implementación de 2FA
+  // 9. Implementación de 2FA
   "Ej: Sí, OTP vía SMS y correo electrónico",
 
-  // 15. Recolección de dispositivo y geolocalización
+  // 10. Recolección de dispositivo y geolocalización
   "Ej: Huella del dispositivo y ubicación aproximada",
 
-  // 16. Proceso de validación de identidad
+  // 11. Proceso de validación de identidad
   "Ej: Validación biométrica y verificación documental",
 
-  // 17. Validación AML y herramientas utilizadas
+  // 12. Validación AML y herramientas utilizadas
   "Ej: Consulta de listas AML mediante proveedor externo",
 
-  // 18. Manejo de billetera móvil
+  // 13. Manejo de billetera móvil
   "Ej: Sí, ofrecemos wallet con saldo en USD",
 
-  // 19. Tipos de transferencias interbancarias
+  // 14. Tipos de transferencias interbancarias
   "Ej: Transferencias P2P, ACH y SPI",
 
-  // 21. Referido
+  // 15. Referido
   "Ej: Referido por María Gómez (partner Zelify)",
 ];
 
@@ -311,22 +303,12 @@ export const TECNOLOGICO_FORM: FormConfig = {
   storageKey: "form-onboarding-tecnologico-answers",
   indices: {
     budgetQuestionIndex: -1, // El formulario técnico NO tiene pregunta de presupuesto
-    servicesQuestionIndex: 5, // Pregunta 9 (índice 5): Funcionalidades requeridas para el MVP
+    servicesQuestionIndex: 3, // Pregunta 4 (índice 3): Funcionalidades requeridas para el MVP
     countryQuestionIndex: -1, // El formulario técnico NO tiene pregunta de países
   },
   selectQuestions: {
-    // Pregunta 4 (índice 3): Tipo de institución - Selección única
+    // Pregunta 4 (índice 3): Funcionalidades requeridas para el MVP - Selección múltiple
     3: {
-      multiple: false,
-      options: [
-        { label: "Banco" },
-        { label: "Cooperativa" },
-        { label: "Fintech" },
-        { label: "Empresa" },
-      ],
-    },
-    // Pregunta 9 (índice 5): Funcionalidades requeridas para el MVP - Selección múltiple
-    5: {
       multiple: true,
       options: [
         { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
