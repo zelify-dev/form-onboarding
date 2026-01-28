@@ -218,16 +218,16 @@ const COMERCIAL_QUESTIONS = [
   "16. ¿Emiten tarjetas (débito, crédito o prepago)?",
 
   // Sección 8 — Métricas operativas
-  "17. TPV: Monto total transaccionado",
-  "18. TPN: Total de transacciones procesadas",
-  "19. TA: Número total de tarjetas activas",
+  "17. TPV (Monto total transaccionado): ¿Cuál es el valor total de dinero que estimas que se moverá en todo 2026?",
+  "18. TPN (Total de transacciones procesadas): ¿Cuántas transacciones en total estimas procesar en todo 2026?",
+  "19. TA (Número total de tarjetas activas): ¿Cuántas tarjetas activas estimas tener al 31 de diciembre de 2026?",
   "20. Número de depósitos al mes por cliente",
-  "21. Número de retiros al mes por cliente",
-  "22. Valor de retiro mensual por cliente",
-  "23. Valor de depósito mensual por cliente",
+  "21. Retiros mensuales por cliente: En promedio, ¿cuántos retiros hará cada cliente al mes en 2026?",
+  "22. Gasto mensual estimado por usuario: En promedio, ¿cuánto dinero estimas que cada usuario gastará al mes en 2026?",
+  "23. Ingresos mensuales estimados por usuario: En promedio, ¿cuánto dinero ingresará cada usuario al mes en 2026?",
 
   // Sección 9 — Proyección
-  "24. Usuarios estimados primer y segundo año",
+  "24. Usuarios estimados (año 1 y año 2): ¿Cuántos usuarios activos estimas tener al cierre del Año 1 y al cierre del Año 2 desde tu lanzamiento?",
   "25. Número de transferencias interbancarias mensuales estimadas",
 
   // Sección 10 — Presupuesto y referencia
@@ -268,16 +268,16 @@ const COMERCIAL_PLACEHOLDERS = [
   "Ej: Sí, tarjetas débito",
 
   // Sección 8 — Métricas operativas
-  "Ej: USD 2,000,000 mensuales",
-  "Ej: 150,000 transacciones mensuales",
-  "Ej: 25,000 tarjetas activas",
+  "Ej: 21.000.000 USD en 2026",
+  "Ej: 500.000 transacciones en 2026",
+  "Ej: 20.000 tarjetas activas al cierre de 2026",
   "Ej: 8 depósitos mensuales por cliente",
-  "Ej: 4 retiros mensuales por cliente",
-  "Ej: USD 300 mensuales",
+  "Ej: 2 retiros por cliente/mes",
+  "Ej: USD 200 por usuario/mes",
   "Ej: USD 500 mensuales",
 
   // Sección 9 — Proyección
-  "Ej: Año 1: 20,000 usuarios / Año 2: 75,000 usuarios",
+  "Ej: Año 1: 50.000 / Año 2: 150.000 usuarios activos",
   "Ej: 60,000 transferencias mensuales",
 
   // Sección 10 — Presupuesto y referencia
