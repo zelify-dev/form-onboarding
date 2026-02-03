@@ -409,7 +409,7 @@ export default function AnimatedQuestion({
   return (
     <h2
       ref={containerRef}
-      className="font-medium text-white text-left mb-4 sm:mb-6 md:mb-8 lg:mb-10 relative"
+      className="font-medium text-slate-600 text-left mb-4 sm:mb-6 md:mb-8 lg:mb-10 relative"
       style={{ fontSize: 'clamp(1.3rem, 3.5vw, 1.75rem)' }}
     >
       {palabras.map((palabra, palabraIndex) => {

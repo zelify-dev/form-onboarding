@@ -206,7 +206,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                         ) : (
                                             <ClockIcon className="w-5 h-5 text-yellow-500 shrink-0" />
                                         )}
-                                        <span className="text-sm font-medium text-slate-900 line-clamp-1">{q.question.replace(/^\d+\.\s*/, '')}</span>
+                                        <span className="text-sm font-medium text-slate-600 line-clamp-1">{q.question.replace(/^\d+\.\s*/, '')}</span>
                                     </div>
                                     {expandedId === q.id ? (
                                         <ChevronUpIcon className="w-4 h-4 text-slate-500" />
@@ -217,7 +217,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
 
                                 {expandedId === q.id && (
                                     <div className="p-4 pt-0 text-sm text-slate-700 bg-slate-50">
-                                        <p className="mb-2 font-semibold text-slate-900">{q.question}</p>
+                                        <p className="mb-2 font-semibold text-slate-600">{q.question}</p>
 
                                         {editingId === q.id ? (
                                             <div className="flex flex-col gap-2">
@@ -271,7 +271,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                         <textarea
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
-                                                            className="w-full bg-slate-50 text-slate-900 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                            className="w-full bg-slate-50 text-slate-600 placeholder-slate-400 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
                                                             rows={4}
                                                         />
                                                     );

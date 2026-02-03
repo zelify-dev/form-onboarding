@@ -1559,7 +1559,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                       value={currentAnswer}
                       onChange={(e) => handleAnswerChange(e.target.value)}
                       onKeyDown={handleKeyPress}
-                      className={`w-full bg-transparent text-white text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-white/50 focus:placeholder-white/30 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError ? "placeholder-red-400/70" : ""
+                      className={`w-full bg-transparent text-slate-600 text-lg sm:text-lg md:text-xl lg:text-2xl text-left outline-none border-none focus:border-none focus:ring-0 placeholder-slate-400 focus:placeholder-slate-300 transition-all resize-none overflow-hidden min-h-[1.5em] ${nameError ? "placeholder-red-400/70" : ""
                         }`}
                       placeholder={placeholders[currentQuestionIndex] || ""}
                       disabled={isExiting}

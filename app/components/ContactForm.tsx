@@ -111,7 +111,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
     };
 
     const inputClass = (error?: string) => `
-    w-full rounded-xl bg-slate-50 px-4 py-3 text-slate-900 text-base outline-none transition
+    w-full rounded-xl bg-slate-50 px-4 py-3 text-slate-600 placeholder-slate-400 text-base outline-none transition
     ${error
             ? "ring-1 ring-red-500/40 focus:ring-red-500/60"
             : "ring-1 ring-slate-200 focus:ring-purple-400/50"

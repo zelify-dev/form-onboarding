@@ -243,7 +243,7 @@ export default function Home() {
                         value={code}
                         onChange={(event) => handleChange(event.target.value)}
                         placeholder="Codigo de acceso"
-                        className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-slate-900 text-base sm:text-lg outline-none transition focus:ring-2 focus:ring-purple-400/30"
+                        className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-slate-600 placeholder-slate-400 text-base sm:text-lg outline-none transition focus:ring-2 focus:ring-purple-400/30"
                         autoComplete="off"
                         aria-label="Codigo de acceso"
                         type="password"

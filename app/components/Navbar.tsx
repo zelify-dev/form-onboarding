@@ -29,6 +29,7 @@ export default function Navbar({ showExitButton = true }: { showExitButton?: boo
           width={32}
           height={32}
           className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 lg:w-10 lg:h-10"
+          style={{ filter: "invert(0)" }}
         />
         <span className="text-slate-900 text-base sm:text-lg md:text-xl lg:text-2xl font-medium">
           Al<span className="text-purple-500">ai</span>za
