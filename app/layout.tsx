@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={nataSans.variable} suppressHydrationWarning>
       <body
-        className="font-sans antialiased"
+        className="font-sans antialiased bg-white text-slate-900"
       >
         {children}
       </body>

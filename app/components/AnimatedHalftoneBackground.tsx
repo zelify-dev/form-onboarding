@@ -26,22 +26,23 @@ export default function AnimatedHalftoneBackground({
 
   // ⚙️ CONFIGURACIÓN DE COLORES
   // Cambia el color RGB de los puntos del halftone (formato: "R,G,B")
-  const halftoneColor = isDark ? "255,255,255" : "58,82,190";
+  // Light theme uses a neutral gray so the dots are visible on white backgrounds.
+  const halftoneColor = isDark ? "255,255,255" : "148,163,184";
   
   // ⚙️ CONFIGURACIÓN DE OPACIDAD/INTENSIDAD
   // baseAlphaRaw: Opacidad base de los puntos (0 = invisible, 1 = completamente opaco)
   // Valores más altos = fondo más pronunciado/visible
   // Valores más bajos = fondo más sutil/discreto
-  const baseAlphaRaw = isDark ? 0.06 : 0.2; // Ajusta aquí para cambiar la opacidad base
+  const baseAlphaRaw = isDark ? 0.06 : 0.14; // Ajusta aquí para cambiar la opacidad base
   
   // pulseAlphaRaw: Opacidad máxima cuando los puntos "pulsan" (efecto de onda)
   // Valores más altos = pulso más intenso y visible
   // Valores más bajos = pulso más sutil
-  const pulseAlphaRaw = isDark ? 0.30 : 0.50; // Ajusta aquí para cambiar la intensidad del pulso
+  const pulseAlphaRaw = isDark ? 0.30 : 0.32; // Ajusta aquí para cambiar la intensidad del pulso
   
   // ⚙️ CONFIGURACIÓN DEL FADE EN LOS BORDES
   // Color del degradado que se aplica en los bordes para suavizar la transición
-  const fadeColor = isDark ? "rgba(8,11,25,1)" : "rgb(250, 252, 255)";
+  const fadeColor = isDark ? "rgba(8,11,25,1)" : "rgb(255, 255, 255)";
 
   useEffect(() => {
     const container = containerRef.current;

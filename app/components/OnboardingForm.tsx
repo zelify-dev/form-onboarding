@@ -12,7 +12,7 @@ import TokenWallet from "./TokenWallet";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
-import { supabase } from "../lib/supabase";
+import { getSupabaseClient } from "../lib/supabase";
 import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from "../lib/api";
 
 type OnboardingFormProps = {
@@ -88,6 +88,13 @@ const isValidName = (name: string): boolean => {
 const getNextQuestionIndex = (currentIndex: number, _answer: string): number => currentIndex + 1;
 
 export default function OnboardingForm({ config }: OnboardingFormProps) {
+  const supabase = useMemo(() => {
+    try {
+      return getSupabaseClient();
+    } catch {
+      return null;
+    }
+  }, []);
   const questions = config.questions;
   const placeholders = config.placeholders;
   const storageKey = config.storageKey;
@@ -586,6 +593,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   // Sync with Supabase on answer change
   useEffect(() => {
+    if (!supabase) return;
     const companyId = localStorage.getItem("onboarding_company_id");
     const role = localStorage.getItem("onboarding_role");
 
@@ -614,6 +622,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   // Load from Supabase on mount
   useEffect(() => {
+    if (!supabase) return;
     const fetchSupabaseData = async () => {
       const companyId = localStorage.getItem("onboarding_company_id");
       const role = localStorage.getItem("onboarding_role");
@@ -792,6 +801,10 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       console.log("❌ [VALIDACIÓN] No hay company_id");
       return { bothComplete: false, missingForms: ['commercial', 'technical'] };
     }
+    if (!supabase) {
+      console.log("❌ [VALIDACIÓN] Supabase no está configurado");
+      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
+    }
 
     try {
       // Obtener ambos formularios
@@ -930,6 +943,10 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   // Función para manejar el clic en Finalizar
   const handleFinalize = async () => {
+    if (!supabase) {
+      setValidationMessage("Falta configurar Supabase (.env.local).");
+      return;
+    }
     // Guardar la respuesta actual antes de verificar
     const newAnswers = [...answers];
     if (isCountryQuestion(currentQuestionIndex)) {
@@ -1238,7 +1255,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       {isSubmitting && !isTechnicalForm && <HexagonLoader />}
 
       <div className="absolute inset-0 animated-gradient" />
-      <AnimatedHalftoneBackground isDark={true} fullScreen={true} intensity={0.6} brightness={0.8} className="z-0" />
+      <AnimatedHalftoneBackground isDark={false} fullScreen={true} intensity={0.8} brightness={1} className="z-0" />
       <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden">
         <Navbar />
         {!isCompleted && (
@@ -1279,7 +1296,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                         if (isTechnical) {
                           return (
                             <div className="w-full">
-                              <h2 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 text-center">
+                              <h2 className="text-slate-900 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 text-center">
                                 ¡Muchas gracias por completar el cuestionario técnico!
                               </h2>
                               <div className="flex flex-col sm:flex-row gap-4 w-full mt-8">
@@ -1293,7 +1310,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                     setShowStatusTab(false);
                                     hasSubmittedRef.current = false;
                                   }}
-                                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-4 px-6 rounded-xl font-medium transition-all duration-300"
+                                  className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-900 py-4 px-6 rounded-xl font-medium transition-all duration-300"
                                 >
                                   Volver a la pregunta 1
                                 </button>
@@ -1371,14 +1388,14 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                 <div className="w-full">
                   {isCountryQuestion(currentQuestionIndex) ? (
                     <div className="w-full">
-                      <p className="text-white/60 text-sm sm:text-base mb-4">Selecciona uno o varios países</p>
+                      <p className="text-slate-600 text-sm sm:text-base mb-4">Selecciona uno o varios países</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                         {COUNTRY_OPTIONS.map((country) => (
                           <label
                             key={country}
-                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${selectedCountries.includes(country)
-                              ? "bg-purple-500/20 border-purple-500 text-white"
-                              : "bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10"
+                            className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${selectedCountries.includes(country)
+                              ? "bg-purple-50 text-slate-900"
+                              : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                               } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <input
@@ -1393,19 +1410,19 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                         ))}
                       </div>
                       {selectedCountries.length === 0 && (
-                        <p className="text-white/50 text-sm sm:text-base mt-4">Selecciona al menos un país</p>
+                        <p className="text-slate-500 text-sm sm:text-base mt-4">Selecciona al menos un país</p>
                       )}
                     </div>
                   ) : isBudgetQuestion(currentQuestionIndex) ? (
                     <div className="w-full flex flex-col items-center">
-                      <p className="text-white/50 text-sm sm:text-base mb-4">Selecciona una opción</p>
+                      <p className="text-slate-600 text-sm sm:text-base mb-4">Selecciona una opción</p>
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         {["Sí", "No"].map((option) => (
                           <label
                             key={option}
-                            className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg border-2 cursor-pointer transition-all duration-200 ${currentAnswer === option
-                              ? "bg-purple-500/20 border-purple-500 text-white"
-                              : "bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10"
+                            className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg cursor-pointer transition-all duration-200 ${currentAnswer === option
+                              ? "bg-purple-50 text-slate-900"
+                              : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                               } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <input
@@ -1428,9 +1445,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                         {SERVICES.map((service) => (
                           <label
                             key={service.name}
-                            className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${selectedServices.includes(service.name)
-                              ? "bg-purple-500/20 border-purple-500 text-white"
-                              : "bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10"
+                            className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg cursor-pointer transition-all duration-200 ${selectedServices.includes(service.name)
+                              ? "bg-purple-50 text-slate-900"
+                              : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                               } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <input
@@ -1442,7 +1459,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                             />
                             <div className="flex flex-col gap-1">
                               <span className="text-sm sm:text-base md:text-lg font-medium select-none">{service.name}</span>
-                              <span className="text-xs sm:text-sm text-white/60 select-none leading-tight">
+                              <span className="text-xs sm:text-sm text-slate-500 select-none leading-tight">
                                 {service.description}
                               </span>
                             </div>
@@ -1454,7 +1471,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                           href="https://www.zelify.com/clips"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-purple-500/20 hover:bg-purple-500/30 border-2 border-purple-500 text-white text-sm sm:text-base font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+                          className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-purple-500 hover:bg-purple-600 text-white text-sm sm:text-base font-medium rounded-lg transition-all duration-300"
                         >
                           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -1464,7 +1481,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                         </a>
                       </div>
                       {selectedServices.length === 0 && (
-                        <p className="text-white/50 text-sm sm:text-base mt-4">Selecciona al menos un servicio</p>
+                        <p className="text-slate-500 text-sm sm:text-base mt-4">Selecciona al menos un servicio</p>
                       )}
                     </div>
                   ) : isSelectQuestion(currentQuestionIndex) ? (
@@ -1477,7 +1494,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
                         return (
                           <>
-                            <p className="text-white/60 text-sm sm:text-base mb-4">
+                            <p className="text-slate-600 text-sm sm:text-base mb-4">
                               {selectConfig.multiple ? "Selecciona una o varias opciones" : "Selecciona una opción"}
                             </p>
                             <div
@@ -1497,9 +1514,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                 return (
                                   <label
                                     key={option.label}
-                                    className={`flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${isSelected
-                                      ? "bg-purple-500/20 border-purple-500 text-white"
-                                      : "bg-white/5 border-white/20 text-white/70 hover:border-white/40 hover:bg-white/10"
+                                    className={`flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg cursor-pointer transition-all duration-200 ${isSelected
+                                      ? "bg-purple-50 text-slate-900"
+                                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                                       } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
                                   >
                                     <input
@@ -1561,7 +1578,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                     <button
                       onClick={handlePrevious}
                       disabled={isExiting}
-                      className="flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 py-1 sm:py-1.5 md:py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:cursor-not-allowed text-white text-sm sm:text-base md:text-lg lg:text-xl font-medium rounded-lg transition-all duration-300"
+                      className="flex items-center gap-1 sm:gap-2 md:gap-3 px-4 sm:px-6 md:px-8 lg:px-10 py-1 sm:py-1.5 md:py-2 bg-slate-100 hover:bg-slate-200 disabled:bg-slate-100/50 disabled:cursor-not-allowed text-slate-900 text-sm sm:text-base md:text-lg lg:text-xl font-medium rounded-lg transition-all duration-300"
                       title="Retroceder"
                     >
                       &lt;
@@ -1638,12 +1655,12 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
       {/* Botón "Finalizar" fijo en la parte inferior solo para formulario comercial - visible en todas las preguntas */}
       {!isCompleted && isCommercialForm && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent pt-4 pb-4 sm:pb-6 px-3 sm:px-6 md:px-8 lg:px-10">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-50 pt-4 pb-4 sm:pb-6 px-3 sm:px-6 md:px-8 lg:px-10">
           <div className="max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto flex justify-center">
             <button
               onClick={() => setShowConfirmModal(true)}
               disabled={isNextButtonDisabled}
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 lg:px-12 py-3 sm:py-3.5 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 lg:px-12 py-3 sm:py-3.5 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300"
             >
               Finalizar
             </button>
@@ -1653,18 +1670,18 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
       {/* Modal de confirmación para formulario comercial */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-white/20 rounded-2xl p-6 sm:p-8 md:p-10 max-w-md w-full mx-4 shadow-2xl">
-            <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+          <div className="bg-slate-50 rounded-2xl p-6 sm:p-8 md:p-10 max-w-md w-full mx-4">
+            <h3 className="text-slate-900 text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">
               ¿Estás seguro de finalizar este cuestionario?
             </h3>
-            <p className="text-white/80 text-base sm:text-lg mb-6 sm:mb-8 text-center">
+            <p className="text-slate-700 text-base sm:text-lg mb-6 sm:mb-8 text-center">
               Se va a generar una propuesta comercial en base a tus respuestas.
             </p>
             
             {validationMessage && (
-              <div className="mb-4 sm:mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <p className="text-red-300 text-sm sm:text-base text-center leading-relaxed">
+              <div className="mb-4 sm:mb-6 p-4 bg-red-50 rounded-lg">
+                <p className="text-red-700 text-sm sm:text-base text-center leading-relaxed">
                   {validationMessage}
                 </p>
               </div>
@@ -1683,7 +1700,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                   setShowConfirmModal(false);
                   setValidationMessage(null);
                 }}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300"
+                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-900 py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300"
               >
                 Cancelar
               </button>

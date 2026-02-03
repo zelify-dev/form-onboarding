@@ -111,17 +111,17 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
     };
 
     const inputClass = (error?: string) => `
-    w-full rounded-xl border bg-black/40 px-4 py-3 text-white text-base outline-none transition 
+    w-full rounded-xl bg-slate-50 px-4 py-3 text-slate-900 text-base outline-none transition
     ${error
-            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/30"
-            : "border-white/10 focus:border-purple-400 focus:ring-1 focus:ring-purple-400/30"
+            ? "ring-1 ring-red-500/40 focus:ring-red-500/60"
+            : "ring-1 ring-slate-200 focus:ring-purple-400/50"
         }
   `;
 
     return (
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div>
-                <label className="text-xs text-white/50 mb-1 block">Nombre</label>
+                <label className="text-xs text-slate-500 mb-1 block">Nombre</label>
                 <input
                     name="name"
                     value={formData.name}
@@ -134,7 +134,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
             </div>
 
             <div>
-                <label className="text-xs text-white/50 mb-1 block">Correo Electrónico</label>
+                <label className="text-xs text-slate-500 mb-1 block">Correo Electrónico</label>
                 <input
                     name="email"
                     type="email"
@@ -148,7 +148,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
             </div>
 
             <div>
-                <label className="text-xs text-white/50 mb-1 block">Teléfono celular</label>
+                <label className="text-xs text-slate-500 mb-1 block">Teléfono celular</label>
                 <input
                     name="phone"
                     type="tel"
@@ -163,7 +163,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
             </div>
 
             <div>
-                <label className="text-xs text-white/50 mb-1 block">Empresa</label>
+                <label className="text-xs text-slate-500 mb-1 block">Empresa</label>
                 <input
                     name="company"
                     value={formData.company}
@@ -176,7 +176,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
             </div>
 
             <div>
-                <label className="text-xs text-white/50 mb-1 block">Rol en la empresa</label>
+                <label className="text-xs text-slate-500 mb-1 block">Rol en la empresa</label>
                 <input
                     name="role"
                     value={formData.role}
@@ -192,7 +192,7 @@ export default function ContactForm({ onCancel, onSubmit }: ContactFormProps) {
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="flex-1 rounded-xl border border-white/20 py-3 text-base font-medium text-white/70 hover:bg-white/5 transition"
+                    className="flex-1 rounded-xl bg-slate-100 hover:bg-slate-200 py-3 text-base font-medium text-slate-900 transition"
                 >
                     Cancelar
                 </button>

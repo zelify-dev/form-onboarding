@@ -31,7 +31,7 @@ export default function FocusedProgressBar({
                 <div className="flex items-center gap-4">
                     {/* Skeleton simple para mantener la estructura visual durante la carga */}
                     {Array.from({ length: 5 }, (_, i) => (
-                        <div key={i} className="w-8 h-8 rounded-full border border-white/10 bg-white/5" />
+                        <div key={i} className="w-8 h-8 rounded-full border border-slate-200 bg-slate-50" />
                     ))}
                 </div>
             </div>
@@ -43,14 +43,14 @@ export default function FocusedProgressBar({
             className="relative w-full h-24 flex flex-col items-center justify-center overflow-hidden"
         >
             {/* Barra de Progreso Continua (Estilo YouTube) */}
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-white/5 z-30">
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-slate-200 z-30">
                 <div
                     className="h-full bg-purple-500 shadow-[0_0_10px_#a855f7] transition-all duration-500 ease-out"
                     style={{ width: `${progressPercentage}%` }}
                 />
                 {/* Brillo en la punta de la barra */}
                 <div
-                    className="absolute top-0 h-[2px] w-2 bg-white blur-[2px] transition-all duration-500 ease-out"
+                    className="absolute top-0 h-[2px] w-2 bg-slate-300 blur-[2px] transition-all duration-500 ease-out"
                     style={{ left: `${progressPercentage}%`, transform: 'translateX(-100%)' }}
                 />
             </div>
@@ -143,7 +143,7 @@ export default function FocusedProgressBar({
                                             ? "border-purple-500 bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                                             : showCheckmark
                                                 ? "border-purple-500 bg-purple-500/10" // Estilo completado
-                                                : "border-white/20 bg-transparent"
+                                                : "border-slate-200 bg-transparent"
                                             }`}
                                     >
                                         {/* Contenido: Checkmark o Número */}
@@ -153,7 +153,7 @@ export default function FocusedProgressBar({
                                             </svg>
                                         ) : (
                                             <span
-                                                className={`font-semibold  transition-colors duration-300 ${distance === 0 ? "text-white text-base" : "text-white/60 text-xs"
+                                                className={`font-semibold  transition-colors duration-300 ${distance === 0 ? "text-slate-900 text-base" : "text-slate-500 text-xs"
                                                     }`}
                                             >
                                                 {stepNumber}
@@ -176,7 +176,7 @@ export default function FocusedProgressBar({
                                         <div className={`w-3 h-[1px] rounded-full transition-colors duration-300 ${
                                             // Si el paso actual ES completado (y no es el último), pintar separador
                                             // O si estamos entre dos completados.
-                                            (isCompleted && completedSteps.includes(stepNumber + 1)) ? "bg-purple-500/50" : "bg-white"
+                                            (isCompleted && completedSteps.includes(stepNumber + 1)) ? "bg-purple-500/50" : "bg-slate-200"
                                             }`} />
                                     </div>
                                 )}

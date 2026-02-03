@@ -13,8 +13,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
@@ -24,23 +24,9 @@ body {
   font-family: var(--font-nata-sans), sans-serif;
 }
 
-/* Animación del gradiente de fondo */
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
+/* Fondo plano (sin gradiente) */
 .animated-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 50%, #000000 100%);
-  background-size: 200% 200%;
-  animation: gradientShift 20s ease infinite;
+  background: #ffffff;
 }
 
 /* Animación para la pestaña de notificación */

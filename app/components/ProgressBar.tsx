@@ -60,7 +60,7 @@ export default function ProgressBar({
             className={`h-0.5 transition-all duration-500 ${
               prevIsCompleted || prevIsPast
                 ? "bg-purple-500"
-                : "bg-white/20"
+                : "bg-slate-200"
             }`}
             style={{ width: 'clamp(2px, 0.4vw, 6px)' }}
           />
@@ -104,7 +104,7 @@ export default function ProgressBar({
                 ? "bg-purple-400 border border-purple-400 shadow-md shadow-purple-400/50 scale-110 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px] md:w-6 md:h-6 lg:w-7 lg:h-7"
                 : state === "viewing-future"
                 ? "bg-blue-500/30 border border-blue-500 shadow-md shadow-blue-500/50 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px] md:w-6 md:h-6 lg:w-7 lg:h-7"
-                : "bg-transparent border border-white/20 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5"
+                : "bg-transparent border border-slate-200 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5"
             }`}
           >
             {/* Checkmark para completadas */}
@@ -132,7 +132,7 @@ export default function ProgressBar({
                     ? "text-purple-300"
                     : state === "viewing-future"
                     ? "text-blue-300"
-                    : "text-white/40"
+                    : "text-slate-400"
                 }`}
               >
                 {stepNumber}
@@ -158,13 +158,13 @@ export default function ProgressBar({
             <div key={index} className="flex items-center">
               {index > 0 && (
                 <div
-                  className="h-0.5 bg-white/20"
+                  className="h-0.5 bg-slate-200"
                   style={{ width: 'clamp(2px, 0.4vw, 6px)' }}
                 />
               )}
               <div className="relative flex items-center justify-center p-0.5 sm:p-1 md:p-1.5 lg:p-2">
-                <div className="relative flex items-center justify-center rounded-full bg-transparent border border-white/20 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5">
-                  <span className="text-[6px] sm:text-[7px] md:text-[8px] lg:text-[9px] font-medium text-white/40">
+                <div className="relative flex items-center justify-center rounded-full bg-transparent border border-slate-200 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5">
+                  <span className="text-[6px] sm:text-[7px] md:text-[8px] lg:text-[9px] font-medium text-slate-400">
                     {index + 1}
                   </span>
                 </div>
@@ -184,4 +184,3 @@ export default function ProgressBar({
     </div>
   );
 }
-

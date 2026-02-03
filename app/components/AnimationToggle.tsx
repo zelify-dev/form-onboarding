@@ -32,9 +32,9 @@ export default function AnimationToggle({
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 shadow-lg border border-purple-500/30">
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 bg-slate-100 rounded-lg px-4 py-3">
       <label className="flex items-center gap-3 cursor-pointer">
-        <span className="text-white text-sm sm:text-base font-medium select-none">
+        <span className="text-slate-900 text-sm sm:text-base font-medium select-none">
           Animaciones
         </span>
         <button
@@ -49,7 +49,7 @@ export default function AnimationToggle({
         >
           <span
             className={`
-              inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out
+              inline-block h-4 w-4 transform rounded-full bg-slate-200 transition-transform duration-200 ease-in-out
               ${enabled ? 'translate-x-6' : 'translate-x-1'}
             `}
           />
@@ -58,4 +58,3 @@ export default function AnimationToggle({
     </div>
   );
 }
-

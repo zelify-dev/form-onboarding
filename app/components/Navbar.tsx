@@ -30,7 +30,7 @@ export default function Navbar({ showExitButton = true }: { showExitButton?: boo
           height={32}
           className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 lg:w-10 lg:h-10"
         />
-        <span className="text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium">
+        <span className="text-slate-900 text-base sm:text-lg md:text-xl lg:text-2xl font-medium">
           Al<span className="text-purple-500">ai</span>za
         </span>
       </div>
@@ -38,11 +38,11 @@ export default function Navbar({ showExitButton = true }: { showExitButton?: boo
       {showExitButton && (
         <button
           onClick={handleLogout}
-          className="group flex items-center gap-2 px-3 py-2 rounded-full hover:bg-white/10 transition-colors"
+          className="group flex items-center gap-2 px-3 py-2 rounded-full hover:bg-slate-100 transition-colors"
           title="Salir"
         >
-          <ArrowRightStartOnRectangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:text-red-500 transition-colors" />
-          <span className="text-white text-sm sm:text-base font-medium group-hover:text-red-500 transition-colors">
+          <ArrowRightStartOnRectangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-red-500 transition-colors" />
+          <span className="text-slate-700 text-sm sm:text-base font-medium group-hover:text-red-500 transition-colors">
             Salir
           </span>
         </button>

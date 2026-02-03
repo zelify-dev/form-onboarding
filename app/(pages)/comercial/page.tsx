@@ -21,7 +21,7 @@ export default function ComercialPage() {
       {/* Floating Action Button for Technical Insights */}
       <button
         onClick={() => setIsTechPanelOpen(true)}
-        className="fixed top-24 right-6 z-40 flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-full shadow-lg transition-all transform hover:scale-105"
+        className="fixed top-24 right-6 z-40 flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-full transition-all transform hover:scale-105"
       >
         <ChartBarIcon className="w-5 h-5" />
         <span className="text-sm font-medium">Ver Estado del Cuestionario del area de tecnologia </span>

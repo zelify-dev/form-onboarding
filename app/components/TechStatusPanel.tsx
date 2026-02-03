@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircleIcon, ClockIcon, ChevronDownIcon, ChevronUpIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { TECNOLOGICO_FORM } from "../lib/formConfigs";
-import { supabase } from "../lib/supabase";
+import { getSupabaseClient } from "../lib/supabase";
 
 export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     // Initialize state
@@ -20,6 +20,14 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
 
     // Fetch from Supabase
     useEffect(() => {
+        let supabase: ReturnType<typeof getSupabaseClient> | null = null;
+        try {
+            supabase = getSupabaseClient();
+        } catch {
+            setIsLoaded(true);
+            return;
+        }
+
         const fetchTechAnswers = async () => {
             const companyId = localStorage.getItem("onboarding_company_id");
             if (!companyId) return;
@@ -65,7 +73,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                     table: 'form_submissions',
                     filter: `company_id=eq.${companyId}`,
                 },
-                (payload) => {
+                (payload: any) => {
                     const newData = payload.new as any;
                     // Check if update is for technical role
                     if (newData.role === 'technical' && newData.answers) {
@@ -87,7 +95,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            supabase?.removeChannel(channel);
         };
 
     }, []);
@@ -131,6 +139,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
         if (companyId) {
             const answersArray = updatedQuestions.map(q => q.answer);
             try {
+                const supabase = getSupabaseClient();
                 await supabase
                     .from('form_submissions')
                     .upsert({
@@ -152,25 +161,25 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
 
     return (
         <div
-            className={`fixed inset-y-0 right-0 w-96 bg-black/90 backdrop-blur-xl border-l border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? "translate-x-0" : "translate-x-full"
+            className={`fixed inset-y-0 right-0 w-96 bg-slate-50 transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? "translate-x-0" : "translate-x-full"
                 }`}
         >
-            <div className="flex flex-col h-full p-6 text-white">
+            <div className="flex flex-col h-full p-6 text-slate-900">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-white">Estado Cuestionario Técnico</h2>
-                    <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+                    <h2 className="text-xl font-bold text-slate-900">Estado Cuestionario Técnico</h2>
+                    <button onClick={onClose} className="text-slate-500 hover:text-slate-900 transition-colors">
                         ✕
                     </button>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mb-8">
-                    <div className="flex justify-between text-sm mb-2 text-white/70">
+                    <div className="flex justify-between text-sm mb-2 text-slate-600">
                         <span>Progreso del equipo</span>
                         <span>{completedCount}/{totalCount} completado</span>
                     </div>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-blue-500 rounded-full transition-all duration-500"
                             style={{ width: `${progress}%` }}
@@ -182,33 +191,33 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                     {!isLoaded ? (
                         <div className="flex justify-center py-10">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
                         </div>
                     ) : (
                         questions.map((q) => (
-                            <div key={q.id} className="border border-white/10 rounded-lg bg-white/5 overflow-hidden">
+                            <div key={q.id} className="rounded-lg bg-slate-50 overflow-hidden">
                                 <button
                                     onClick={() => toggleExpand(q.id)}
-                                    className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+                                    className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
                                         {q.status === 'completed' ? (
-                                            <CheckCircleIcon className="w-5 h-5 text-green-400 shrink-0" />
+                                            <CheckCircleIcon className="w-5 h-5 text-green-500 shrink-0" />
                                         ) : (
-                                            <ClockIcon className="w-5 h-5 text-yellow-400 shrink-0" />
+                                            <ClockIcon className="w-5 h-5 text-yellow-500 shrink-0" />
                                         )}
-                                        <span className="text-sm font-medium text-white/90 line-clamp-1">{q.question.replace(/^\d+\.\s*/, '')}</span>
+                                        <span className="text-sm font-medium text-slate-900 line-clamp-1">{q.question.replace(/^\d+\.\s*/, '')}</span>
                                     </div>
                                     {expandedId === q.id ? (
-                                        <ChevronUpIcon className="w-4 h-4 text-white/50" />
+                                        <ChevronUpIcon className="w-4 h-4 text-slate-500" />
                                     ) : (
-                                        <ChevronDownIcon className="w-4 h-4 text-white/50" />
+                                        <ChevronDownIcon className="w-4 h-4 text-slate-500" />
                                     )}
                                 </button>
 
                                 {expandedId === q.id && (
-                                    <div className="p-4 pt-0 border-t border-white/5 text-sm text-white/70 bg-black/20">
-                                        <p className="mb-2 font-semibold text-white/90">{q.question}</p>
+                                    <div className="p-4 pt-0 text-sm text-slate-700 bg-slate-50">
+                                        <p className="mb-2 font-semibold text-slate-900">{q.question}</p>
 
                                         {editingId === q.id ? (
                                             <div className="flex flex-col gap-2">
@@ -225,7 +234,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                                 {selectConfig.options.map((option) => {
                                                                     const isSelected = currentValues.includes(option.label);
                                                                     return (
-                                                                        <label key={option.label} className="flex items-start gap-2 cursor-pointer hover:bg-white/5 p-1 rounded">
+                                                                        <label key={option.label} className="flex items-start gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
                                                                             <input
                                                                                 type={selectConfig.multiple ? "checkbox" : "radio"}
                                                                                 name={`question-${q.id}`}
@@ -243,12 +252,12 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                                                         setEditValue(option.label);
                                                                                     }
                                                                                 }}
-                                                                                className="mt-1 bg-transparent border-white/30 text-blue-500 focus:ring-blue-500 rounded-sm"
+                                                                                className="mt-1 bg-transparent border-slate-300 text-blue-600 focus:ring-blue-500 rounded-sm"
                                                                             />
                                                                             <div className="text-sm">
-                                                                                <span className="text-white/90 font-medium">{option.label}</span>
+                                                                                <span className="text-slate-900 font-medium">{option.label}</span>
                                                                                 {option.description && (
-                                                                                    <p className="text-xs text-white/50">{option.description}</p>
+                                                                                    <p className="text-xs text-slate-500">{option.description}</p>
                                                                                 )}
                                                                             </div>
                                                                         </label>
@@ -262,7 +271,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                         <textarea
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
-                                                            className="w-full bg-white/10 text-white rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                            className="w-full bg-slate-50 text-slate-900 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
                                                             rows={4}
                                                         />
                                                     );
@@ -271,7 +280,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                 <div className="flex justify-end gap-2 mt-2">
                                                     <button
                                                         onClick={handleCancel}
-                                                        className="px-3 py-1 rounded text-xs text-white/60 hover:text-white"
+                                                        className="px-3 py-1 rounded text-xs text-slate-600 hover:text-slate-900"
                                                     >
                                                         Cancelar
                                                     </button>
@@ -286,11 +295,11 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                         ) : (
                                             <>
                                                 {q.status === 'completed' ? (
-                                                    <div className="text-white/80">
+                                                    <div className="text-slate-700">
                                                         {TECNOLOGICO_FORM.selectQuestions?.[q.id]?.multiple ? (
                                                             <div className="flex flex-wrap gap-2 mt-1">
                                                                 {q.answer.split(",").map((item: string, idx: number) => (
-                                                                    <span key={idx} className="bg-blue-500/20 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-500/30">
+                                                                    <span key={idx} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
                                                                         {item.trim()}
                                                                     </span>
                                                                 ))}
@@ -300,7 +309,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-yellow-400/80 italic">Esperando respuesta...</p>
+                                                    <p className="text-yellow-700 italic">Esperando respuesta...</p>
                                                 )}
 
                                                 <button
@@ -308,7 +317,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                         e.stopPropagation();
                                                         handleEditClick(q);
                                                     }}
-                                                    className="mt-3 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                                    className="mt-3 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
                                                 >
                                                     <PencilSquareIcon className="w-3 h-3" />
                                                     Editar respuesta
