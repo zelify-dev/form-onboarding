@@ -1,4 +1,5 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://exemptive-bernice-experiencedly.ngrok-free.dev";
+export const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://mailing-production-431c.up.railway.app";
 
 type EvaluateBusinessProfileResponse = {
     status: "next" | "decline";
