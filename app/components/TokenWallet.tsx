@@ -81,8 +81,8 @@ export default function TokenWallet({
                 {/* Tooltip Informativo */}
                 <div className="absolute bottom-full right-0 mb-4 w-64 p-3 rounded-xl bg-[#0F0A1F] border border-purple-500/30 shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50">
                     <div className="text-xs text-white/90 leading-relaxed text-center">
-                        <span className="text-purple-400 font-bold block mb-1">¡Gana Tokens! 🚀</span>
-                        Entre más detalladas y de valor sean tus respuestas, ganarás más tokens para usar en nuestros servicios futuros.
+                        <span className="text-purple-400 font-bold block mb-1">¡Gana Zcoins! 🚀</span>
+                        Entre más detalladas y de valor sean tus respuestas, ganarás más Zcoins para usar en nuestros servicios futuros.
                     </div>
                     {/* Triángulo/Flecha */}
                     <div className="absolute -bottom-1 right-8 w-2 h-2 bg-[#0F0A1F] border-r border-b border-purple-500/30 rotate-45"></div>
@@ -116,13 +116,13 @@ export default function TokenWallet({
                 {/* Texto de Balance */}
                 <div className="flex flex-col">
                     <span className="text-white/50 text-[10px] sm:text-xs font-medium uppercase tracking-wider">
-                        Tus Tokens
+                        Tus Zcoins
                     </span>
                     <div className="flex items-baseline gap-1">
                         <span className={`text-xl sm:text-2xl font-bold font-mono transition-colors duration-300 ${isAnimating ? "text-purple-400" : "text-white"}`}>
                             {displayBalance.toLocaleString()}
                         </span>
-                        <span className="text-white/40 text-xs">tkn</span>
+                        <span className="text-white/40 text-xs">zcoins</span>
                     </div>
                 </div>
             </div>

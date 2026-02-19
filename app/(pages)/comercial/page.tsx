@@ -24,7 +24,7 @@ export default function ComercialPage() {
         className="fixed top-24 right-6 z-40 flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-full transition-all transform hover:scale-105"
       >
         <ChartBarIcon className="w-5 h-5" />
-        <span className="text-sm font-medium">Ver Estado del Cuestionario del area de tecnologia </span>
+        <span className="text-sm font-medium">Ver Estado del Cuestionario del area de tecnología </span>
       </button>
 
       {/* Main Form Area */}

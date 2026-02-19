@@ -69,8 +69,8 @@ export default function FocusedProgressBar({
                     style={{
                         // 4rem es el ancho total de cada bloque (círculo + separador)
                         // Ajustamos para centrar el elemento actual
-                        // -1rem es para compensar la mitad del ancho del círculo
-                        transform: `translateX(calc(50% - ${(currentStep) * 4}rem - 1rem))`,
+                        // 2rem es la mitad del ancho del círculo (w-8 = 2rem) para centrarlo perfectamente
+                        transform: `translateX(calc(50% - ${(currentStep - 1) * 4}rem - 1rem))`,
                     }}
                 >
                     {Array.from({ length: totalSteps }, (_, i) => {
@@ -139,26 +139,28 @@ export default function FocusedProgressBar({
 
                                     {/* 2. Círculo Base */}
                                     <div
-                                        className={`absolute inset-0 rounded-full border flex items-center justify-center transition-colors duration-500 flex-shrink-0 ${distance === 0
+                                        className={`absolute inset-0 rounded-full border transition-colors duration-500 flex-shrink-0 ${distance === 0
                                             ? "border-purple-500 bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                                             : showCheckmark
                                                 ? "border-purple-500 bg-purple-500/10" // Estilo completado
                                                 : "border-slate-200 bg-transparent"
                                             }`}
                                     >
-                                        {/* Contenido: Checkmark o Número */}
-                                        {showCheckmark ? (
-                                            <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            <span
-                                                className={`font-semibold  transition-colors duration-300 ${distance === 0 ? "text-slate-900 text-base" : "text-slate-500 text-xs"
-                                                    }`}
-                                            >
-                                                {stepNumber}
-                                            </span>
-                                        )}
+                                        {/* Contenido: Checkmark o Número - Contenedor con flexbox perfecto */}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            {showCheckmark ? (
+                                                <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                <span
+                                                    className={`font-semibold leading-none transition-colors duration-300 ${distance === 0 ? "text-slate-900 text-base" : "text-slate-500 text-xs"
+                                                        }`}
+                                                >
+                                                    {stepNumber}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* 3. Glow estático para el activo */}

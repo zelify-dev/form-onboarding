@@ -263,6 +263,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       setCurrentAnswer(answers[currentQuestionIndex] || "");
     }
     setNameError("");
+    setValidationMessage(null);
   }, [currentQuestionIndex, answers]);
 
   const handleCountryToggle = (country: string) => {
@@ -333,6 +334,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   const handleAnswerChange = (value: string) => {
     setCurrentAnswer(value);
+    
+    // Limpiar mensaje de validación cuando el usuario empiece a escribir
+    if (validationMessage) {
+      setValidationMessage(null);
+    }
 
     if (currentQuestionIndex === 0) {
       if (value.trim() === "") {
@@ -824,17 +830,17 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const isNextButtonDisabled = useMemo(() => {
     if (!mounted) return true;
     if (isCountryQuestion(currentQuestionIndex)) {
-      return isExiting || selectedCountries.length === 0 || nameError !== "";
+      return isExiting || selectedCountries.length === 0 || nameError !== "" || validationMessage !== null;
     }
     if (isServicesQuestion(currentQuestionIndex)) {
-      return isExiting || selectedServices.length === 0;
+      return isExiting || selectedServices.length === 0 || validationMessage !== null;
     }
     if (isSelectQuestion(currentQuestionIndex)) {
       const selections = selectSelections[currentQuestionIndex] || [];
-      return isExiting || selections.length === 0;
+      return isExiting || selections.length === 0 || validationMessage !== null;
     }
-    return isExiting || currentAnswer.trim() === "" || nameError !== "";
-  }, [mounted, isExiting, currentAnswer, currentQuestionIndex, selectedCountries, selectedServices, nameError, selectSelections]);
+    return isExiting || currentAnswer.trim() === "" || nameError !== "" || validationMessage !== null;
+  }, [mounted, isExiting, currentAnswer, currentQuestionIndex, selectedCountries, selectedServices, nameError, validationMessage, selectSelections]);
 
   // Verificar si es la última pregunta
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -1310,7 +1316,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         )}
 
         <div className="flex-1 flex items-start justify-center py-2 sm:py-4 md:py-8 overflow-y-auto">
-          <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl pb-24 sm:pb-28 md:pb-32">
+          <div className="flex flex-col px-3 sm:px-6 md:px-8 lg:px-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl pt-8 sm:pt-12 md:pt-16 lg:pt-20 pb-24 sm:pb-28 md:pb-32">
             {isCompleted && !isSubmitting ? (
               showQuestion && (
                 <>
@@ -1610,6 +1616,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                       disabled={isExiting}
                       rows={1}
                     />
+                  )}
+                  {validationMessage && !isCountryQuestion(currentQuestionIndex) && !isServicesQuestion(currentQuestionIndex) && !isSelectQuestion(currentQuestionIndex) && (
+                    <p className="text-red-500 text-sm sm:text-base mt-2 font-medium">{validationMessage}</p>
                   )}
                   {nameError && <p className="text-red-400 text-sm sm:text-base mt-2">{nameError}</p>}
                 </div>
