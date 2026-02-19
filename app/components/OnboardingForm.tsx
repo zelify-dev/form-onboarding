@@ -12,8 +12,8 @@ import TokenWallet from "./TokenWallet";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
-import { getSupabaseClient } from "../lib/supabase";
 import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from "../lib/api";
+import { submitOnboardingForm, saveOnboardingProgress, getOnboardingProgress, finalizeOnboarding } from "../actions";
 
 type OnboardingFormProps = {
   config: FormConfig;
@@ -121,13 +121,7 @@ const validateAnswer =  (questionIndex : number, answer: string, config: FormCon
 const getNextQuestionIndex = (currentIndex: number, _answer: string): number => currentIndex + 1;
 
 export default function OnboardingForm({ config }: OnboardingFormProps) {
-  const supabase = useMemo(() => {
-    try {
-      return getSupabaseClient();
-    } catch {
-      return null;
-    }
-  }, []);
+
   const questions = config.questions;
   const placeholders = config.placeholders;
   const storageKey = config.storageKey;
@@ -207,7 +201,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Detectar si es formulario técnico
   const isTechnicalForm = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -519,39 +513,36 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       setIsSubmitting(true);
 
       try {
-        const data = {
-          questions: questions.map((question, index) => ({
-            questionNumber: index + 1,
-            question,
-            answer: finalAnswers[index] || "",
-          })),
-          submittedAt: new Date().toISOString(),
-        };
-
-        console.log("📤 [ENVÍO] Enviando respuestas a la API...", {
-          totalPreguntas: data.questions.length,
-          timestamp: data.submittedAt,
-        });
-
-        // Para formulario técnico, no esperar tiempo de procesamiento
-        if (!isTechnicalForm) {
-          await new Promise((resolve) => setTimeout(resolve, 10000));
+        const role = isTechnicalForm ? 'technical' : isCommercialForm ? 'commercial' : null;
+        if (!role) {
+          console.error("No role found for submission");
+          return;
         }
-        
-        const response = {
-          ok: true,
-          json: async () => ({ status: "next" }),
-        };
 
-        const result = await response.json();
+        // Para formulario técnico, no esperar tiempo de procesamiento (simulado antes)
+        if (!isTechnicalForm) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
 
-        if (result.status === "next" || result.status === "decline") {
-          setSubmissionStatus(result.status);
-          if (result.status === "next") {
-            setShowStatusTab(true);
+        const result = await submitOnboardingForm(role, finalAnswers);
+
+        if (result.success) {
+          const status = result.status || "next";
+          if (status === "next" || status === "decline") {
+            setSubmissionStatus(status as any);
+            if (status === "next") {
+              setShowStatusTab(true);
+            }
+          }
+        } else {
+          console.error("Submission failed:", result.message);
+          if (result.fieldErrors) {
+            console.error("Field errors:", result.fieldErrors);
+            alert(`Error en el formulario: ${result.message}`);
+          } else {
+            alert(result.message || "Error al enviar las respuestas.");
           }
         }
-
 
       } catch (error) {
         console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
@@ -559,7 +550,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         setIsSubmitting(false);
       }
     },
-    [questions, storageKey, isTechnicalForm],
+    [questions, storageKey, isTechnicalForm, isCommercialForm],
   );
 
   useEffect(() => {
@@ -631,25 +622,16 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
 
   // Sync with Supabase on answer change
+  // Sync with Supabase on answer change via Server Action
   useEffect(() => {
-    if (!supabase) return;
-    const companyId = localStorage.getItem("onboarding_company_id");
+    if (typeof window === 'undefined') return;
     const role = localStorage.getItem("onboarding_role");
 
-    if (companyId && role && answers.some(a => a !== "")) {
+    // Only save if we have a valid role and some answers
+    if ((role === 'commercial' || role === 'technical') && answers.some(a => a !== "")) {
       const handler = setTimeout(async () => {
         try {
-          await supabase
-            .from('form_submissions')
-            .upsert(
-              {
-                company_id: companyId,
-                role: role,
-                answers: JSON.stringify(answers),
-                updated_at: new Date().toISOString()
-              },
-              { onConflict: 'company_id, role' }
-            );
+          await saveOnboardingProgress(role, answers);
         } catch (err) {
           console.error("Error syncing to Supabase:", err);
         }
@@ -660,32 +642,21 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   }, [answers]);
 
   // Load from Supabase on mount
+  // Load from Supabase on mount via Server Action
   useEffect(() => {
-    if (!supabase) return;
     const fetchSupabaseData = async () => {
-      const companyId = localStorage.getItem("onboarding_company_id");
+      if (typeof window === 'undefined') return;
       const role = localStorage.getItem("onboarding_role");
 
-      if (companyId && role) {
-        const { data, error } = await supabase
-          .from('form_submissions')
-          .select('answers')
-          .eq('company_id', companyId)
-          .eq('role', role)
-          .single();
-
-        if (data && data.answers) {
-          try {
-            // Handle if answers is string (JSON) or object (JSONB auto-parsed)
-            const parsed = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers;
-            // Verify it's an array
-            if (Array.isArray(parsed)) {
-              setAnswers(parsed);
-              if (parsed[0]) setCurrentAnswer(parsed[0]);
-            }
-          } catch (e) {
-            console.error("Error parsing Supabase answers", e);
+      if (role === 'commercial' || role === 'technical') {
+        try {
+          const result = await getOnboardingProgress(role);
+          if (result.success && result.answers && Array.isArray(result.answers)) {
+            setAnswers(result.answers);
+            if (result.answers[0]) setCurrentAnswer(result.answers[0]);
           }
+        } catch (e) {
+          console.error("Error loading progress:", e);
         }
       };
     };
@@ -845,159 +816,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   // Verificar si es la última pregunta
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
-  // Función para verificar si ambos formularios están completos
-  const checkBothFormsComplete = async (): Promise<{ bothComplete: boolean; missingForms: string[] }> => {
-    const companyId = localStorage.getItem("onboarding_company_id");
-    if (!companyId) {
-      console.log("❌ [VALIDACIÓN] No hay company_id");
-      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
-    }
-    if (!supabase) {
-      console.log("❌ [VALIDACIÓN] Supabase no está configurado");
-      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
-    }
+  // Client-side validation removed in favor of Server Action validation
 
-    try {
-      // Obtener ambos formularios
-      const { data: submissions, error } = await supabase
-        .from('form_submissions')
-        .select('role, answers')
-        .eq('company_id', companyId)
-        .in('role', ['commercial', 'technical']);
-
-      if (error) {
-        console.error("❌ [VALIDACIÓN] Error checking forms:", error);
-        return { bothComplete: false, missingForms: ['commercial', 'technical'] };
-      }
-
-      console.log("📋 [VALIDACIÓN] Submissions encontradas:", submissions?.length || 0);
-
-      const commercialSubmission = submissions?.find(s => s.role === 'commercial');
-      const technicalSubmission = submissions?.find(s => s.role === 'technical');
-
-      const missingForms: string[] = [];
-      
-      // Verificar formulario comercial - usar la longitud real del array de preguntas del formulario comercial
-      const expectedCommercialQuestions = COMERCIAL_FORM.questions.length;
-      
-      if (!commercialSubmission || !commercialSubmission.answers) {
-        console.log("❌ [VALIDACIÓN] Formulario comercial no existe o no tiene respuestas");
-        missingForms.push('commercial');
-      } else {
-        let commercialAnswers: string[] = [];
-        try {
-          commercialAnswers = typeof commercialSubmission.answers === 'string' 
-            ? JSON.parse(commercialSubmission.answers) 
-            : commercialSubmission.answers;
-          
-          if (!Array.isArray(commercialAnswers)) {
-            console.log("❌ [VALIDACIÓN] Respuestas comerciales no son un array:", commercialAnswers);
-            missingForms.push('commercial');
-          } else {
-            const answerCount = commercialAnswers.length;
-            // Verificar que todas las preguntas hasta el número esperado tengan respuestas no vacías
-            const filledAnswers = commercialAnswers
-              .slice(0, expectedCommercialQuestions)
-              .filter((a: any) => {
-                if (a === null || a === undefined) return false;
-                const str = String(a).trim();
-                return str !== '' && str !== 'null' && str !== 'undefined';
-              }).length;
-            
-            console.log(`📊 [VALIDACIÓN] Comercial: ${filledAnswers}/${expectedCommercialQuestions} preguntas respondidas (total en array: ${answerCount})`);
-            console.log(`📊 [VALIDACIÓN] Respuestas comerciales:`, commercialAnswers.slice(0, 5), '...');
-            
-            // Verificar que tenga al menos el número esperado de respuestas y que todas estén llenas
-            const commercialComplete = answerCount >= expectedCommercialQuestions &&
-              filledAnswers === expectedCommercialQuestions;
-            
-            if (!commercialComplete) {
-              console.log(`❌ [VALIDACIÓN] Formulario comercial incompleto: ${filledAnswers}/${expectedCommercialQuestions} (array length: ${answerCount})`);
-              // Mostrar qué preguntas están vacías
-              const emptyIndices: number[] = [];
-              for (let i = 0; i < expectedCommercialQuestions; i++) {
-                const answer = commercialAnswers[i];
-                if (!answer || String(answer).trim() === '' || String(answer).trim() === 'null' || String(answer).trim() === 'undefined') {
-                  emptyIndices.push(i + 1);
-                }
-              }
-              if (emptyIndices.length > 0) {
-                console.log(`❌ [VALIDACIÓN] Preguntas vacías en comercial:`, emptyIndices.slice(0, 10));
-              }
-              missingForms.push('commercial');
-            } else {
-              console.log("✅ [VALIDACIÓN] Formulario comercial completo");
-            }
-          }
-        } catch (parseError) {
-          console.error("❌ [VALIDACIÓN] Error parseando respuestas comerciales:", parseError);
-          missingForms.push('commercial');
-        }
-      }
-
-      // Verificar formulario técnico - necesitamos obtener el número correcto de preguntas
-      // Para el técnico, usamos 13 como está definido en TECH_QUESTIONS
-      const expectedTechnicalQuestions = 13;
-      
-      if (!technicalSubmission || !technicalSubmission.answers) {
-        console.log("❌ [VALIDACIÓN] Formulario técnico no existe o no tiene respuestas");
-        missingForms.push('technical');
-      } else {
-        let technicalAnswers: string[] = [];
-        try {
-          technicalAnswers = typeof technicalSubmission.answers === 'string' 
-            ? JSON.parse(technicalSubmission.answers) 
-            : technicalSubmission.answers;
-          
-          if (!Array.isArray(technicalAnswers)) {
-            console.log("❌ [VALIDACIÓN] Respuestas técnicas no son un array:", technicalAnswers);
-            missingForms.push('technical');
-          } else {
-            const answerCount = technicalAnswers.length;
-            const filledAnswers = technicalAnswers
-              .slice(0, expectedTechnicalQuestions)
-              .filter((a: any) => {
-                if (a === null || a === undefined) return false;
-                const str = String(a).trim();
-                return str !== '' && str !== 'null' && str !== 'undefined';
-              }).length;
-            
-            console.log(`📊 [VALIDACIÓN] Técnico: ${filledAnswers}/${expectedTechnicalQuestions} preguntas respondidas (total en array: ${answerCount})`);
-            
-            const technicalComplete = answerCount >= expectedTechnicalQuestions &&
-              filledAnswers === expectedTechnicalQuestions;
-            
-            if (!technicalComplete) {
-              console.log(`❌ [VALIDACIÓN] Formulario técnico incompleto: ${filledAnswers}/${expectedTechnicalQuestions} (array length: ${answerCount})`);
-              missingForms.push('technical');
-            } else {
-              console.log("✅ [VALIDACIÓN] Formulario técnico completo");
-            }
-          }
-        } catch (parseError) {
-          console.error("❌ [VALIDACIÓN] Error parseando respuestas técnicas:", parseError);
-          missingForms.push('technical');
-        }
-      }
-
-      console.log(`📋 [VALIDACIÓN] Resultado final: ${missingForms.length === 0 ? '✅ Ambos completos' : '❌ Faltan: ' + missingForms.join(', ')}`);
-
-      return {
-        bothComplete: missingForms.length === 0,
-        missingForms
-      };
-    } catch (error) {
-      console.error("❌ [VALIDACIÓN] Error checking forms:", error);
-      return { bothComplete: false, missingForms: ['commercial', 'technical'] };
-    }
-  };
 
   // Función para manejar el clic en Finalizar
   const handleFinalize = async () => {
-    if (!supabase) {
-      setValidationMessage("Falta configurar Supabase (.env.local).");
-      return;
-    }
     // Guardar la respuesta actual antes de verificar
     const newAnswers = [...answers];
     if (isCountryQuestion(currentQuestionIndex)) {
@@ -1013,263 +836,42 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     setAnswers(newAnswers);
     answersRef.current = newAnswers;
 
-    // Guardar en Supabase antes de verificar
-    const companyId = localStorage.getItem("onboarding_company_id");
-    const role = localStorage.getItem("onboarding_role");
-    if (companyId && role) {
-      try {
-        await supabase
-          .from('form_submissions')
-          .upsert(
-            {
-              company_id: companyId,
-              role: role,
-              answers: JSON.stringify(newAnswers),
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: 'company_id, role' }
-          );
-      } catch (err) {
-        console.error("Error saving to Supabase:", err);
-      }
-    }
-
-    // Esperar un momento para asegurar que el guardado se complete
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Verificar si ambos formularios están completos
-    const { bothComplete, missingForms } = await checkBothFormsComplete();
-
-    if (!bothComplete) {
-      // Mostrar mensaje de error más claro y específico
-      let errorMessage = "";
-      if (missingForms.length === 2) {
-        errorMessage = "Faltan preguntas por responder en el perfil comercial y en el perfil técnico. Por favor, completa todas las preguntas de ambos formularios antes de finalizar.";
-      } else if (missingForms.includes('commercial')) {
-        errorMessage = "Faltan preguntas por responder en el perfil comercial. Por favor, completa todas las preguntas del formulario comercial antes de finalizar.";
-      } else if (missingForms.includes('technical')) {
-        errorMessage = "Faltan preguntas por responder en el perfil técnico. Por favor, completa todas las preguntas del formulario técnico antes de finalizar.";
-      }
-      console.log("⚠️ [FINALIZAR] Mensaje de error:", errorMessage);
-      console.log("⚠️ [FINALIZAR] Formularios faltantes:", missingForms);
-      setValidationMessage(errorMessage);
-      return;
-    }
-
-    // Si ambos están completos, proceder con el flujo final
-    setValidationMessage(null);
-    setShowConfirmModal(false);
-    
     // Mostrar estado de carga
     setIsSubmitting(true);
-    
+    setValidationMessage(null);
+
     try {
-      console.log("🚀 [FINALIZAR] ===== INICIANDO FLUJO DE FINALIZACIÓN =====");
-      console.log("📋 [FINALIZAR] Company ID:", companyId);
-      console.log("📋 [FINALIZAR] Role:", role);
-      console.log("📋 [FINALIZAR] Total respuestas:", newAnswers.length);
-      console.log("📋 [FINALIZAR] Total preguntas:", questions.length);
-      
-      // 0. Obtener respuestas técnicas de Supabase ANTES de evaluar
-      console.log("\n📋 [FINALIZAR] Paso 0: Obteniendo respuestas técnicas...");
-      let technicalAnswers: string[] = [];
-      let technicalQuestions: string[] = [];
-      
-      try {
-        const { data: techSubmission, error: techError } = await supabase
-          .from('form_submissions')
-          .select('answers')
-          .eq('company_id', companyId)
-          .eq('role', 'technical')
-          .single();
+      const result = await finalizeOnboarding(newAnswers);
 
-        if (!techError && techSubmission && techSubmission.answers) {
-          try {
-            const parsedTechAnswers = typeof techSubmission.answers === 'string' 
-              ? JSON.parse(techSubmission.answers) 
-              : techSubmission.answers;
-            
-            if (Array.isArray(parsedTechAnswers)) {
-              technicalAnswers = parsedTechAnswers;
-              technicalQuestions = TECNOLOGICO_FORM.questions;
-              console.log("✅ [FINALIZAR] Respuestas técnicas obtenidas:", technicalAnswers.length, "respuestas");
-              console.log("✅ [FINALIZAR] Preguntas técnicas:", technicalQuestions.length, "preguntas");
-            } else {
-              console.log("⚠️ [FINALIZAR] Respuestas técnicas no son un array");
-            }
-          } catch (parseError) {
-            console.error("❌ [FINALIZAR] Error parseando respuestas técnicas:", parseError);
-          }
+      if (result.success) {
+        if (result.status === 'decline') {
+          setSubmissionStatus("decline");
+          setIsCompleted(true);
+          setIsExiting(false);
+          setShowQuestion(true);
+          setIsSubmitting(false);
+          setShowConfirmModal(false);
         } else {
-          console.log("⚠️ [FINALIZAR] No se encontraron respuestas técnicas o hubo un error:", techError);
-        }
-      } catch (err) {
-        console.error("❌ [FINALIZAR] Error obteniendo respuestas técnicas:", err);
-      }
-      
-      // 1. Evaluar perfil comercial (con preguntas comerciales + técnicas, excluyendo nombre del técnico)
-      console.log("\n📤 [FINALIZAR] Paso 1: Evaluando perfil comercial...");
-      console.log("📤 [FINALIZAR] Enviando a: POST /ai/evaluate-business-profile");
-      console.log("📤 [FINALIZAR] Payload summary:", {
-        commercialQuestionsCount: questions.length,
-        commercialAnswersCount: newAnswers.length,
-        technicalQuestionsCount: technicalQuestions.length,
-        technicalAnswersCount: technicalAnswers.length,
-        submittedAt: new Date().toISOString()
-      });
-      
-      const evaluationResult = await evaluateBusinessProfile(
-        newAnswers, 
-        questions,
-        technicalAnswers.length > 0 ? technicalAnswers : undefined,
-        technicalQuestions.length > 0 ? technicalQuestions : undefined
-      );
-      
-      console.log("✅ [FINALIZAR] Respuesta recibida de evaluate-business-profile:");
-      console.log("   Status:", evaluationResult.status);
-      console.log("   Percentage:", evaluationResult.percentage);
-      console.log("   Criteria Met:", evaluationResult.criteriaMet);
-      console.log("   Criteria Partial:", evaluationResult.criteriaPartial);
-      console.log("   Criteria Not Met:", evaluationResult.criteriaNotMet);
-      console.log("   Message:", evaluationResult.message || "Sin mensaje");
-      console.log("   Email Message ID:", evaluationResult.emailMessageId || "Sin ID");
-      console.log("   Respuesta completa:", JSON.stringify(evaluationResult, null, 2));
-      
-      if (evaluationResult.status !== "next") {
-        console.log("\n⚠️ [FINALIZAR] Status NO es 'next', mostrando pantalla de agradecimiento simple");
-        console.log("⚠️ [FINALIZAR] Status recibido:", evaluationResult.status);
-        // Mostrar pantalla de agradecimiento simple
-        setSubmissionStatus("decline");
-        setIsCompleted(true);
-        setIsExiting(false);
-        setShowQuestion(true);
-        setIsSubmitting(false);
-        setShowConfirmModal(false);
-        console.log("✅ [FINALIZAR] Pantalla de agradecimiento simple mostrada");
-        return;
-      }
-      
-      console.log("\n✅ [FINALIZAR] Status es 'next', continuando con generación de propuesta...");
+          // Success - 'next'
+          console.log("Finalize Success:", result);
+          setIsCompleted(true);
+          setIsExiting(false);
+          setShowQuestion(true);
+          setIsSubmitting(false);
+          hasSubmittedRef.current = false;
 
-      // 3. Generar propuesta (PDF) con respuestas comerciales y técnicas
-      console.log("\n📄 [FINALIZAR] Paso 2b: Generando propuesta comercial...");
-      console.log("📄 [FINALIZAR] Enviando a: POST /ai/generate-proposal");
-      console.log("📄 [FINALIZAR] Payload summary:", {
-        commercialQuestionsCount: questions.length,
-        commercialAnswersCount: newAnswers.length,
-        technicalQuestionsCount: technicalQuestions.length,
-        technicalAnswersCount: technicalAnswers.length,
-        submittedAt: new Date().toISOString()
-      });
-      
-      const proposalResult = await generateProposal(
-        newAnswers, 
-        questions,
-        technicalAnswers.length > 0 ? technicalAnswers : undefined,
-        technicalQuestions.length > 0 ? technicalQuestions : undefined
-      );
-      
-      console.log("✅ [FINALIZAR] Respuesta recibida de generate-proposal:");
-      console.log("   Message:", proposalResult.message);
-      console.log("   URL:", proposalResult.url);
-      console.log("   S3 URL:", proposalResult.s3Url);
-      console.log("   File Name:", proposalResult.fileName);
-      console.log("   Client:", proposalResult.client);
-      console.log("   Mapped Modules:", proposalResult.mappedModules);
-      console.log("   Inferred Modules:", proposalResult.inferredModules);
-      console.log("   Merged Modules:", proposalResult.mergedModules);
-      console.log("   Respuesta completa:", JSON.stringify(proposalResult, null, 2));
-      
-      if (!proposalResult.url) {
-        console.error("\n❌ [FINALIZAR] No se recibió URL del PDF en la respuesta");
-        setValidationMessage("Error al generar la propuesta. Por favor, intenta nuevamente.");
+          // Optionally show the status tab if that's the desired UI
+          setSubmissionStatus("next");
+          setShowConfirmModal(false);
+        }
+      } else {
+        setValidationMessage(result.message || "Error al finalizar.");
         setIsSubmitting(false);
-        return;
       }
-      
-      console.log("\n✅ [FINALIZAR] PDF generado exitosamente");
-      console.log("   URL:", proposalResult.url);
-      
-      // 3. Obtener información de la compañía y el nombre del formulario
-      console.log("\n📊 [FINALIZAR] Paso 3: Obteniendo información de la compañía...");
-      console.log("📊 [FINALIZAR] Consultando Supabase: companies table");
-      console.log("📊 [FINALIZAR] Company ID:", companyId);
-      
-      const companyData = await supabase
-        .from('companies')
-        .select('contact_email, contact_name')
-        .eq('id', companyId)
-        .single();
-      
-      console.log("📊 [FINALIZAR] Respuesta de Supabase:");
-      console.log("   Error:", companyData.error || "Ninguno");
-      console.log("   Data:", JSON.stringify(companyData.data, null, 2));
-      
-      if (companyData.error || !companyData.data) {
-        console.error("\n❌ [FINALIZAR] Error obteniendo datos de la compañía");
-        console.error("   Error:", companyData.error);
-        setValidationMessage("Error al obtener información de la compañía.");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Obtener el nombre del formulario (primera pregunta)
-      const formName = newAnswers[0] || companyData.data.contact_name || "Cliente";
-      const recipientEmail = companyData.data.contact_email;
-      
-      console.log("\n📋 [FINALIZAR] Datos obtenidos:");
-      console.log("   Nombre del formulario (primera respuesta):", newAnswers[0]);
-      console.log("   Nombre de contacto (company):", companyData.data.contact_name);
-      console.log("   Nombre a usar:", formName);
-      console.log("   Email destinatario:", recipientEmail);
-      
-      if (!recipientEmail) {
-        console.error("\n❌ [FINALIZAR] No hay email de contacto en la compañía");
-        setValidationMessage("No se encontró un email de contacto para enviar la propuesta.");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // 4. Enviar correo con la propuesta
-      console.log("\n📧 [FINALIZAR] Paso 4: Enviando correo con propuesta...");
-      console.log("📧 [FINALIZAR] Enviando a: POST /email/send");
-      console.log("\n📧 [FINALIZAR] ===== DATOS DEL CORREO A ENVIAR =====");
-      console.log("📧 [FINALIZAR] CORREO DESTINATARIO:", recipientEmail);
-      console.log("📧 [FINALIZAR] NOMBRE DESTINATARIO:", formName);
-      console.log("📧 [FINALIZAR] PDF URL (link del documento):", proposalResult.url);
-      console.log("📧 [FINALIZAR] ========================================");
-      
-      const emailResult = await sendProposalEmail({
-        recipientEmail,
-        recipientName: formName,
-        pdfUrl: proposalResult.url,
-      });
-      
-      console.log("✅ [FINALIZAR] Respuesta del envío de correo:");
-      console.log("   Resultado:", JSON.stringify(emailResult, null, 2));
-      console.log("\n✅ [FINALIZAR] ===== CORREO ENVIADO EXITOSAMENTE =====");
-      console.log("✅ [FINALIZAR] CORREO DESTINATARIO:", recipientEmail);
-      console.log("✅ [FINALIZAR] NOMBRE DESTINATARIO:", formName);
-      console.log("✅ [FINALIZAR] PDF URL enviado:", proposalResult.url);
-      console.log("✅ [FINALIZAR] ==========================================");
-      
-      // 5. Finalizar y mostrar pantalla de agradecimiento
-      console.log("\n🎉 [FINALIZAR] Paso 5: Finalizando y mostrando pantalla de agradecimiento");
-      setIsCompleted(true);
-      setIsExiting(false);
-      setShowQuestion(true);
-      setIsSubmitting(false);
-      hasSubmittedRef.current = false;
-      
-      console.log("\n✅ [FINALIZAR] ===== FLUJO COMPLETADO EXITOSAMENTE =====");
-      
+
     } catch (error) {
-      console.error("\n❌ [FINALIZAR] ===== ERROR EN EL FLUJO =====");
-      console.error("❌ [FINALIZAR] Tipo de error:", error instanceof Error ? error.constructor.name : typeof error);
-      console.error("❌ [FINALIZAR] Mensaje:", error instanceof Error ? error.message : String(error));
-      console.error("❌ [FINALIZAR] Stack:", error instanceof Error ? error.stack : "No disponible");
-      console.error("❌ [FINALIZAR] Error completo:", error);
-      setValidationMessage("Ocurrió un error al procesar tu solicitud. Por favor, intenta nuevamente.");
+      console.error("❌ [FINALIZAR] Error inesperado:", error);
+      setValidationMessage("Ocurrió un error inesperado. Intente nuevamente.");
       setIsSubmitting(false);
     }
   };
@@ -1554,7 +1156,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                 : selectConfig.multiple
                                   ? "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"
                                   : "flex flex-col sm:flex-row gap-3 sm:gap-4"
-                              }`}
+                                }`}
                               style={{
                                 scrollbarWidth: 'thin',
                                 scrollbarColor: 'rgba(168, 85, 247, 0.5) transparent'
@@ -1732,7 +1334,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
             <p className="text-slate-700 text-base sm:text-lg mb-6 sm:mb-8 text-center">
               Se va a generar una propuesta comercial con base en tus respuestas.
             </p>
-            
+
             {validationMessage && (
               <div className="mb-4 sm:mb-6 p-4 bg-red-50 rounded-lg">
                 <p className="text-red-700 text-sm sm:text-base text-center leading-relaxed">
