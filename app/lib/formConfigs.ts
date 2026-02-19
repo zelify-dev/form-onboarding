@@ -1,3 +1,6 @@
+import { error } from "console";
+import { pattern } from "framer-motion/client";
+
 export type SelectOption = {
   label: string;
   description?: string;
@@ -19,7 +22,17 @@ export type FormConfig = {
   };
   // Configuración de preguntas select: índice de pregunta -> configuración
   selectQuestions?: Record<number, SelectQuestionConfig>;
+  validationRules?: Record<number, ValidationRules>; // índice de pregunta -> reglas de validación
 };
+
+export type ValidationRules = {
+  pattern: RegExp;
+  errorMessage: string;
+  minLength?: number;
+  maxLength?: number;
+  blockedWords?: string[]; // Palabras no permitidas (se validan en minúsculas)
+};
+
 
 const MAIN_QUESTIONS = [
   "1. Nombre y apellido",
@@ -400,6 +413,15 @@ export const COMERCIAL_FORM: FormConfig = {
         { label: "Sí" },
         { label: "No" },
       ],
+    },
+  },
+  validationRules: {
+    5: { // Pregunta 6 (índice 5): Actividad principal de la institución
+      pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-()]{10,200}$/,
+      errorMessage: "Por favor, describe la actividad principal de tu institución con al menos 10 caracteres. Puedes incluir letras, números y signos de puntuación básicos.",
+      minLength: 10,
+      maxLength: 200,
+      blockedWords: ["no hay", "ninguna", "n/a", "no aplica", "nada", "asdf", "xxx"],
     },
   },
 };

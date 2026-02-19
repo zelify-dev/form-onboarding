@@ -85,6 +85,39 @@ const isValidName = (name: string): boolean => {
   return words.every((word) => word.length >= 2 && nameRegex.test(word)) && nameRegex.test(trimmed);
 };
 
+const validateAnswer =  (questionIndex : number, answer: string, config: FormConfig): string | null => {
+  const rule = config.validationRules?.[questionIndex];
+  if (!rule) return null; 
+
+  const trimmed = answer.trim();
+
+  //Validar longitud minima
+  if (rule.minLength && trimmed.length < rule.minLength) {
+    return rule.errorMessage;
+  }
+
+  //Validar longitud máxima
+  if (rule.maxLength && trimmed.length > rule.maxLength) {
+    return rule.errorMessage;
+  }
+
+  //Validar patrón
+  if (rule.pattern && !rule.pattern.test(trimmed)) {
+    return rule.errorMessage;
+  }
+
+  //Validar palabras bloqueadas
+  if (rule.blockedWords && rule.blockedWords.length > 0) {
+    const lowerAnswer = trimmed.toLowerCase();
+    const blockedWord = rule.blockedWords.find(word => lowerAnswer.includes(word.toLowerCase()));
+    if (blockedWord) {
+      return `Por favor, proporciona una respuesta válida. "${blockedWord}" no es aceptable.`;
+    }
+  }
+
+  return null;
+};
+
 const getNextQuestionIndex = (currentIndex: number, _answer: string): number => currentIndex + 1;
 
 export default function OnboardingForm({ config }: OnboardingFormProps) {
@@ -648,7 +681,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
             console.error("Error parsing Supabase answers", e);
           }
         }
-      }
+      };
     };
 
     fetchSupabaseData();
@@ -678,6 +711,18 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         return;
       }
       setNameError("");
+    }
+
+    // Validar campos con reglas especiales (solo para campos de texto normales)
+    if (!isCountryQuestion(currentQuestionIndex) && 
+        !isServicesQuestion(currentQuestionIndex) && 
+        !isSelectQuestion(currentQuestionIndex)) {
+      const validationError = validateAnswer(currentQuestionIndex, currentAnswer, config);
+      if (validationError) {
+        setValidationMessage(validationError);
+        return;
+      }
+      setValidationMessage(null);
     }
 
     const newAnswers = [...answers];
