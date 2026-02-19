@@ -33,7 +33,7 @@ const MAIN_QUESTIONS = [
   "9. Número aproximado de clientes activos",
   "10. Nivel de digitalización actual (bajo / medio / alto)",
   "11. Problema principal que desean resolver",
-  "12. Objetivo de negocio a 6–12 meses",
+  "12. Objetivo de negocio a 6/12 meses",
   "13. Consecuencia de no ejecutar este proyecto",
   "14. Funcionalidades requeridas para el MVP",
   "15. Funcionalidades previstas para fases futuras",
@@ -120,10 +120,10 @@ const TECH_QUESTIONS = [
   "1. Nombre y apellido",
   "2. Cargo y responsabilidades",
   "3. Productos o servicios financieros actuales",
-  "4. Funcionalidades requeridas para el MVP \n\n  Puede elegir varias opciones.",
+  "4. Funcionalidades requeridas para el MVP. Puede elegir varias opciones.",
   // Sección 2 (Técnico)
   "5. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
-  "6. ¿Principales proveedores tecnológicos para servicios digitales?",
+  "6. Principales proveedores tecnológicos para servicios digitales",
   "7. ¿Utilizan webhooks o eventos en tiempo real?",
   "8. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
   "9. ¿Implementan doble factor de autenticación (2FA)?",
@@ -201,11 +201,11 @@ const COMERCIAL_QUESTIONS = [
   "9. Segmento de clientes atendido",
 
   // Sección 3 — Estrategia y canales
-  "10. Objetivo de negocio a 6–12 meses",
+  "10. Objetivo de negocio a 6/12 meses",
   "11. Canales digitales activos (app, web, POS, otros)",
 
   // Sección 4 — Core y arquitectura
-  "12. ¿Tiene core bancario? Si es sí, ¿cuál es el core bancario actual y qué módulos tiene?",
+  "12. ¿Tiene core bancario? Si la respuesta es sí, ¿Cuál es el core bancario actual y qué módulos tiene?",
 
   // Sección 5 — MVP
   "13. Funcionalidades requeridas para el MVP",

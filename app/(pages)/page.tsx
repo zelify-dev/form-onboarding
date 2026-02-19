@@ -65,7 +65,7 @@ export default function Home() {
     // My DB generation uses uppercase alphanumeric.
 
     if (!normalized) {
-      setError("Por favor ingresa un código.");
+      setError("Por favor, ingresa un código.");
       return;
     }
 
@@ -234,7 +234,7 @@ export default function Home() {
                       </p>
                       <h1 className="text-3xl sm:text-4xl font-semibold text-slate-900">Portal de ingreso</h1>
                       <p className="text-slate-600 text-sm sm:text-base">
-                        Ingresa tu codigo de acceso para continuar al formulario.
+                        Ingresa tu código de acceso para continuar al formulario.
                       </p>
                     </div>
 
@@ -242,10 +242,10 @@ export default function Home() {
                       <input
                         value={code}
                         onChange={(event) => handleChange(event.target.value)}
-                        placeholder="Codigo de acceso"
+                        placeholder="Código de acceso"
                         className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-slate-600 placeholder-slate-400 text-base sm:text-lg outline-none transition focus:ring-2 focus:ring-purple-400/30"
                         autoComplete="off"
-                        aria-label="Codigo de acceso"
+                        aria-label="Código de acceso"
                         type="password"
                       />
                       {error && <p className="text-sm text-red-300">{error}</p>}

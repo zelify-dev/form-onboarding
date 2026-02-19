@@ -305,7 +305,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       if (value.trim() === "") {
         setNameError("");
       } else if (!isValidName(value)) {
-        setNameError("Por favor ingresa tu nombre completo (nombre y apellido, mínimo 2 palabras)");
+        setNameError("Por favor, ingresa tu nombre completo (nombre y apellido, mínimo 2 palabras)");
       } else {
         setNameError("");
       }
@@ -674,7 +674,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
     if (currentQuestionIndex === 0) {
       if (!isValidName(currentAnswer)) {
-        setNameError("Por favor ingresa tu nombre completo (nombre y apellido, mínimo 2 palabras)");
+        setNameError("Por favor, ingresa tu nombre completo (nombre y apellido, mínimo 2 palabras)");
         return;
       }
       setNameError("");
@@ -1676,7 +1676,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
               ¿Estás seguro de finalizar este cuestionario?
             </h3>
             <p className="text-slate-700 text-base sm:text-lg mb-6 sm:mb-8 text-center">
-              Se va a generar una propuesta comercial en base a tus respuestas.
+              Se va a generar una propuesta comercial con base en tus respuestas.
             </p>
             
             {validationMessage && (
