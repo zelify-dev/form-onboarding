@@ -19,7 +19,18 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
 
-        // 4. Role Validation (Optional but recommended)
+        // 4. Device Fingerprinting Check
+        const currentIp = request.headers.get('x-forwarded-for') || '127.0.0.1';
+        const currentUserAgent = request.headers.get('user-agent') || 'unknown';
+
+        if (session.ip !== currentIp || session.userAgent !== currentUserAgent) {
+            console.warn(`[Security] Fingerprint validation failed. Hijacking detected or network changed.`);
+            const response = NextResponse.redirect(new URL('/', request.url));
+            response.cookies.delete('onboarding_session');
+            return response;
+        }
+
+        // 5. Role Validation (Optional but recommended)
         // Ensure commercial role can't access /tecnologico if we want strict separation
         if (currentPath.startsWith('/tecnologico') && session.role !== 'technical') {
             // Redirect to their correct page or home?

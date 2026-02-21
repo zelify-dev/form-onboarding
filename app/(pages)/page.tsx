@@ -7,8 +7,6 @@ import Navbar from "../components/Navbar";
 import ContactForm from "../components/ContactForm";
 import { BriefcaseIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { verifyAccessCode, submitContactForm } from "../actions";
-
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState<"selection" | "auth" | "contact">("selection");
@@ -16,16 +14,11 @@ export default function Home() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
-  // Verificar si el usuario ya está autenticado y redirigir automáticamente
-  // NOTE: This relies on localStorage for completely client-side redirection.
-  // Ideally, this should be handled by Middleware or Server Component logic checking the cookie.
-  // For now, we maintain this for backward compatibility while the server session is established.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const companyId = localStorage.getItem("onboarding_company_id");
       const userRole = localStorage.getItem("onboarding_role");
 
-      // Si hay sesión activa, redirigir al formulario correspondiente
       if (companyId && userRole) {
         if (userRole === "commercial") {
           router.replace("/comercial");
@@ -36,13 +29,12 @@ export default function Home() {
     }
   }, [router]);
 
-  // Variables numéricas para controlar el estilo de la tarjeta (Card Style Specs)
   const cardSpecs = {
-    opacity: 0.9,    // 0.0 - 1.0 (Opacidad del fondo)
-    blur: 2,        // px (Desenfoque)
-    roundness: 24,   // px (Redondeo de esquinas)
-    borderOpacity: 0.2, // 0.0 - 1.0 (Opacidad del borde)
-    shadowOpacity: 0.2  // 0.0 - 1.0 (Opacidad de la sombra)
+    opacity: 0.9,
+    blur: 2,
+    roundness: 24,
+    borderOpacity: 0.2,
+    shadowOpacity: 0.2
   };
 
   const commonCardStyle = {
@@ -59,39 +51,25 @@ export default function Home() {
     event.preventDefault();
     setError("");
 
-    // Call Server Action
-    // Zod validation inside the action handles empty/invalid formats securely.
-    const result = await verifyAccessCode(code);
+    try {
+      const normalizedProfile = selectedProfile === "tech" ? "technical" : "commercial";
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, role: normalizedProfile })
+      });
 
-    if (!result.success) {
-      console.error("Error validating code:", result.message);
-      // Show general error or specific field error if available
-      setError(result.message || "Código inválido.");
-      return;
-    }
+      const result = await res.json();
 
-    // Valid code!
-    // Result.role comes from the secure server query
-    if (result.role) {
-      const role = result.role;
-      // Store in localStorage for client-side persistence (optional, but keeps existing flow working)
-      if (typeof window !== 'undefined') {
-        // We don't have company_id returned here explicitly in the success message unless we add it,
-        // but the cookie is set. We'll set a flag.
-        localStorage.setItem("onboarding_role", role);
-        localStorage.setItem("onboarding_company_id", "session_active"); // Placeholder or retrieval needed if used elsewhere
+      if (!res.ok || !result.success) {
+        setError(result.message || "Credenciales inválidas.");
+        return;
       }
 
-      // Validate profile match
-      const normalizedProfile = selectedProfile === "tech" ? "technical" : "commercial";
-
-      if (role !== normalizedProfile) {
-        // If they logged in with a tech code but selected commercial, warn them?
-        // Or just redirect them to the correct one?
-        // The original logic showed an error.
-        const requiredProfile = role === "technical" ? "Tecnológico" : "de Negocio";
-        setError(`Verifica si el código es el correcto o puede que estes en el perfil incorrecto. Tu código es para el perfil ${requiredProfile}.`);
-        return;
+      const role = result.role;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("onboarding_role", role);
+        localStorage.setItem("onboarding_company_id", "session_active");
       }
 
       let targetPath = "";
@@ -99,6 +77,8 @@ export default function Home() {
       else if (role === "commercial") targetPath = "/comercial";
 
       router.push(targetPath);
+    } catch (e) {
+      setError("Error de red. Intenta nuevamente.");
     }
   };
 
@@ -281,25 +261,24 @@ export default function Home() {
                       onCancel={() => setView("auth")}
                       onSubmit={async (data) => {
                         try {
-                          // Call Server Action
-                          const result = await submitContactForm(data);
+                          const res = await fetch('/api/contact', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                          });
+                          const result = await res.json();
 
-                          if (result.success) {
+                          if (res.ok && result.success) {
                             alert(result.message || "¡Solicitud enviada con éxito! Te contactaremos pronto.");
                             setView("auth");
                           } else {
-                            // Show server-side validation messages
                             if (result.fieldErrors) {
-                              // We could map these errors to the form if ContactForm supported generic external errors
-                              // For now, simpler alert
                               alert(`Error en el formulario: ${Object.values(result.fieldErrors).flat().join(", ")}`);
-                              console.error(result.fieldErrors);
                             } else {
                               alert(result.message || "Error al enviar la solicitud.");
                             }
                           }
                         } catch (err) {
-                          console.error("Error al procesar solicitud:", err);
                           alert("Ocurrió un error inesperado.");
                         }
                       }}

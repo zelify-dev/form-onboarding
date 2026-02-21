@@ -13,7 +13,6 @@ import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
 import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from "../lib/api";
-import { submitOnboardingForm, saveOnboardingProgress, getOnboardingProgress, finalizeOnboarding } from "../actions";
 
 type OnboardingFormProps = {
   config: FormConfig;
@@ -85,9 +84,9 @@ const isValidName = (name: string): boolean => {
   return words.every((word) => word.length >= 2 && nameRegex.test(word)) && nameRegex.test(trimmed);
 };
 
-const validateAnswer =  (questionIndex : number, answer: string, config: FormConfig): string | null => {
+const validateAnswer = (questionIndex: number, answer: string, config: FormConfig): string | null => {
   const rule = config.validationRules?.[questionIndex];
-  if (!rule) return null; 
+  if (!rule) return null;
 
   const trimmed = answer.trim();
 
@@ -328,7 +327,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   const handleAnswerChange = (value: string) => {
     setCurrentAnswer(value);
-    
+
     // Limpiar mensaje de validación cuando el usuario empiece a escribir
     if (validationMessage) {
       setValidationMessage(null);
@@ -414,7 +413,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         const blob = await response.blob();
         setPreGeneratedPDF(blob);
       } catch (error) {
-        console.error("❌ [PDF] Error al generar PDF plano:", error);
         throw error;
       }
     },
@@ -501,7 +499,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(" [PDF] Error al generar PDF combinado:", error);
       alert("Error al generar el PDF combinado. Por favor, intenta nuevamente.");
     } finally {
       setIsGeneratingPDF(false);
@@ -515,7 +512,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       try {
         const role = isTechnicalForm ? 'technical' : isCommercialForm ? 'commercial' : null;
         if (!role) {
-          console.error("No role found for submission");
           return;
         }
 
@@ -524,7 +520,12 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
 
-        const result = await submitOnboardingForm(role, finalAnswers);
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submitForm', formType: role, answers: finalAnswers })
+        });
+        const result = await res.json();
 
         if (result.success) {
           const status = result.status || "next";
@@ -535,9 +536,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
             }
           }
         } else {
-          console.error("Submission failed:", result.message);
           if (result.fieldErrors) {
-            console.error("Field errors:", result.fieldErrors);
             alert(`Error en el formulario: ${result.message}`);
           } else {
             alert(result.message || "Error al enviar las respuestas.");
@@ -545,7 +544,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         }
 
       } catch (error) {
-        console.error("❌ [ENVÍO] Error al enviar las respuestas:", error);
+        // Envio fail silencioso en UI si ya se maneja
       } finally {
         setIsSubmitting(false);
       }
@@ -590,12 +589,10 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
             if (services.length > 0) {
               generatePDFInBackground(services, institutionName).catch((err) => {
-                console.error("Error al generar PDF en segundo plano:", err);
               });
             }
           }
         } catch (error) {
-          console.error("❌ [ENVÍO] Error en el proceso:", error);
         }
 
         timeoutRef.current = null;
@@ -631,9 +628,12 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     if ((role === 'commercial' || role === 'technical') && answers.some(a => a !== "")) {
       const handler = setTimeout(async () => {
         try {
-          await saveOnboardingProgress(role, answers);
+          await fetch('/api/onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'saveProgress', formType: role, answers })
+          });
         } catch (err) {
-          console.error("Error syncing to Supabase:", err);
         }
       }, 1000); // Debounce saves
 
@@ -650,13 +650,13 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
       if (role === 'commercial' || role === 'technical') {
         try {
-          const result = await getOnboardingProgress(role);
+          const res = await fetch(`/api/onboarding?formType=${role}`);
+          const result = await res.json();
           if (result.success && result.answers && Array.isArray(result.answers)) {
             setAnswers(result.answers);
             if (result.answers[0]) setCurrentAnswer(result.answers[0]);
           }
         } catch (e) {
-          console.error("Error loading progress:", e);
         }
       };
     };
@@ -691,9 +691,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     }
 
     // Validar campos con reglas especiales (solo para campos de texto normales)
-    if (!isCountryQuestion(currentQuestionIndex) && 
-        !isServicesQuestion(currentQuestionIndex) && 
-        !isSelectQuestion(currentQuestionIndex)) {
+    if (!isCountryQuestion(currentQuestionIndex) &&
+      !isServicesQuestion(currentQuestionIndex) &&
+      !isSelectQuestion(currentQuestionIndex)) {
       const validationError = validateAnswer(currentQuestionIndex, currentAnswer, config);
       if (validationError) {
         setValidationMessage(validationError);
@@ -841,7 +841,13 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     setValidationMessage(null);
 
     try {
-      const result = await finalizeOnboarding(newAnswers);
+      const role = localStorage.getItem("onboarding_role");
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'finalize', formType: role, answers: newAnswers })
+      });
+      const result = await res.json();
 
       if (result.success) {
         if (result.status === 'decline') {
@@ -853,7 +859,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           setShowConfirmModal(false);
         } else {
           // Success - 'next'
-          console.log("Finalize Success:", result);
           setIsCompleted(true);
           setIsExiting(false);
           setShowQuestion(true);
@@ -870,7 +875,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       }
 
     } catch (error) {
-      console.error("❌ [FINALIZAR] Error inesperado:", error);
       setValidationMessage("Ocurrió un error inesperado. Intente nuevamente.");
       setIsSubmitting(false);
     }

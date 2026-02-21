@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { CheckCircleIcon, ClockIcon, ChevronDownIcon, ChevronUpIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { TECNOLOGICO_FORM } from "../lib/formConfigs";
-import { getSupabaseClient } from "../lib/supabase";
 
 export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     // Initialize state
@@ -18,65 +17,63 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
 
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Fetch from Supabase
+    // SSE Fetch Stream
     useEffect(() => {
-        let supabase: ReturnType<typeof getSupabaseClient> | null = null;
-        try {
-            supabase = getSupabaseClient();
-        } catch {
-            setIsLoaded(true);
-            return;
-        }
+        let abortController = new AbortController();
+        let isComponentMounted = true;
+        let reconnectTimeout: NodeJS.Timeout;
+        let retryAttempt = 0;
 
-        const fetchTechAnswers = async () => {
-            const companyId = localStorage.getItem("onboarding_company_id");
-            if (!companyId) return;
+        const connectSSE = async () => {
+            if (!isComponentMounted) return;
 
-            // We specifically want the TECHNICAL role answers, regardless of who is viewing
-            const { data, error } = await supabase
-                .from('form_submissions')
-                .select('answers')
-                .eq('company_id', companyId)
-                .eq('role', 'technical')
-                .single();
+            try {
+                // Buffer to prevent race conditions while snapshot loads
+                let bufferedEvents: any[] = [];
+                let isSnapshotLoaded = false;
 
-            if (data && data.answers) {
-                try {
-                    const storedAnswers = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers;
-                    if (Array.isArray(storedAnswers)) {
-                        setQuestions(prev => prev.map((q, index) => ({
-                            ...q,
-                            answer: storedAnswers[index] || "",
-                            status: storedAnswers[index] ? "completed" : "pending"
-                        })));
-                    }
-                } catch (e) {
-                    console.error("Error parsing tech answers", e);
+                // 1. Connect SSE
+                const res = await fetch('/api/tech-status', {
+                    signal: abortController.signal,
+                    headers: { 'Accept': 'text/event-stream' }
+                });
+
+                if (!res.ok || !res.body) {
+                    throw new Error("Failed to connect");
                 }
-            }
-            setIsLoaded(true);
-        };
 
-        fetchTechAnswers();
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
 
-        // Real-time subscription
-        const companyId = localStorage.getItem("onboarding_company_id");
-        if (!companyId) return;
+                // 2. Fetch snapshot concurrently
+                fetch('/api/tech-status/snapshot', { signal: abortController.signal })
+                    .then(snapRes => snapRes.json())
+                    .then(result => {
+                        if (!isComponentMounted) return;
+                        // 3. Apply Snapshot
+                        if (result.success && result.answers) {
+                            const storedAnswers = result.answers;
+                            if (Array.isArray(storedAnswers)) {
+                                setQuestions(prev => prev.map((q, index) => ({
+                                    ...q,
+                                    answer: storedAnswers[index] || "",
+                                    status: storedAnswers[index] ? "completed" : "pending"
+                                })));
+                            }
+                        }
+                        isSnapshotLoaded = true;
+                        setIsLoaded(true);
 
-        const channel = supabase
-            .channel('tech-status-updates')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'form_submissions',
-                    filter: `company_id=eq.${companyId}`,
-                },
-                (payload: any) => {
+                        // 4. Replay buffered events
+                        bufferedEvents.forEach(applyEvent);
+                        bufferedEvents = [];
+                        retryAttempt = 0; // Reset backoff
+                    })
+                    .catch(e => { /* Ignore aborts */ });
+
+                const applyEvent = (payload: any) => {
                     const newData = payload.new as any;
-                    // Check if update is for technical role
-                    if (newData.role === 'technical' && newData.answers) {
+                    if (newData && newData.role === 'technical' && newData.answers) {
                         try {
                             const storedAnswers = typeof newData.answers === 'string' ? JSON.parse(newData.answers) : newData.answers;
                             if (Array.isArray(storedAnswers)) {
@@ -86,25 +83,65 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                     status: storedAnswers[index] ? "completed" : "pending"
                                 })));
                             }
-                        } catch (e) {
-                            console.error("Error updating tech answers from realtime", e);
+                        } catch (e) { }
+                    }
+                };
+
+                // Read stream chunks
+                let buffer = "";
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const parts = buffer.split('\n\n');
+                    buffer = parts.pop() || ""; // Keep incomplete chunk in buffer
+
+                    for (const part of parts) {
+                        const line = part.trim();
+                        if (!line || line.startsWith(':')) continue; // Skip comments/heartbeats
+
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const dataStr = line.substring(6); // Remove 'data: '
+                                const payload = JSON.parse(dataStr);
+
+                                if (payload.type === 'SESSION_EXPIRED') {
+                                    return; // Bounded lifetime reached, do not reconnect
+                                }
+
+                                if (!isSnapshotLoaded) {
+                                    bufferedEvents.push(payload);
+                                } else {
+                                    applyEvent(payload);
+                                }
+                            } catch (e) {
+                                // Ignore parse errors of bad chunks
+                            }
                         }
                     }
                 }
-            )
-            .subscribe();
+            } catch (err: any) {
+                if (err.name === 'AbortError') return;
+            }
+
+            // Exponential Backoff Reconnection
+            if (isComponentMounted) {
+                const backoff = Math.min(1000 * Math.pow(2, retryAttempt), 30000);
+                retryAttempt++;
+                reconnectTimeout = setTimeout(connectSSE, backoff);
+            }
+        };
+
+        connectSSE();
 
         return () => {
-            supabase?.removeChannel(channel);
+            isComponentMounted = false;
+            abortController.abort();
+            clearTimeout(reconnectTimeout);
         };
 
     }, []);
-
-    // Disable local storage sync/save since we are only VIEWING or saving via the form component
-    // If this panel allows editing, we need to implement Supabase update. 
-    // The previous code had `handleSave`. Let's update `handleSave` to write to Supabase.
-
-
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState("");
@@ -134,23 +171,16 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
         setQuestions(updatedQuestions);
         setEditingId(null);
 
-        // Save to Supabase
-        const companyId = localStorage.getItem("onboarding_company_id");
-        if (companyId) {
-            const answersArray = updatedQuestions.map(q => q.answer);
-            try {
-                const supabase = getSupabaseClient();
-                await supabase
-                    .from('form_submissions')
-                    .upsert({
-                        company_id: companyId,
-                        role: 'technical',
-                        answers: JSON.stringify(answersArray),
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'company_id, role' });
-            } catch (err) {
-                console.error("Error saving edit to Supabase", err);
-            }
+        // Save via our secure API route
+        const answersArray = updatedQuestions.map(q => q.answer);
+        try {
+            await fetch('/api/tech-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: answersArray })
+            });
+        } catch (err) {
+            // Silently handle error
         }
     };
 

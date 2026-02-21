@@ -33,3 +33,22 @@ export function getSupabaseAdmin() {
   });
 }
 
+// Client for authenticated server-side access (Enforces RLS via custom JWT)
+export function getSupabaseServerClient(token: string) {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.",
+    );
+  }
+  return createClient(supabaseUrl, supabaseKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    }
+  });
+}
