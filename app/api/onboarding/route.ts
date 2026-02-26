@@ -8,6 +8,17 @@ import { TECNOLOGICO_FORM, COMERCIAL_FORM } from '../../lib/formConfigs';
 import { cookies } from 'next/headers';
 import { rateLimit } from '../../lib/rate-limit';
 
+export async function OPTIONS(request: Request) {
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+    });
+}
+
 export async function GET(request: Request) {
     const session = await getSession();
     if (!session) {
@@ -75,16 +86,46 @@ export async function POST(request: Request) {
         if (action === 'saveProgress') {
             if (session.role !== formType) return NextResponse.json({ success: false }, { status: 403 });
 
-            const { error } = await supabase
+            // Intentar buscar primero si existe
+            const { data: existingProcess, error: selectError } = await supabase
                 .from('form_submissions')
-                .upsert({
-                    company_id: session.companyId,
-                    role: session.role,
-                    answers: JSON.stringify(sanitizedAnswers),
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'company_id, role' });
+                .select('id')
+                .eq('company_id', session.companyId)
+                .eq('role', session.role)
+                .single();
+
+            if (selectError && selectError.code !== 'PGRST116') { // PGRST116 is No rows found
+                console.error("Supabase select error in saveProgress:", selectError);
+                return NextResponse.json({ success: false, message: "Database Error" }, { status: 500 });
+            }
+
+            let error;
+            if (existingProcess) {
+                // Existe, actualizar
+                const { error: updateError } = await supabase
+                    .from('form_submissions')
+                    .update({
+                        answers: JSON.stringify(sanitizedAnswers),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('company_id', session.companyId)
+                    .eq('role', session.role);
+                error = updateError;
+            } else {
+                // No existe, insertar
+                const { error: insertError } = await supabase
+                    .from('form_submissions')
+                    .insert({
+                        company_id: session.companyId,
+                        role: session.role,
+                        answers: JSON.stringify(sanitizedAnswers),
+                        updated_at: new Date().toISOString()
+                    });
+                error = insertError;
+            }
 
             if (error) {
+                console.error("Supabase upsert error in saveProgress:", error);
                 return NextResponse.json({ success: false, message: "Database Error" }, { status: 500 });
             }
             return NextResponse.json({ success: true });
@@ -110,16 +151,44 @@ export async function POST(request: Request) {
 
             const validAnswers = validation.data.answers;
 
-            const { error } = await supabase
+            // Intentar buscar primero si existe
+            const { data: existingProcess, error: selectError } = await supabase
                 .from('form_submissions')
-                .upsert({
-                    company_id: session.companyId,
-                    role: session.role,
-                    answers: JSON.stringify(validAnswers),
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'company_id, role' });
+                .select('id')
+                .eq('company_id', session.companyId)
+                .eq('role', session.role)
+                .single();
+
+            if (selectError && selectError.code !== 'PGRST116') {
+                console.error("Supabase select error in submitForm:", selectError);
+                return NextResponse.json({ success: false, message: "Database Error" }, { status: 500 });
+            }
+
+            let error;
+            if (existingProcess) {
+                const { error: updateError } = await supabase
+                    .from('form_submissions')
+                    .update({
+                        answers: JSON.stringify(validAnswers),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('company_id', session.companyId)
+                    .eq('role', session.role);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('form_submissions')
+                    .insert({
+                        company_id: session.companyId,
+                        role: session.role,
+                        answers: JSON.stringify(validAnswers),
+                        updated_at: new Date().toISOString()
+                    });
+                error = insertError;
+            }
 
             if (error) {
+                console.error("Supabase upsert error in submitForm:", error);
                 return NextResponse.json({ success: false, message: "Database Error" }, { status: 500 });
             }
 
@@ -129,14 +198,39 @@ export async function POST(request: Request) {
         if (action === 'finalize') {
             if (session.role !== 'commercial') return NextResponse.json({ success: false }, { status: 403 });
 
-            await supabase
+            const { data: existingProcess, error: selectError } = await supabase
                 .from('form_submissions')
-                .upsert({
-                    company_id: session.companyId,
-                    role: session.role,
-                    answers: JSON.stringify(sanitizedAnswers),
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'company_id, role' });
+                .select('id')
+                .eq('company_id', session.companyId)
+                .eq('role', session.role)
+                .single();
+
+            let finalizeError;
+            if (existingProcess) {
+                const { error: updateError } = await supabase
+                    .from('form_submissions')
+                    .update({
+                        answers: JSON.stringify(sanitizedAnswers),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('company_id', session.companyId)
+                    .eq('role', session.role);
+                finalizeError = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('form_submissions')
+                    .insert({
+                        company_id: session.companyId,
+                        role: session.role,
+                        answers: JSON.stringify(sanitizedAnswers),
+                        updated_at: new Date().toISOString()
+                    });
+                finalizeError = insertError;
+            }
+
+            if (finalizeError) {
+                console.error("Supabase upsert error in finalize:", finalizeError);
+            }
 
             const { data: techData, error: techError } = await supabase
                 .from('form_submissions')

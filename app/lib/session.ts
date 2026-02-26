@@ -25,7 +25,7 @@ export async function createSession(data: SessionData) {
 
     const payload = {
         company_id: data.companyId,
-        role: data.role,
+        app_role: data.role,
         ip: data.ip,
         userAgent: data.userAgent
     };
@@ -58,7 +58,7 @@ export async function getSession(): Promise<SessionData | null> {
 
         return {
             companyId: payload.company_id as string,
-            role: payload.role as string,
+            role: payload.app_role as string,
             ip: payload.ip as string,
             userAgent: payload.userAgent as string,
         };
@@ -75,7 +75,7 @@ export async function decrypt(cookie: string | undefined): Promise<SessionData |
         });
         return {
             companyId: payload.company_id as string,
-            role: payload.role as string,
+            role: payload.app_role as string,
             ip: payload.ip as string,
             userAgent: payload.userAgent as string,
         };
