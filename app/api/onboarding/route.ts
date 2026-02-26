@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '../../lib/session';
 import { getSupabaseServerClient } from '../../lib/supabase';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import { technicalFormSchema, commercialFormSchema } from '../../lib/schemas';
 import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from '../../lib/api';
 import { TECNOLOGICO_FORM, COMERCIAL_FORM } from '../../lib/formConfigs';
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: "Invalid payload" }, { status: 400 });
         }
 
-        const sanitizedAnswers = answers.map((a: string) => DOMPurify.sanitize(a, { ALLOWED_TAGS: [] }).slice(0, 5000));
+        const sanitizedAnswers = answers.map((a: string) => sanitizeHtml(a, { allowedTags: [], allowedAttributes: {} }).slice(0, 5000));
 
         const cookieStore = await cookies();
         const token = cookieStore.get('onboarding_session')?.value || '';

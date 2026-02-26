@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '../../lib/session';
 import { getSupabaseAdmin } from '../../lib/supabase';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import { jwtVerify } from 'jose';
 
 export const runtime = 'edge';
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: "Invalid payload" }, { status: 400 });
         }
 
-        const sanitizedAnswers = answers.map((a: string) => DOMPurify.sanitize(a, { ALLOWED_TAGS: [] }).slice(0, 5000));
+        const sanitizedAnswers = answers.map((a: string) => sanitizeHtml(a, { allowedTags: [], allowedAttributes: {} }).slice(0, 5000));
 
         const supabase = getSupabaseAdmin();
 
