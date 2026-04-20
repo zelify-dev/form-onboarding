@@ -216,6 +216,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const [preGeneratedPDF, setPreGeneratedPDF] = useState<Blob | null>(null);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
+  const hasRestoredProgressRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detectar si es formulario técnico
@@ -240,6 +241,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!hasRestoredProgressRef.current) return;
     localStorage.setItem(progressKey, String(currentQuestionIndex));
   }, [currentQuestionIndex, progressKey]);
 
@@ -699,7 +701,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
             setCurrentAnswer(normalizedAnswers[resumedIndex] || "");
           }
         } catch (e) {
+        } finally {
+          hasRestoredProgressRef.current = true;
         }
+      } else {
+        hasRestoredProgressRef.current = true;
       };
     };
 
