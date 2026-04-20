@@ -8,7 +8,6 @@ import AnimatedQuestion from "./AnimatedQuestion";
 import AnimatedHalftoneBackground from "./AnimatedHalftoneBackground";
 import HexagonLoader from "./HexagonLoader";
 import AnimationToggle from "./AnimationToggle";
-import TokenWallet from "./TokenWallet";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
@@ -119,11 +118,18 @@ const validateAnswer = (questionIndex: number, answer: string, config: FormConfi
 
 const getNextQuestionIndex = (currentIndex: number, _answer: string): number => currentIndex + 1;
 
+const getResumeQuestionIndex = (answers: string[], totalQuestions: number): number => {
+  const firstEmptyIndex = answers.findIndex((answer) => answer.trim() === "");
+  if (firstEmptyIndex >= 0) return firstEmptyIndex;
+  return Math.max(0, totalQuestions - 1);
+};
+
 export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   const questions = config.questions;
   const placeholders = config.placeholders;
   const storageKey = config.storageKey;
+  const progressKey = `${storageKey}-current-index`;
   const { budgetQuestionIndex, servicesQuestionIndex, countryQuestionIndex } = config.indices;
   const selectQuestions = config.selectQuestions || {};
 
@@ -155,9 +161,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
-  const [tokenBalance, setTokenBalance] = useState(100);
-  const [lastAddedTokens, setLastAddedTokens] = useState(0);
-  const [awardedTokens, setAwardedTokens] = useState<Record<number, number>>({});
 
   const [currentAnswer, setCurrentAnswer] = useState(answers[0] || "");
   // Estado genérico para manejar selecciones de preguntas select
@@ -220,6 +223,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(progressKey, String(currentQuestionIndex));
+  }, [currentQuestionIndex, progressKey]);
 
 
 
@@ -660,8 +668,20 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           const res = await fetch(`/api/onboarding?formType=${role}`);
           const result = await res.json();
           if (result.success && result.answers && Array.isArray(result.answers)) {
-            setAnswers(result.answers);
-            if (result.answers[0]) setCurrentAnswer(result.answers[0]);
+            const normalizedAnswers = Array.from({ length: questions.length }, (_, index) => {
+              const value = result.answers[index];
+              return typeof value === "string" ? value : "";
+            });
+            const savedIndexRaw = localStorage.getItem(progressKey);
+            const savedIndex = savedIndexRaw ? parseInt(savedIndexRaw, 10) : NaN;
+            const inferredIndex = getResumeQuestionIndex(normalizedAnswers, questions.length);
+            const resumedIndex = Number.isFinite(savedIndex)
+              ? Math.min(Math.max(savedIndex, 0), questions.length - 1)
+              : inferredIndex;
+
+            setAnswers(normalizedAnswers);
+            setCurrentQuestionIndex(resumedIndex);
+            setCurrentAnswer(normalizedAnswers[resumedIndex] || "");
           }
         } catch (e) {
         }
@@ -669,7 +689,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     };
 
     fetchSupabaseData();
-  }, []);
+  }, [progressKey, questions.length]);
 
   const totalSteps = questions.length;
   const currentStep = currentQuestionIndex + 1;
@@ -721,8 +741,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       newAnswers[currentQuestionIndex] = currentAnswer;
     }
     setAnswers(newAnswers);
-
-    updateTokens(currentAnswer);
 
     const nextIndex = getNextQuestionIndex(currentQuestionIndex, currentAnswer);
 
@@ -887,35 +905,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     }
   };
 
-  const calculateReward = (answer: string): number => {
-    const BASE_REWARD = 10;
-    const lengthBonus = Math.min(Math.floor(answer.length / 5), 50);
-    const complexWords = ["porque", "para", "mediante", "actualmente", "proyecto", "objetivo"];
-    const qualityBonus = complexWords.some((w) => answer.toLowerCase().includes(w)) ? 10 : 0;
-
-    return BASE_REWARD + lengthBonus + qualityBonus;
-  };
-
-  const updateTokens = (answer: string) => {
-    const currentReward = calculateReward(answer);
-    const previousReward = awardedTokens[currentQuestionIndex] || 0;
-    const difference = currentReward - previousReward;
-
-    if (difference !== 0) {
-      setTokenBalance((prev) => prev + difference);
-      setLastAddedTokens(difference);
-
-      setAwardedTokens((prev) => ({
-        ...prev,
-        [currentQuestionIndex]: currentReward,
-      }));
-    }
-  };
-
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
-      <TokenWallet balance={tokenBalance} addedAmount={lastAddedTokens} onAnimationComplete={() => setLastAddedTokens(0)} />
-
       {isSubmitting && !isTechnicalForm && <HexagonLoader />}
 
       <div className="absolute inset-0 animated-gradient" />
@@ -1324,21 +1315,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       )}
 
       {!isCompleted && <AnimationToggle onToggle={setAnimationsEnabled} />}
-
-      {/* Botón "Finalizar" fijo en la parte inferior solo para formulario comercial - visible en todas las preguntas */}
-      {!isCompleted && isCommercialForm && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-50 pt-4 pb-4 sm:pb-6 px-3 sm:px-6 md:px-8 lg:px-10">
-          <div className="max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto flex justify-center">
-            <button
-              onClick={() => setShowConfirmModal(true)}
-              disabled={isNextButtonDisabled}
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 lg:px-12 py-3 sm:py-3.5 md:py-4 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 disabled:cursor-not-allowed text-white text-base sm:text-lg md:text-xl lg:text-2xl font-medium rounded-lg transition-all duration-300"
-            >
-              Finalizar
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Modal de confirmación para formulario comercial */}
       {showConfirmModal && (
