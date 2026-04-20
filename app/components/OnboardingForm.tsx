@@ -135,6 +135,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   // Función genérica para verificar si una pregunta es de tipo select
   const isSelectQuestion = (index: number): boolean => {
+    if (isBudgetQuestion(index)) return false;
     return index in selectQuestions;
   };
 
