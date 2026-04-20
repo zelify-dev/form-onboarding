@@ -1324,7 +1324,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       {!isCompleted && <AnimationToggle onToggle={setAnimationsEnabled} />}
 
       {/* Modal de confirmación para formulario comercial */}
-      {showConfirmModal && (
+      {showConfirmModal && !isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
           <div className="bg-slate-50 rounded-2xl p-6 sm:p-8 md:p-10 max-w-md w-full mx-4">
             <h3 className="text-slate-900 text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center">
@@ -1346,7 +1346,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
               <button
                 onClick={handleFinalize}
                 className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 disabled:bg-purple-500/50 disabled:cursor-not-allowed"
-                disabled={!!validationMessage}
+                disabled={!!validationMessage || isSubmitting}
               >
                 Sí, estoy seguro
               </button>
@@ -1355,7 +1355,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                   setShowConfirmModal(false);
                   setValidationMessage(null);
                 }}
-                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-900 py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300"
+                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-900 py-3 sm:py-4 px-6 rounded-xl font-medium transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
                 Cancelar
               </button>
