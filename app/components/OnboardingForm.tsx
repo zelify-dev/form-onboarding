@@ -68,6 +68,19 @@ const DECLINE_MESSAGE =
 const DOCS_URL = "https://docs.zelify.com";
 
 const COUNTRY_OPTIONS = ["Colombia", "Ecuador", "Estados Unidos", "México"];
+const SELECT_ANSWER_SEPARATOR = " || ";
+
+const serializeSelectAnswer = (values: string[]): string => values.join(SELECT_ANSWER_SEPARATOR);
+
+const parseSelectAnswer = (value: string, options?: string[]): string[] => {
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  if (options?.includes(trimmed)) return [trimmed];
+  if (trimmed.includes(SELECT_ANSWER_SEPARATOR)) {
+    return trimmed.split(SELECT_ANSWER_SEPARATOR).map((item) => item.trim()).filter(Boolean);
+  }
+  return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
+};
 
 // Función para validar nombre y apellido
 // Debe tener al menos 2 palabras (nombre y apellido), solo letras, espacios y caracteres especiales comunes
@@ -170,8 +183,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     Object.keys(selectQuestions).forEach((key) => {
       const index = parseInt(key, 10);
       const savedAnswer = answers[index] || "";
+      const optionLabels = selectQuestions[index]?.options.map((option) => option.label);
       if (savedAnswer) {
-        initial[index] = savedAnswer.split(",").map((s) => s.trim()).filter((s) => s);
+        initial[index] = parseSelectAnswer(savedAnswer, optionLabels);
       } else {
         initial[index] = [];
       }
@@ -254,7 +268,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       setCurrentAnswer(savedAnswer);
     } else if (isSelectQuestion(currentQuestionIndex)) {
       const savedAnswer = answers[currentQuestionIndex] || "";
-      const selections = savedAnswer ? savedAnswer.split(",").map((s) => s.trim()).filter((s) => s) : [];
+      const optionLabels = getSelectConfig(currentQuestionIndex)?.options.map((option) => option.label);
+      const selections = savedAnswer ? parseSelectAnswer(savedAnswer, optionLabels) : [];
       setSelectSelections((prev) => ({
         ...prev,
         [currentQuestionIndex]: selections,
@@ -324,7 +339,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         newSelections = currentSelections.includes(optionLabel) ? [] : [optionLabel];
       }
 
-      const answerValue = newSelections.join(", ");
+      const answerValue = serializeSelectAnswer(newSelections);
       setValidationMessage(null);
       setCurrentAnswer(answerValue);
       setAnswers((prevAnswers) => {
@@ -736,7 +751,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       newAnswers[currentQuestionIndex] = selectedServices.join(", ");
     } else if (isSelectQuestion(currentQuestionIndex)) {
       const selections = selectSelections[currentQuestionIndex] || [];
-      newAnswers[currentQuestionIndex] = selections.join(", ");
+      newAnswers[currentQuestionIndex] = serializeSelectAnswer(selections);
     } else {
       newAnswers[currentQuestionIndex] = currentAnswer;
     }
@@ -854,7 +869,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       newAnswers[currentQuestionIndex] = selectedServices.join(", ");
     } else if (isSelectQuestion(currentQuestionIndex)) {
       const selections = selectSelections[currentQuestionIndex] || [];
-      newAnswers[currentQuestionIndex] = selections.join(", ");
+      newAnswers[currentQuestionIndex] = serializeSelectAnswer(selections);
     } else {
       newAnswers[currentQuestionIndex] = currentAnswer;
     }

@@ -4,6 +4,20 @@ import { useState, useEffect } from "react";
 import { CheckCircleIcon, ClockIcon, ChevronDownIcon, ChevronUpIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { TECNOLOGICO_FORM } from "../lib/formConfigs";
 
+const SELECT_ANSWER_SEPARATOR = " || ";
+
+const serializeSelectAnswer = (values: string[]): string => values.join(SELECT_ANSWER_SEPARATOR);
+
+const parseSelectAnswer = (value: string, options?: string[]): string[] => {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    if (options?.includes(trimmed)) return [trimmed];
+    if (trimmed.includes(SELECT_ANSWER_SEPARATOR)) {
+        return trimmed.split(SELECT_ANSWER_SEPARATOR).map((item) => item.trim()).filter(Boolean);
+    }
+    return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
+};
+
 export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     // Initialize state
     const [questions, setQuestions] = useState(() => {
@@ -255,9 +269,10 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                     const selectConfig = TECNOLOGICO_FORM.selectQuestions?.[q.id];
 
                                                     if (selectConfig) {
+                                                        const optionLabels = selectConfig.options.map((option) => option.label);
                                                         const currentValues = selectConfig.multiple
-                                                            ? (editValue ? editValue.split(",").map(s => s.trim()) : [])
-                                                            : [editValue];
+                                                            ? parseSelectAnswer(editValue, optionLabels)
+                                                            : parseSelectAnswer(editValue, optionLabels);
 
                                                         return (
                                                             <div className="space-y-2 mt-2">
@@ -277,7 +292,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                                                         } else {
                                                                                             newValues = [...currentValues, option.label];
                                                                                         }
-                                                                                        setEditValue(newValues.join(", "));
+                                                                                        setEditValue(serializeSelectAnswer(newValues));
                                                                                     } else {
                                                                                         setEditValue(option.label);
                                                                                     }
@@ -328,7 +343,10 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                     <div className="text-slate-700">
                                                         {TECNOLOGICO_FORM.selectQuestions?.[q.id]?.multiple ? (
                                                             <div className="flex flex-wrap gap-2 mt-1">
-                                                                {q.answer.split(",").map((item: string, idx: number) => (
+                                                                {parseSelectAnswer(
+                                                                    q.answer,
+                                                                    TECNOLOGICO_FORM.selectQuestions?.[q.id]?.options.map((option) => option.label)
+                                                                ).map((item: string, idx: number) => (
                                                                     <span key={idx} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
                                                                         {item.trim()}
                                                                     </span>
