@@ -334,6 +334,9 @@ export async function evaluateBusinessProfile(
         if (!response.ok) {
             const errorText = await response.text();
             console.error("❌ [API] evaluateBusinessProfile - Error:", response.status, errorText);
+            if (response.status === 404) {
+                throw new Error("La API externa no tiene habilitado el endpoint /ai/evaluate-business-profile. Revisa la configuración de NEXT_PUBLIC_API_URL.");
+            }
             throw new Error(`Error al evaluar perfil comercial: ${response.statusText}`);
         }
 

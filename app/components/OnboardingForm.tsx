@@ -1339,7 +1339,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
               ¿Estás seguro de finalizar este cuestionario?
             </h3>
             <p className="text-slate-700 text-base sm:text-lg mb-6 sm:mb-8 text-center">
-              Se va a generar una propuesta comercial con base en tus respuestas.
+              Se evaluarán tus respuestas para determinar el siguiente paso del proceso.
             </p>
 
             {validationMessage && (

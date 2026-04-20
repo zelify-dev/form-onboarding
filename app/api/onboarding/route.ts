@@ -63,18 +63,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    const isAllowed = await rateLimit(ip, { limit: 20, windowMs: 60 * 1000 });
-    if (!isAllowed) {
-        return NextResponse.json({ success: false, message: "Demasiadas peticiones. Por favor espere." }, { status: 429 });
-    }
-
     try {
         const body = await request.json();
         const { action, formType, answers } = body;
 
         if (!Array.isArray(answers)) {
             return NextResponse.json({ success: false, message: "Invalid payload" }, { status: 400 });
+        }
+
+        if (action !== 'saveProgress') {
+            const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+            const isAllowed = await rateLimit(ip, { limit: 20, windowMs: 60 * 1000 });
+            if (!isAllowed) {
+                return NextResponse.json({ success: false, message: "Demasiadas peticiones. Por favor espere." }, { status: 429 });
+            }
         }
 
         const sanitizedAnswers = answers.map((a: string) => sanitizeHtml(a, { allowedTags: [], allowedAttributes: {} }).slice(0, 5000));
@@ -274,6 +276,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });
     } catch (e) {
-        return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+        const message = e instanceof Error ? e.message : "Internal server error";
+        return NextResponse.json({ success: false, message }, { status: 500 });
     }
 }
