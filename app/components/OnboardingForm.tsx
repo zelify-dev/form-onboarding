@@ -302,15 +302,22 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
       if (selectConfig.multiple) {
         // Selección múltiple: toggle
-        newSelections = currentSelections.includes(optionLabel)
-          ? currentSelections.filter((s) => s !== optionLabel)
-          : [...currentSelections, optionLabel];
+        if (currentSelections.includes(optionLabel)) {
+          newSelections = currentSelections.filter((s) => s !== optionLabel);
+        } else {
+          if (selectConfig.maxSelections && currentSelections.length >= selectConfig.maxSelections) {
+            setValidationMessage(`Puedes seleccionar maximo ${selectConfig.maxSelections} opciones en esta pregunta.`);
+            return prev;
+          }
+          newSelections = [...currentSelections, optionLabel];
+        }
       } else {
         // Selección única: reemplazar
         newSelections = currentSelections.includes(optionLabel) ? [] : [optionLabel];
       }
 
       const answerValue = newSelections.join(", ");
+      setValidationMessage(null);
       setCurrentAnswer(answerValue);
       setAnswers((prevAnswers) => {
         const updated = [...prevAnswers];
@@ -1154,6 +1161,11 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                             <p className="text-slate-600 text-sm sm:text-base mb-4">
                               {selectConfig.multiple ? "Selecciona una o varias opciones" : "Selecciona una opción"}
                             </p>
+                            {selectConfig.maxSelections ? (
+                              <p className="text-slate-500 text-xs sm:text-sm mb-4">
+                                Maximo permitido: {selectConfig.maxSelections} opciones.
+                              </p>
+                            ) : null}
                             <div
                               className={`overflow-y-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] pr-2 -mr-2 ${hasDescriptions
                                 ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 md:gap-3.5"
@@ -1223,7 +1235,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                       rows={1}
                     />
                   )}
-                  {validationMessage && !isCountryQuestion(currentQuestionIndex) && !isServicesQuestion(currentQuestionIndex) && !isSelectQuestion(currentQuestionIndex) && (
+                  {validationMessage && !isCountryQuestion(currentQuestionIndex) && !isServicesQuestion(currentQuestionIndex) && (
                     <p className="text-red-500 text-sm sm:text-base mt-2 font-medium">{validationMessage}</p>
                   )}
                   {nameError && <p className="text-red-400 text-sm sm:text-base mt-2">{nameError}</p>}

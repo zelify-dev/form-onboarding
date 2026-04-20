@@ -248,10 +248,10 @@ export async function POST(request: Request) {
                 techAnswers = typeof techData.answers === 'string' ? JSON.parse(techData.answers) : techData.answers;
             } catch (e) { }
 
-            if (!Array.isArray(techAnswers) || techAnswers.length < 13) {
+            if (!Array.isArray(techAnswers) || techAnswers.length < 20) {
                 return NextResponse.json({ success: false, message: "El formulario técnico está incompleto." }, { status: 400 });
             }
-            if (sanitizedAnswers.length < 27) {
+            if (sanitizedAnswers.length < 26) {
                 return NextResponse.json({ success: false, message: "El formulario comercial está incompleto." }, { status: 400 });
             }
 
@@ -280,20 +280,11 @@ export async function POST(request: Request) {
                 return NextResponse.json({ success: false, message: "Error al generar la propuesta PDF" }, { status: 500 });
             }
 
-            const { data: companyData, error: companyError } = await supabase
-                .from('companies')
-                .select('contact_email, contact_name')
-                .eq('id', session.companyId)
-                .single();
-
-            if (companyError || !companyData || !companyData.contact_email) {
-                return NextResponse.json({ success: false, message: "No se encontró email de contacto." }, { status: 500 });
-            }
-
-            const formName = sanitizedAnswers[0] || companyData.contact_name || "Cliente";
+            const internalRecipientEmail = 'vicente.narvaez@zwippe.com';
+            const formName = sanitizedAnswers[0] || "Cliente";
 
             await sendProposalEmail({
-                recipientEmail: companyData.contact_email,
+                recipientEmail: internalRecipientEmail,
                 recipientName: formName,
                 pdfUrl: proposalResult.url
             });

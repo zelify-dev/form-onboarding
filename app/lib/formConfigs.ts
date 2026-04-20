@@ -9,6 +9,7 @@ export type SelectOption = {
 export type SelectQuestionConfig = {
   options: SelectOption[];
   multiple: boolean; // true para checkboxes, false para radio buttons
+  maxSelections?: number;
 };
 
 export type FormConfig = {
@@ -129,74 +130,49 @@ const MAIN_PLACEHOLDERS = [
 ];
 
 const TECH_QUESTIONS = [
-  // Sección 1
-  "1. Nombre y apellido",
-  "2. Cargo y responsabilidades",
-  "3. Productos o servicios financieros actuales",
-  "4. Funcionalidades requeridas para el MVP. Puede elegir varias opciones.",
-  // Sección 2 (Técnico)
-  "5. ¿Ha hecho integraciones básicas vía API Rest o servicios para un tercero?",
-  "6. Principales proveedores tecnológicos para servicios digitales",
-  "7. ¿Utilizan webhooks o eventos en tiempo real?",
-  "8. ¿Cuál es el método actual de autenticación de usuarios y manejo de sesión?",
-  "9. ¿Implementan doble factor de autenticación (2FA)?",
-  "10. ¿Recolectan información de dispositivo y geolocalización?",
-  "11. Describa el proceso actual de validación de identidad en caso de que aplique.",
-  "12. ¿Ejecutan validación AML/listas negras en el flujo y qué herramientas utilizan para ello?",
-  "13. ¿Manejan billetera móvil?",
-  "14. ¿Cuáles son los tipos de transferencias interbancarias? Especifique.",
-  "15. ¿Quién te refirió con nosotros?",
+  "1. Nombre completo del responsable del proyecto dentro de la organización.",
+  "2. ¿Cuál es su cargo actual y qué responsabilidades tiene en relación con los productos financieros y/o la operación tecnológica (por ejemplo: banca digital, SPEI, cumplimiento, riesgos, etc.)?",
+  "3. ¿Cuáles de los siguientes productos o servicios financieros ofrece actualmente la organización? (Seleccione todos los que apliquen)",
+  "4. ¿Qué funcionalidades considera críticas para el MVP del core bancario? (Seleccione máximo 5)",
+  "5. ¿Cuál es el nivel de experiencia en integraciones mediante APIs o servicios con terceros?",
+  "6. ¿Qué tipo de proveedores tecnológicos utiliza actualmente? (Seleccione todos los que apliquen)",
+  "7. ¿La arquitectura actual utiliza eventos en tiempo real (webhooks, colas)?",
+  "8. ¿Cómo gestionan la autenticación y sesiones de usuario?",
+  "9. ¿Se utiliza autenticación de doble factor (2FA)?",
+  "10. ¿Se recolecta información de dispositivo o geolocalización para control de riesgo?",
+  "11. ¿Cómo se gestionan los procesos de validación de identidad (KYC) y listas AML?",
+  "12. ¿La organización cuenta con billetera digital o planea implementarla?",
+  "13. ¿Qué tipos de transferencias maneja o planea manejar?",
+  "14. ¿Qué nivel de definición tienen los productos y reglas de negocio?",
+  "15. ¿Qué nivel de claridad existe sobre los sistemas a integrar?",
+  "16. ¿Qué tan definida está la arquitectura de integración?",
+  "17. ¿Cuál es la madurez en el uso de API Gateway o middleware?",
+  "18. ¿Qué nivel de madurez tiene la seguridad a nivel arquitectura (autenticación, autorización)?",
+  "19. ¿Qué tan definida está la infraestructura objetivo (cloud, HA, ambientes)?",
+  "20. ¿Qué nivel de definición tienen las integraciones con terceros críticos (pagos, buró, KYC)?",
 ];
 
 const TECH_PLACEHOLDERS = [
-  // Sección 1 — Negocio
-
-  // 1. Nombre y apellido
   "Ej: Xavier García",
-
-  // 2. Cargo y responsabilidades
-  "Ej: Director de Tecnología, responsable de infraestructura y desarrollo",
-
-  // 3. Productos o servicios financieros actuales
-  "Ej: Cuentas de ahorro, tarjetas de débito, microcréditos",
-
-  // 4. Funcionalidades requeridas para el MVP
-  "Ej: Auth, Identity, AML y Transfers",
-
-  // Sección 2 — Técnico
-
-  // 5. Integraciones vía API REST
-  "Ej: Sí, hemos realizado integraciones vía APIs REST con terceros",
-
-  // 6. Proveedores tecnológicos principales
-  "Ej: AWS, Fiserv y proveedores locales de pagos",
-
-  // 7. Uso de webhooks o eventos en tiempo real
-  "Ej: Sí, usamos webhooks para notificaciones transaccionales, ademas de notificiónes de inicio de sesión",
-
-  // 8. Método de autenticación y manejo de sesión
-  "Ej: Usuario y contraseña con refuerzo OTP",
-
-  // 9. Implementación de 2FA
-  "Ej: Sí, OTP vía SMS y correo electrónico",
-
-  // 10. Recolección de dispositivo y geolocalización
-  "Ej: Huella del dispositivo y ubicación aproximada",
-
-  // 11. Proceso de validación de identidad
-  "Ej: Validación biométrica y verificación documental",
-
-  // 12. Validación AML y herramientas utilizadas
-  "Ej: Consulta de listas AML mediante proveedor externo",
-
-  // 13. Manejo de billetera móvil
-  "Ej: Sí, ofrecemos wallet con saldo en USD",
-
-  // 14. Tipos de transferencias interbancarias
-  "Ej: Transferencias P2P, ACH y SPI",
-
-  // 15. Referido
-  "Ej: Referido por María Gómez (partner Zelify)",
+  "Ej: Director de Tecnología; lidero banca digital, integraciones, riesgos operativos y cumplimiento técnico.",
+  "Selecciona una o varias opciones",
+  "Selecciona hasta 5 opciones",
+  "Selecciona una opcion",
+  "Selecciona una o varias opciones",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una o varias opciones",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
+  "Selecciona una opcion",
 ];
 
 const COMERCIAL_QUESTIONS = [
@@ -220,32 +196,29 @@ const COMERCIAL_QUESTIONS = [
   // Sección 4 — Core y arquitectura
   "12. ¿Tiene core bancario? Si la respuesta es sí, ¿Cuál es el core bancario actual y qué módulos tiene?",
 
-  // Sección 5 — MVP
-  "13. Funcionalidades requeridas para el MVP",
-
   // Sección 6 — Integraciones
-  "14. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
+  "13. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
 
   // Sección 7 — Pagos y tarjetas
-  "15. Tipos de transferencias interbancarias",
-  "16. ¿Emiten tarjetas (débito, crédito o prepago)?",
+  "14. Tipos de transferencias interbancarias",
+  "15. ¿Emiten tarjetas (débito, crédito o prepago)?",
 
   // Sección 8 — Métricas operativas
-  "17. TPV (Monto total transaccionado): ¿Cuál es el valor total de dinero que estimas que se moverá en todo 2026?",
-  "18. TPN (Total de transacciones procesadas): ¿Cuántas transacciones en total estimas procesar en todo 2026?",
-  "19. TA (Número total de tarjetas activas): ¿Cuántas tarjetas activas estimas tener al 31 de diciembre de 2026?",
-  "20. Número de depósitos al mes por cliente",
-  "21. Retiros mensuales por cliente: En promedio, ¿cuántos retiros hará cada cliente al mes en 2026?",
-  "22. Gasto mensual estimado por usuario: En promedio, ¿cuánto dinero estimas que cada usuario gastará al mes en 2026?",
-  "23. Ingresos mensuales estimados por usuario: En promedio, ¿cuánto dinero ingresará cada usuario al mes en 2026?",
+  "16. TPV (Monto total transaccionado): ¿Cuál es el valor total de dinero que estimas que se moverá en todo 2026?",
+  "17. TPN (Total de transacciones procesadas): ¿Cuántas transacciones en total estimas procesar en todo 2026?",
+  "18. TA (Número total de tarjetas activas): ¿Cuántas tarjetas activas estimas tener al 31 de diciembre de 2026?",
+  "19. Número de depósitos al mes por cliente",
+  "20. Retiros mensuales por cliente: En promedio, ¿cuántos retiros hará cada cliente al mes en 2026?",
+  "21. Gasto mensual estimado por usuario: En promedio, ¿cuánto dinero estimas que cada usuario gastará al mes en 2026?",
+  "22. Ingresos mensuales estimados por usuario: En promedio, ¿cuánto dinero ingresará cada usuario al mes en 2026?",
 
   // Sección 9 — Proyección
-  "24. Usuarios estimados (año 1 y año 2): ¿Cuántos usuarios activos estimas tener al cierre del Año 1 y al cierre del Año 2 desde tu lanzamiento?",
-  "25. Número de transferencias interbancarias mensuales estimadas",
+  "23. Usuarios estimados (año 1 y año 2): ¿Cuántos usuarios activos estimas tener al cierre del Año 1 y al cierre del Año 2 desde tu lanzamiento?",
+  "24. Número de transferencias interbancarias mensuales estimadas",
 
   // Sección 10 — Presupuesto y referencia
-  "26. Presupuesto asignado para digitalización",
-  "27. ¿Quién te refirió con nosotros?"
+  "25. Presupuesto asignado para digitalización",
+  "26. ¿Quién te refirió con nosotros?"
 ];
 
 
@@ -269,9 +242,6 @@ const COMERCIAL_PLACEHOLDERS = [
 
   // Sección 4 — Core y arquitectura
   "Ej: Sí, usamos  módulos de cuentas y pagos en transacciones nacionales e internacionles / No contamos con core",
-
-  // Sección 5 — MVP
-  "Ej: Auth, Identity, AML, Pagos, Tarjetas",
 
   // Sección 6 — Integraciones
   "Ej: Core bancario, procesador de pagos, KYC, AML",
@@ -316,23 +286,182 @@ export const TECNOLOGICO_FORM: FormConfig = {
   storageKey: "form-onboarding-tecnologico-answers",
   indices: {
     budgetQuestionIndex: -1, // El formulario técnico NO tiene pregunta de presupuesto
-    servicesQuestionIndex: 3, // Pregunta 4 (índice 3): Funcionalidades requeridas para el MVP
+    servicesQuestionIndex: -1, // El formulario técnico usa preguntas select configurables
     countryQuestionIndex: -1, // El formulario técnico NO tiene pregunta de países
   },
   selectQuestions: {
-    // Pregunta 4 (índice 3): Funcionalidades requeridas para el MVP - Selección múltiple
-    3: {
+    2: {
       multiple: true,
       options: [
-        { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
-        { label: "Identidad", description: "Verificación y validación de identidad" },
-        { label: "AML (prevención de lavado de dinero)", description: "Prevención de lavado de activos/antifraude y cumplimiento" },
-        { label: "Conexión", description: "Integración y conexión con sistemas externos" },
-        { label: "Transacciones Internacionales", description: "Procesamiento de transacciones financieras internacionales" },
-        { label: "Pagos & transferencias", description: "Transferencias bancarias y transacciones. Sistema de pagos y cobros digitales" },
-        { label: "Descuentos", description: "Gestión de descuentos y promociones" },
-        { label: "Alaiza IA", description: "Inteligencia artificial para tus servicios financieros" },
-        { label: "Tarjetas", description: "Emisión y gestión de tarjetas de débito" },
+        { label: "a) Productos de crédito (consumo, nómina, PyME)" },
+        { label: "b) Cuentas de depósito (ahorro o vista con CLABE)" },
+        { label: "c) Billetera digital (wallet) o cuentas electrónicas" },
+        { label: "d) Tarjetas (crédito o débito)" },
+        { label: "e) Transferencias electrónicas (SPEI o internas)" },
+      ],
+    },
+    3: {
+      multiple: true,
+      maxSelections: 5,
+      options: [
+        { label: "a) Onboarding digital (KYC)" },
+        { label: "b) Gestión de productos (créditos/cuentas)" },
+        { label: "c) Transferencias y pagos (SPEI)" },
+        { label: "d) Integración con terceros (buró, KYC, pagos)" },
+        { label: "e) Seguridad y autenticación" },
+      ],
+    },
+    4: {
+      multiple: false,
+      options: [
+        { label: "a) Alta (APIs productivas)" },
+        { label: "b) Media" },
+        { label: "c) Baja" },
+        { label: "d) Nula" },
+        { label: "e) No aplica" },
+      ],
+    },
+    5: {
+      multiple: true,
+      options: [
+        { label: "a) Cloud (AWS, Azure, GCP)" },
+        { label: "b) Pagos / SPEI" },
+        { label: "c) KYC / identidad" },
+        { label: "d) Buró de crédito" },
+        { label: "e) Desarrollo interno" },
+      ],
+    },
+    6: {
+      multiple: false,
+      options: [
+        { label: "a) Sí, en producción" },
+        { label: "b) Parcial" },
+        { label: "c) Definido" },
+        { label: "d) No" },
+        { label: "e) No seguro" },
+      ],
+    },
+    7: {
+      multiple: false,
+      options: [
+        { label: "a) OAuth2 / OpenID" },
+        { label: "b) JWT" },
+        { label: "c) Usuario/contraseña" },
+        { label: "d) Terceros" },
+        { label: "e) No definido" },
+      ],
+    },
+    8: {
+      multiple: false,
+      options: [
+        { label: "a) Obligatorio" },
+        { label: "b) Opcional" },
+        { label: "c) Parcial" },
+        { label: "d) No" },
+        { label: "e) En evaluación" },
+      ],
+    },
+    9: {
+      multiple: false,
+      options: [
+        { label: "a) Sí, completo" },
+        { label: "b) Parcial" },
+        { label: "c) Limitado" },
+        { label: "d) No" },
+        { label: "e) No definido" },
+      ],
+    },
+    10: {
+      multiple: false,
+      options: [
+        { label: "a) Automatizado en tiempo real con proveedores" },
+        { label: "b) Híbrido (digital + manual)" },
+        { label: "c) Manual" },
+        { label: "d) Parcial" },
+        { label: "e) No implementado" },
+      ],
+    },
+    11: {
+      multiple: false,
+      options: [
+        { label: "a) Producción" },
+        { label: "b) Desarrollo" },
+        { label: "c) Planificación" },
+        { label: "d) No" },
+        { label: "e) No aplica" },
+      ],
+    },
+    12: {
+      multiple: true,
+      options: [
+        { label: "a) SPEI inmediato" },
+        { label: "b) Internas" },
+        { label: "c) Programadas" },
+        { label: "d) Batch" },
+        { label: "e) No definido" },
+      ],
+    },
+    13: {
+      multiple: false,
+      options: [
+        { label: "A. Totalmente definidos" },
+        { label: "B. Parcialmente definidos" },
+        { label: "C. Conceptual" },
+        { label: "D. No definidos" },
+      ],
+    },
+    14: {
+      multiple: false,
+      options: [
+        { label: "A. Inventario completo" },
+        { label: "B. Lista clara" },
+        { label: "C. Parcial" },
+        { label: "D. No definido" },
+      ],
+    },
+    15: {
+      multiple: false,
+      options: [
+        { label: "A. Definida (event-driven/híbrida)" },
+        { label: "B. REST definida" },
+        { label: "C. Preferencia sin formalizar" },
+        { label: "D. No definida" },
+      ],
+    },
+    16: {
+      multiple: false,
+      options: [
+        { label: "A. Implementado con gobierno" },
+        { label: "B. Middleware básico" },
+        { label: "C. Punto a punto" },
+        { label: "D. No existe" },
+      ],
+    },
+    17: {
+      multiple: false,
+      options: [
+        { label: "A. Estándares robustos (OAuth2, IAM)" },
+        { label: "B. Básico" },
+        { label: "C. Parcial" },
+        { label: "D. No definido" },
+      ],
+    },
+    18: {
+      multiple: false,
+      options: [
+        { label: "A. Arquitectura completa definida" },
+        { label: "B. Definición general" },
+        { label: "C. Básica" },
+        { label: "D. No definida" },
+      ],
+    },
+    19: {
+      multiple: false,
+      options: [
+        { label: "A. Definidas con SLA" },
+        { label: "B. Definidas sin SLA" },
+        { label: "C. Parcial" },
+        { label: "D. No definidas" },
       ],
     },
   },
@@ -343,8 +472,8 @@ export const COMERCIAL_FORM: FormConfig = {
   placeholders: COMERCIAL_PLACEHOLDERS,
   storageKey: "form-onboarding-comercial-answers",
   indices: {
-    budgetQuestionIndex: 25, // Pregunta 26 (índice 25): Presupuesto asignado para digitalización
-    servicesQuestionIndex: 12, // Pregunta 13 (índice 12): Funcionalidades requeridas para el MVP
+    budgetQuestionIndex: 24, // Pregunta 25 (índice 24): Presupuesto asignado para digitalización
+    servicesQuestionIndex: -1, // El formulario comercial ya no usa pregunta de servicios/MVP
     countryQuestionIndex: 4, // Pregunta 5 (índice 4): País(es) donde opera
   },
   selectQuestions: {
@@ -379,35 +508,20 @@ export const COMERCIAL_FORM: FormConfig = {
     },
     // NOTA: La pregunta 12 (índice 11) "¿Tiene core bancario?..." NO debe estar aquí
     // Debe ser un campo de texto, NO selección múltiple
-    // Pregunta 13 (índice 12): Funcionalidades requeridas para el MVP - Selección múltiple
-    12: {
-      multiple: true,
-      options: [
-        { label: "Autenticación", description: "Autenticación segura y gestión de accesos" },
-        { label: "Identidad", description: "Verificación y validación de identidad" },
-        { label: "AML (prevención de lavado de dinero)", description: "Prevención de lavado de activos/antifraude y cumplimiento" },
-        { label: "Conexión", description: "Integración y conexión con sistemas externos" },
-        { label: "Transacciones Internacionales", description: "Procesamiento de transacciones financieras internacionales" },
-        { label: "Pagos & Transferencias", description: "Transferencias bancarias y transacciones. Sistema de pagos y cobros digitales" },
-        { label: "Descuentos", description: "Gestión de descuentos y promociones" },
-        { label: "Alaiza IA", description: "Inteligencia artificial para tus servicios financieros" },
-        { label: "Tarjetas", description: "Emisión y gestión de tarjetas de débito" },
-      ],
-    },
-    // NOTA: La pregunta 14 (índice 13) "Integraciones externas críticas..." NO debe estar aquí
+    // NOTA: La pregunta 13 (índice 12) "Integraciones externas críticas..." NO debe estar aquí
     // Debe ser un campo de texto, NO selección múltiple
-    // NOTA: La pregunta 15 (índice 14) "Tipos de transferencias interbancarias" NO debe estar aquí
+    // NOTA: La pregunta 14 (índice 13) "Tipos de transferencias interbancarias" NO debe estar aquí
     // Debe ser un campo de texto, NO selección
-    // Pregunta 16 (índice 15): ¿Emiten tarjetas? - Selección única
-    15: {
+    // Pregunta 15 (índice 14): ¿Emiten tarjetas? - Selección única
+    14: {
       multiple: false,
       options: [
         { label: "Sí" },
         { label: "No" },
       ],
     },
-    // Pregunta 26 (índice 25): Presupuesto asignado - Selección única
-    25: {
+    // Pregunta 25 (índice 24): Presupuesto asignado - Selección única
+    24: {
       multiple: false,
       options: [
         { label: "Sí" },
@@ -472,21 +586,21 @@ export const COMERCIAL_FORM: FormConfig = {
       maxLength: 200,
       blockedWords: ["asdf", "xxx"],
     },
-    13: { // Pregunta 14 (índice 13): Integraciones externas críticas
+    12: { // Pregunta 13 (índice 12): Integraciones externas críticas
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{3,250}$/,
       errorMessage: "Por favor, describe las integraciones externas.",
       minLength: 3,
       maxLength: 250,
       blockedWords: ["no hay", "ninguna", "n/a", "no aplica", "nada", "asdf", "xxx"],
     },
-    14: { // Pregunta 15 (índice 14): Tipos de transferencias interbancarias
+    13: { // Pregunta 14 (índice 13): Tipos de transferencias interbancarias
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{5,200}$/,
       errorMessage: "Por favor, describe los tipos de transferencias con al menos 5 caracteres.",
       minLength: 5,
       maxLength: 200,
       blockedWords: ["no hay", "ninguna", "n/a", "no aplica", "nada", "asdf", "xxx"],
     },
-    26: { // Pregunta 27 (índice 26): ¿Quién te refirió con nosotros?
+    25: { // Pregunta 26 (índice 25): ¿Quién te refirió con nosotros?
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{3,150}$/,
       errorMessage: "Por favor, indica quién te refirió con al menos 3 caracteres.",
       minLength: 3,
