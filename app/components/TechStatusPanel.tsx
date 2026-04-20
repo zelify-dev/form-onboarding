@@ -18,18 +18,37 @@ const parseSelectAnswer = (value: string, options?: string[]): string[] => {
     return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
 };
 
-export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+const mapAnswersToQuestions = (answers: string[]) =>
+    TECNOLOGICO_FORM.questions.map((q, index) => ({
+        id: index,
+        question: q,
+        answer: answers[index] || "",
+        status: answers[index] ? "completed" : "pending",
+    }));
+
+export default function TechStatusPanel({
+    isOpen,
+    onClose,
+    prefetchedAnswers,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    prefetchedAnswers?: string[] | null;
+}) {
     // Initialize state
     const [questions, setQuestions] = useState(() => {
-        return TECNOLOGICO_FORM.questions.map((q, index) => ({
-            id: index,
-            question: q,
-            answer: "",
-            status: "pending",
-        }));
+        return prefetchedAnswers && prefetchedAnswers.length > 0
+            ? mapAnswersToQuestions(prefetchedAnswers)
+            : mapAnswersToQuestions([]);
     });
 
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(Boolean(prefetchedAnswers));
+
+    useEffect(() => {
+        if (!prefetchedAnswers) return;
+        setQuestions(mapAnswersToQuestions(prefetchedAnswers));
+        setIsLoaded(true);
+    }, [prefetchedAnswers]);
 
     // SSE Fetch Stream
     useEffect(() => {
@@ -68,11 +87,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                         if (result.success && result.answers) {
                             const storedAnswers = result.answers;
                             if (Array.isArray(storedAnswers)) {
-                                setQuestions(prev => prev.map((q, index) => ({
-                                    ...q,
-                                    answer: storedAnswers[index] || "",
-                                    status: storedAnswers[index] ? "completed" : "pending"
-                                })));
+                                setQuestions(mapAnswersToQuestions(storedAnswers));
                             }
                         }
                         isSnapshotLoaded = true;
@@ -91,11 +106,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                         try {
                             const storedAnswers = typeof newData.answers === 'string' ? JSON.parse(newData.answers) : newData.answers;
                             if (Array.isArray(storedAnswers)) {
-                                setQuestions(prev => prev.map((q, index) => ({
-                                    ...q,
-                                    answer: storedAnswers[index] || "",
-                                    status: storedAnswers[index] ? "completed" : "pending"
-                                })));
+                                setQuestions(mapAnswersToQuestions(storedAnswers));
                             }
                         } catch (e) { }
                     }
@@ -159,6 +170,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState("");
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const completedCount = questions.filter(q => q.status === "completed").length;
     const totalCount = questions.length;
@@ -174,6 +186,7 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
     const handleEditClick = (q: any) => {
         setEditingId(q.id);
         setEditValue(q.answer);
+        setSaveError(null);
     };
 
     const handleSave = async (id: number) => {
@@ -188,19 +201,26 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
         // Save via our secure API route
         const answersArray = updatedQuestions.map(q => q.answer);
         try {
-            await fetch('/api/tech-status', {
+            const response = await fetch('/api/tech-status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ answers: answersArray })
             });
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || "No se pudo guardar la respuesta.");
+            }
+            setSaveError(null);
         } catch (err) {
-            // Silently handle error
+            const message = err instanceof Error ? err.message : "No se pudo guardar la respuesta.";
+            setSaveError(message);
         }
     };
 
     const handleCancel = () => {
         setEditingId(null);
         setEditValue("");
+        setSaveError(null);
     };
 
     return (
@@ -336,6 +356,9 @@ export default function TechStatusPanel({ isOpen, onClose }: { isOpen: boolean; 
                                                         Guardar
                                                     </button>
                                                 </div>
+                                                {saveError ? (
+                                                    <p className="text-xs text-red-600 mt-2">{saveError}</p>
+                                                ) : null}
                                             </div>
                                         ) : (
                                             <>

@@ -60,12 +60,10 @@ const SERVICE_PDF_MAP: Record<string, string[]> = {
 };
 
 const THANK_YOU_MESSAGE =
-  "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify en Ecuador.";
+  "Muchas gracias por tus respuestas. Estamos procesando tu información. Un ejecutivo coordinará una reunión introductoria para la presentación de los productos y servicios de Zelify.";
 
 const DECLINE_MESSAGE =
   "Gracias por tus respuestas. Evaluaremos tus preguntas y nos pondremos en contacto contigo lo más pronto posible.";
-
-const DOCS_URL = "https://docs.zelify.com";
 
 const COUNTRY_OPTIONS = ["Colombia", "Ecuador", "Estados Unidos", "México"];
 const SELECT_ANSWER_SEPARATOR = " || ";
@@ -888,12 +886,24 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
     try {
       const role = localStorage.getItem("onboarding_role");
+      console.log("[OnboardingForm] Finalize start", {
+        role,
+        currentQuestionIndex,
+        answersCount: newAnswers.length,
+      });
+
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'finalize', formType: role, answers: newAnswers })
       });
       const result = await res.json();
+
+      console.log("[OnboardingForm] Finalize response", {
+        status: res.status,
+        ok: res.ok,
+        result,
+      });
 
       if (result.success) {
         if (result.status === 'decline') {
@@ -921,7 +931,9 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       }
 
     } catch (error) {
-      setValidationMessage("Ocurrió un error inesperado. Intente nuevamente.");
+      console.error("[OnboardingForm] Finalize exception", error);
+      const message = error instanceof Error ? error.message : "Ocurrió un error inesperado. Intente nuevamente.";
+      setValidationMessage(message);
       setIsSubmitting(false);
     }
   };
@@ -1015,32 +1027,6 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                               animationsEnabled={animationsEnabled}
                               onAnimationComplete={() => { }}
                             />
-                            <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 mt-8">
-                              <div className="mt-4 sm:mt-6 md:mt-8">
-                                <p className="text-white text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 font-medium">
-                                  Mientras tanto, te invitamos a visitar nuestro sitio de documentación para conocer más sobre nuestros
-                                  servicios:
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5">
-                                  <a
-                                    href={DOCS_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-purple-500 hover:bg-purple-600 text-white text-base sm:text-lg md:text-xl font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
-                                  >
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                      />
-                                    </svg>
-                                    Visitar Documentación
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
                           </>
                         );
                       })()}

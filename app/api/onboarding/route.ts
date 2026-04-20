@@ -276,6 +276,10 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });
     } catch (e) {
+        console.error("[api/onboarding] POST error", {
+            error: e,
+            message: e instanceof Error ? e.message : "Unknown error",
+        });
         const message = e instanceof Error ? e.message : "Internal server error";
         return NextResponse.json({ success: false, message }, { status: 500 });
     }

@@ -105,8 +105,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Role Gate: Strictly enforce
-    if (session.role !== 'technical') {
+    // Allow both profiles from the same company to update the technical questionnaire.
+    if (session.role !== 'technical' && session.role !== 'commercial') {
         return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
     }
 
