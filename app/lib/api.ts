@@ -312,7 +312,7 @@ export async function evaluateBusinessProfile(
             submittedAt: new Date().toISOString(),
         };
 
-        console.log("📤 [API] evaluateBusinessProfile - URL:", `${API_BASE_URL}/ai/evaluate-business-profile`);
+        console.log("📤 [API] evaluateBusinessProfile - URL:", `${API_BASE_URL}/api/ai/evaluate-business-profile`);
         console.log("📤 [API] evaluateBusinessProfile - Total preguntas combinadas:", allQuestions.length);
         console.log("📤 [API] evaluateBusinessProfile - Preguntas comerciales incluidas:", commercialQuestions.length);
         console.log("📤 [API] evaluateBusinessProfile - Preguntas técnicas totales:", technicalAnswers && technicalQuestions ? technicalQuestions.length : 0);
@@ -320,7 +320,7 @@ export async function evaluateBusinessProfile(
         console.log("📤 [API] evaluateBusinessProfile - Preguntas técnicas incluidas:", technicalAnswers && technicalQuestions ? technicalQuestions.length - excludedTechnicalIndices.size : 0);
         console.log("📤 [API] evaluateBusinessProfile - Payload:", JSON.stringify(payload, null, 2));
 
-        const response = await fetch(`${API_BASE_URL}/ai/evaluate-business-profile`, {
+        const response = await fetch(`${API_BASE_URL}/api/ai/evaluate-business-profile`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -335,7 +335,7 @@ export async function evaluateBusinessProfile(
             const errorText = await response.text();
             console.error("❌ [API] evaluateBusinessProfile - Error:", response.status, errorText);
             if (response.status === 404) {
-                throw new Error("La API externa no tiene habilitado el endpoint /ai/evaluate-business-profile. Revisa la configuración de NEXT_PUBLIC_API_URL.");
+                throw new Error("La API externa no tiene habilitado el endpoint /api/ai/evaluate-business-profile. Revisa la configuración de NEXT_PUBLIC_API_URL.");
             }
             throw new Error(`Error al evaluar perfil comercial: ${response.statusText}`);
         }
@@ -398,13 +398,13 @@ export async function generateProposal(
             submittedAt: new Date().toISOString(),
         };
 
-        console.log("📤 [API] generateProposal - URL:", `${API_BASE_URL}/ai/generate-proposal`);
+        console.log("📤 [API] generateProposal - URL:", `${API_BASE_URL}/api/ai/generate-proposal`);
         console.log("📤 [API] generateProposal - Total preguntas combinadas:", allQuestions.length);
         console.log("📤 [API] generateProposal - Preguntas comerciales incluidas:", commercialQuestions.length);
         console.log("📤 [API] generateProposal - Preguntas técnicas incluidas:", technicalAnswers && technicalQuestions ? technicalQuestions.length : 0);
         console.log("📤 [API] generateProposal - Payload:", JSON.stringify(payload, null, 2));
 
-        const response = await fetch(`${API_BASE_URL}/ai/generate-proposal`, {
+        const response = await fetch(`${API_BASE_URL}/api/ai/generate-proposal`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
