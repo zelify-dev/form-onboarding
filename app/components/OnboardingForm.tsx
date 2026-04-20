@@ -11,7 +11,6 @@ import AnimationToggle from "./AnimationToggle";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
-import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from "../lib/api";
 
 type OnboardingFormProps = {
   config: FormConfig;

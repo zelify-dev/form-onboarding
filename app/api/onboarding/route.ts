@@ -3,7 +3,7 @@ import { getSession } from '../../lib/session';
 import { getSupabaseServerClient } from '../../lib/supabase';
 import sanitizeHtml from 'sanitize-html';
 import { technicalFormSchema, commercialFormSchema } from '../../lib/schemas';
-import { evaluateBusinessProfile, generateProposal, sendProposalEmail } from '../../lib/api';
+import { evaluateBusinessProfile } from '../../lib/api';
 import { TECNOLOGICO_FORM, COMERCIAL_FORM } from '../../lib/formConfigs';
 import { cookies } from 'next/headers';
 import { rateLimit } from '../../lib/rate-limit';
@@ -269,27 +269,7 @@ export async function POST(request: Request) {
                 return NextResponse.json({ success: true, status: 'decline' });
             }
 
-            const proposalResult = await generateProposal(
-                sanitizedAnswers,
-                commercialQuestions,
-                techAnswers,
-                technicalQuestions
-            );
-
-            if (!proposalResult.url) {
-                return NextResponse.json({ success: false, message: "Error al generar la propuesta PDF" }, { status: 500 });
-            }
-
-            const internalRecipientEmail = 'vicente.narvaez@zwippe.com';
-            const formName = sanitizedAnswers[0] || "Cliente";
-
-            await sendProposalEmail({
-                recipientEmail: internalRecipientEmail,
-                recipientName: formName,
-                pdfUrl: proposalResult.url
-            });
-
-            return NextResponse.json({ success: true, status: 'next', pdfUrl: proposalResult.url });
+            return NextResponse.json({ success: true, status: 'next' });
         }
 
         return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });
