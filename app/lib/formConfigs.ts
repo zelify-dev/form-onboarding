@@ -195,30 +195,38 @@ const COMERCIAL_QUESTIONS = [
 
   // Sección 4 — Core y arquitectura
   "12. ¿Tiene core bancario? Si la respuesta es sí, ¿Cuál es el core bancario actual y qué módulos tiene?",
+  "13. ¿Qué servicios necesitarían para su core bancario? (Seleccione todos los que apliquen)",
+  "14. Número de usuarios del sistema (empleados, ejecutivos, operacionales)",
+  "15. ¿Qué módulos requerirían para su solución? (Seleccione todos los que apliquen)",
+  "16. Monedas soportadas (locales y extranjeras)",
+  "17. ¿Qué canales requerirían? (Seleccione todos los que apliquen)",
+  "18. Timeline de implementación deseado",
+  "19. Infraestructura preferida",
+  "20. Requisitos de cumplimiento necesarios (Seleccione todos los que apliquen)",
 
   // Sección 6 — Integraciones
-  "13. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
+  "21. Integraciones externas críticas (core, pagos, validación de identidad, cumplimiento)",
 
   // Sección 7 — Pagos y tarjetas
-  "14. Tipos de transferencias interbancarias",
-  "15. ¿Emiten tarjetas (débito, crédito o prepago)?",
+  "22. Tipos de transferencias interbancarias",
+  "23. ¿Emiten tarjetas (débito, crédito o prepago)?",
 
   // Sección 8 — Métricas operativas
-  "16. TPV (Monto total transaccionado): ¿Cuál es el valor total de dinero que estimas que se moverá en todo 2026?",
-  "17. TPN (Total de transacciones procesadas): ¿Cuántas transacciones en total estimas procesar en todo 2026?",
-  "18. TA (Número total de tarjetas activas): ¿Cuántas tarjetas activas estimas tener al 31 de diciembre de 2026?",
-  "19. Número de depósitos al mes por cliente",
-  "20. Retiros mensuales por cliente: En promedio, ¿cuántos retiros hará cada cliente al mes en 2026?",
-  "21. Gasto mensual estimado por usuario: En promedio, ¿cuánto dinero estimas que cada usuario gastará al mes en 2026?",
-  "22. Ingresos mensuales estimados por usuario: En promedio, ¿cuánto dinero ingresará cada usuario al mes en 2026?",
+  "24. TPV (Monto total transaccionado): ¿Cuál es el valor total de dinero que estimas que se moverá en todo 2026?",
+  "25. TPN (Total de transacciones procesadas): ¿Cuántas transacciones en total estimas procesar en todo 2026?",
+  "26. TA (Número total de tarjetas activas): ¿Cuántas tarjetas activas estimas tener al 31 de diciembre de 2026?",
+  "27. Número de depósitos al mes por cliente",
+  "28. Retiros mensuales por cliente: En promedio, ¿cuántos retiros hará cada cliente al mes en 2026?",
+  "29. Gasto mensual estimado por usuario: En promedio, ¿cuánto dinero estimas que cada usuario gastará al mes en 2026?",
+  "30. Ingresos mensuales estimados por usuario: En promedio, ¿cuánto dinero ingresará cada usuario al mes en 2026?",
 
   // Sección 9 — Proyección
-  "23. Usuarios estimados (año 1 y año 2): ¿Cuántos usuarios activos estimas tener al cierre del Año 1 y al cierre del Año 2 desde tu lanzamiento?",
-  "24. Número de transferencias interbancarias mensuales estimadas",
+  "31. Usuarios estimados (año 1 y año 2): ¿Cuántos usuarios activos estimas tener al cierre del Año 1 y al cierre del Año 2 desde tu lanzamiento?",
+  "32. Número de transferencias interbancarias mensuales estimadas",
 
   // Sección 10 — Presupuesto y referencia
-  "25. Presupuesto asignado para digitalización",
-  "26. ¿Quién te refirió con nosotros?"
+  "33. Presupuesto asignado para digitalización",
+  "34. ¿Quién te refirió con nosotros?"
 ];
 
 
@@ -242,6 +250,14 @@ const COMERCIAL_PLACEHOLDERS = [
 
   // Sección 4 — Core y arquitectura
   "Ej: Sí, usamos  módulos de cuentas y pagos en transacciones nacionales e internacionles / No contamos con core",
+  "Selecciona una o varias opciones",
+  "Ej: 120 empleados, 25 ejecutivos, 40 usuarios operacionales",
+  "Selecciona una o varias opciones",
+  "Ej: USD, MXN, EUR",
+  "Selecciona una o varias opciones",
+  "Selecciona una opción",
+  "Selecciona una opción",
+  "Selecciona una o varias opciones",
 
   // Sección 6 — Integraciones
   "Ej: Core bancario, procesador de pagos, KYC, AML",
@@ -472,7 +488,7 @@ export const COMERCIAL_FORM: FormConfig = {
   placeholders: COMERCIAL_PLACEHOLDERS,
   storageKey: "form-onboarding-comercial-answers",
   indices: {
-    budgetQuestionIndex: 24, // Pregunta 25 (índice 24): Presupuesto asignado para digitalización
+    budgetQuestionIndex: 32, // Pregunta 33 (índice 32): Presupuesto asignado para digitalización
     servicesQuestionIndex: -1, // El formulario comercial ya no usa pregunta de servicios/MVP
     countryQuestionIndex: 4, // Pregunta 5 (índice 4): País(es) donde opera
   },
@@ -508,20 +524,150 @@ export const COMERCIAL_FORM: FormConfig = {
     },
     // NOTA: La pregunta 12 (índice 11) "¿Tiene core bancario?..." NO debe estar aquí
     // Debe ser un campo de texto, NO selección múltiple
-    // NOTA: La pregunta 13 (índice 12) "Integraciones externas críticas..." NO debe estar aquí
-    // Debe ser un campo de texto, NO selección múltiple
-    // NOTA: La pregunta 14 (índice 13) "Tipos de transferencias interbancarias" NO debe estar aquí
-    // Debe ser un campo de texto, NO selección
-    // Pregunta 15 (índice 14): ¿Emiten tarjetas? - Selección única
+    // Pregunta 13 (índice 12): Servicios requeridos para el core bancario - Selección múltiple
+    12: {
+      multiple: true,
+      options: [
+        {
+          label: "Gestión de clientes y usuarios",
+          description:
+            "Administración de personas y empresas, junto con control de accesos, roles y permisos dentro del sistema.",
+        },
+        {
+          label: "Productos financieros",
+          description:
+            "Configuración y administración de créditos, cuentas de ahorro, cuentas corrientes y estructuras como líneas de crédito.",
+        },
+        {
+          label: "Procesamiento transaccional",
+          description:
+            "Registro de movimientos financieros, ejecución de operaciones y cálculo de intereses sobre saldos y productos.",
+        },
+        {
+          label: "Pagos y transferencias",
+          description:
+            "Ejecución de pagos locales e internacionales e integración con redes externas de dinero.",
+        },
+        {
+          label: "Tarjetas",
+          description:
+            "Integración con proveedores para la emisión y gestión de tarjetas de débito o crédito.",
+        },
+        {
+          label: "Contabilidad y auditoría",
+          description:
+            "Libro mayor, registro en doble entrada y trazabilidad completa de operaciones para cumplimiento regulatorio.",
+        },
+        {
+          label: "Reportes y analítica",
+          description:
+            "Generación de información operativa, financiera y de negocio, junto con capacidades de análisis e insights.",
+        },
+        {
+          label: "Notificaciones",
+          description:
+            "Comunicación automática con clientes y usuarios basada en eventos del sistema.",
+        },
+        {
+          label: "Operaciones de caja",
+          description:
+            "Gestión de transacciones presenciales en sucursales o puntos físicos.",
+        },
+      ],
+    },
+    // NOTA: La pregunta 14 (índice 13) "Número de usuarios del sistema..." debe ser texto abierto
+    // Pregunta 15 (índice 14): Módulos requeridos - Selección múltiple
     14: {
+      multiple: true,
+      options: [
+        {
+          label: "Depósitos y cuentas",
+          description:
+            "Gestión de cuentas de ahorro, cuentas corrientes, saldos y movimientos asociados.",
+        },
+        {
+          label: "Préstamos y líneas de crédito",
+          description:
+            "Originación, administración de créditos, cuotas, cronogramas y líneas de financiamiento.",
+        },
+        {
+          label: "Pagos y recaudos",
+          description:
+            "Pagos de servicios, cobranzas, dispersión de fondos y operaciones de recaudo.",
+        },
+        {
+          label: "Transferencias",
+          description:
+            "Transferencias internas, interbancarias, inmediatas o programadas.",
+        },
+        {
+          label: "Tarjetas",
+          description:
+            "Procesos asociados a emisión, administración y operación de tarjetas.",
+        },
+        {
+          label: "Inversiones",
+          description:
+            "Productos y operaciones relacionadas con instrumentos de inversión y rendimiento.",
+        },
+      ],
+    },
+    // NOTA: La pregunta 16 (índice 15) "Monedas soportadas..." debe ser texto abierto
+    // Pregunta 17 (índice 16): Canales requeridos - Selección múltiple
+    16: {
+      multiple: true,
+      options: [
+        { label: "Banca móvil", description: "Canal móvil para clientes finales y operaciones digitales." },
+        { label: "Web", description: "Portal web transaccional o de autoservicio." },
+        { label: "ATM", description: "Integración con cajeros automáticos y retiros." },
+        { label: "Teller / caja", description: "Operación presencial en sucursales o puntos físicos." },
+        { label: "POS", description: "Pagos y operaciones en terminales de punto de venta." },
+      ],
+    },
+    // Pregunta 18 (índice 17): Timeline de implementación - Selección única
+    17: {
+      multiple: false,
+      options: [
+        { label: "0 a 3 meses", description: "Necesidad de salida muy rápida o despliegue inmediato." },
+        { label: "3 a 6 meses", description: "Implementación prioritaria a corto plazo." },
+        { label: "6 a 12 meses", description: "Proyecto planificado para el mediano plazo." },
+        { label: "Más de 12 meses", description: "Iniciativa estratégica con horizonte extendido." },
+      ],
+    },
+    // Pregunta 19 (índice 18): Infraestructura preferida - Selección única
+    18: {
+      multiple: false,
+      options: [
+        { label: "Cloud", description: "Infraestructura desplegada principalmente en la nube." },
+        { label: "On-premise", description: "Infraestructura alojada en entornos propios o del cliente." },
+        { label: "Híbrida", description: "Combinación de nube y componentes on-premise." },
+      ],
+    },
+    // Pregunta 20 (índice 19): Requisitos de cumplimiento - Selección múltiple
+    19: {
+      multiple: true,
+      options: [
+        { label: "Basilea III", description: "Requisitos de gestión de riesgo y suficiencia patrimonial." },
+        { label: "AML", description: "Controles de prevención de lavado de activos." },
+        { label: "KYC", description: "Procesos de conocimiento e identificación del cliente." },
+        { label: "PCI DSS", description: "Controles de seguridad para manejo de datos de tarjetas." },
+        { label: "Regulación local", description: "Cumplimiento específico según regulador y país de operación." },
+      ],
+    },
+    // NOTA: La pregunta 21 (índice 20) "Integraciones externas críticas..." NO debe estar aquí
+    // Debe ser un campo de texto, NO selección múltiple
+    // NOTA: La pregunta 22 (índice 21) "Tipos de transferencias interbancarias" NO debe estar aquí
+    // Debe ser un campo de texto, NO selección
+    // Pregunta 23 (índice 22): ¿Emiten tarjetas? - Selección única
+    22: {
       multiple: false,
       options: [
         { label: "Sí" },
         { label: "No" },
       ],
     },
-    // Pregunta 25 (índice 24): Presupuesto asignado - Selección única
-    24: {
+    // Pregunta 33 (índice 32): Presupuesto asignado - Selección única
+    32: {
       multiple: false,
       options: [
         { label: "Sí" },
@@ -586,21 +732,35 @@ export const COMERCIAL_FORM: FormConfig = {
       maxLength: 200,
       blockedWords: ["asdf", "xxx"],
     },
-    12: { // Pregunta 13 (índice 12): Integraciones externas críticas
+    13: { // Pregunta 14 (índice 13): Número de usuarios del sistema
+      pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{5,200}$/,
+      errorMessage: "Por favor, describe el número de usuarios del sistema con suficiente detalle.",
+      minLength: 5,
+      maxLength: 200,
+      blockedWords: ["asdf", "xxx"],
+    },
+    15: { // Pregunta 16 (índice 15): Monedas soportadas
+      pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{3,120}$/,
+      errorMessage: "Por favor, indica las monedas soportadas con al menos 3 caracteres.",
+      minLength: 3,
+      maxLength: 120,
+      blockedWords: ["asdf", "xxx"],
+    },
+    20: { // Pregunta 21 (índice 20): Integraciones externas críticas
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{3,250}$/,
       errorMessage: "Por favor, describe las integraciones externas.",
       minLength: 3,
       maxLength: 250,
       blockedWords: ["no hay", "ninguna", "n/a", "no aplica", "nada", "asdf", "xxx"],
     },
-    13: { // Pregunta 14 (índice 13): Tipos de transferencias interbancarias
+    21: { // Pregunta 22 (índice 21): Tipos de transferencias interbancarias
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{5,200}$/,
       errorMessage: "Por favor, describe los tipos de transferencias con al menos 5 caracteres.",
       minLength: 5,
       maxLength: 200,
       blockedWords: ["no hay", "ninguna", "n/a", "no aplica", "nada", "asdf", "xxx"],
     },
-    25: { // Pregunta 26 (índice 25): ¿Quién te refirió con nosotros?
+    33: { // Pregunta 34 (índice 33): ¿Quién te refirió con nosotros?
       pattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s,.;:\-/()]{3,150}$/,
       errorMessage: "Por favor, indica quién te refirió con al menos 3 caracteres.",
       minLength: 3,

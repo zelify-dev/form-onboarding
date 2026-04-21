@@ -253,7 +253,7 @@ export async function POST(request: Request) {
             if (!Array.isArray(techAnswers) || techAnswers.length < 20) {
                 return NextResponse.json({ success: false, message: "El formulario técnico está incompleto." }, { status: 400 });
             }
-            if (sanitizedAnswers.length < 26) {
+            if (sanitizedAnswers.length < 34) {
                 return NextResponse.json({ success: false, message: "El formulario comercial está incompleto." }, { status: 400 });
             }
 

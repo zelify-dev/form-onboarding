@@ -80,12 +80,12 @@ export const technicalFormSchema = z.object({
     })
 });
 
-// Commercial form has 26 questions
-// Indices 15-23 are metrics (numeric-ish)
+// Commercial form has 34 questions
+// Indices 23-31 are metrics (numeric-ish)
 const metricRegex = /^[\d\s\.,$€£%a-zA-Z]+$/; // Allows numbers, spaces, dots, commas, currency, and some text (e.g. "USD")
 
 export const commercialFormSchema = z.object({
-    answers: z.array(z.string().trim()).min(26).max(26).superRefine((val, ctx) => {
+    answers: z.array(z.string().trim()).min(34).max(34).superRefine((val, ctx) => {
         val.forEach((answer, index) => {
             // General sanitization
             if (answer.length > 0 && !permissiveTextRegex.test(answer)) {
@@ -105,10 +105,10 @@ export const commercialFormSchema = z.object({
                 });
             }
 
-            // Metrics validation (Indices 15-23)
-            // 16. TPV to 24. Number of transfers
-            // Arrays are 0-indexed, so Question 16 is index 15.
-            if (index >= 15 && index <= 23 && answer.length > 0) {
+            // Metrics validation (Indices 23-31)
+            // 24. TPV to 32. Number of transfers
+            // Arrays are 0-indexed, so Question 24 is index 23.
+            if (index >= 23 && index <= 31 && answer.length > 0) {
                 if (!metricRegex.test(answer)) {
                     ctx.addIssue({
                         code: z.ZodIssueCode.custom,

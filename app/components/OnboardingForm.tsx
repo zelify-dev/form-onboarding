@@ -1166,7 +1166,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                             ) : null}
                             <div
                               className={`overflow-y-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] pr-2 -mr-2 ${hasDescriptions
-                                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 md:gap-3.5"
+                                ? "grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4"
                                 : selectConfig.multiple
                                   ? "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"
                                   : "flex flex-col sm:flex-row gap-3 sm:gap-4"
@@ -1181,9 +1181,12 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                 return (
                                   <label
                                     key={option.label}
-                                    className={`flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg cursor-pointer transition-all duration-200 ${isSelected
-                                      ? "bg-purple-50 text-slate-900"
-                                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-xl border cursor-pointer transition-all duration-200 ${hasDescriptions
+                                      ? "min-h-[132px]"
+                                      : ""
+                                      } ${isSelected
+                                      ? "border-purple-300 bg-purple-50 text-slate-900 shadow-sm"
+                                      : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
                                       } ${isExiting ? "opacity-50 cursor-not-allowed" : ""}`}
                                   >
                                     <input
@@ -1197,12 +1200,12 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                         : "w-4 h-4 sm:w-5 sm:h-5 accent-purple-500 cursor-pointer"
                                         }`}
                                     />
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="text-xs sm:text-sm md:text-base font-medium select-none leading-tight">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="text-sm sm:text-base font-medium select-none leading-tight">
                                         {option.label}
                                       </span>
                                       {option.description && (
-                                        <span className="text-xs text-white/60 select-none leading-tight">
+                                        <span className="text-xs sm:text-sm text-slate-500 select-none leading-snug">
                                           {option.description}
                                         </span>
                                       )}
