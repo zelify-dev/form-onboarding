@@ -6,6 +6,9 @@ import { jwtVerify } from 'jose';
 
 export const runtime = 'edge';
 
+/** Vercel limita ~60–300s según plan; el SSE no puede vivir hasta expirar el JWT (p. ej. 2h) o la función es matada. */
+const MAX_SSE_MS = 240_000;
+
 const encoder = new TextEncoder();
 
 export async function GET(request: Request) {
@@ -66,14 +69,18 @@ export async function GET(request: Request) {
                 } catch (e) { }
             }, 15000);
 
-            // Bounded Lifetime
+            // Cierra el stream antes del tope de Vercel; el cliente (TechStatusPanel) reconecta solo.
+            // Si el JWT vence antes de ese tope, avisamos para no reconectar en vano.
+            const boundedMs = Math.max(0, Math.min(msUntilExpiry, MAX_SSE_MS));
             expiryTimeout = setTimeout(() => {
                 try {
-                    const endPayload = { type: 'SESSION_EXPIRED' };
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(endPayload)}\n\n`));
+                    if (boundedMs >= msUntilExpiry && msUntilExpiry > 0) {
+                        const endPayload = { type: 'SESSION_EXPIRED' };
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(endPayload)}\n\n`));
+                    }
                     controller.close();
                 } catch (e) { }
-            }, Math.max(0, msUntilExpiry));
+            }, boundedMs);
 
             // Clean up: Request Abort overrides memory leaks
             request.signal.addEventListener('abort', () => {
