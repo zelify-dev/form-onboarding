@@ -11,6 +11,10 @@ import AnimationToggle from "./AnimationToggle";
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
+import { refreshOnboardingSession } from "../lib/sessionRefreshClient";
+
+/** Renueva la sesión en segundo plano mientras el usuario está en el formulario (evita 401 al finalizar). */
+const SESSION_HEARTBEAT_MS = 3 * 60 * 1000;
 
 type OnboardingFormProps = {
   config: FormConfig;
@@ -545,6 +549,14 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           return;
         }
 
+        const sessionOk = await refreshOnboardingSession();
+        if (!sessionOk) {
+          alert(
+            "Tu sesión expiró. Por favor, vuelve a la página inicial e ingresa de nuevo con tu código de acceso para enviar tus respuestas."
+          );
+          return;
+        }
+
         // Para formulario técnico, no esperar tiempo de procesamiento (simulado antes)
         if (!isTechnicalForm) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -553,6 +565,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         const res = await fetch('/api/onboarding', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ action: 'submitForm', formType: role, answers: finalAnswers })
         });
         const result = await res.json();
@@ -661,6 +674,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
           await fetch('/api/onboarding', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify({ action: 'saveProgress', formType: role, answers })
           });
         } catch (err) {
@@ -671,6 +685,28 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     }
   }, [answers]);
 
+  // Heartbeat + al volver a la pestaña: renueva la cookie antes de que caduque (usuario inactivo leyendo).
+  useEffect(() => {
+    if (typeof window === 'undefined' || isCompleted) return;
+    const role = localStorage.getItem('onboarding_role');
+    if (role !== 'commercial' && role !== 'technical') return;
+
+    const tick = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshOnboardingSession();
+      }
+    };
+
+    void tick();
+    const id = window.setInterval(tick, SESSION_HEARTBEAT_MS);
+    document.addEventListener('visibilitychange', tick);
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, [isCompleted]);
+
   // Load from Supabase on mount
   // Load from Supabase on mount via Server Action
   useEffect(() => {
@@ -680,7 +716,10 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
       if (role === 'commercial' || role === 'technical') {
         try {
-          const res = await fetch(`/api/onboarding?formType=${role}`);
+          const res = await fetch(`/api/onboarding?formType=${role}`, {
+            credentials: 'same-origin',
+            cache: 'no-store',
+          });
           const result = await res.json();
           if (result.success && result.answers && Array.isArray(result.answers)) {
             const normalizedAnswers = Array.from({ length: questions.length }, (_, index) => {
@@ -892,9 +931,19 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
         answersCount: newAnswers.length,
       });
 
+      const sessionOk = await refreshOnboardingSession();
+      if (!sessionOk) {
+        setValidationMessage(
+          "Tu sesión expiró. Vuelve a la página inicial e ingresa de nuevo con tu código de acceso; tus respuestas pueden estar guardadas."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ action: 'finalize', formType: role, answers: newAnswers })
       });
       const result = await res.json();

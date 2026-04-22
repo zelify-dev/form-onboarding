@@ -10,7 +10,8 @@ type SessionData = {
 };
 
 const SESSION_COOKIE_NAME = 'onboarding_session';
-const COOKIE_MAX_AGE = 60 * 15; // 15 minutes
+/** Tiempo suficiente para formularios largos; se renueva en cada petición autenticada (getSession). */
+const COOKIE_MAX_AGE = 60 * 120; // 2 horas
 
 const getSecretKey = () => {
     const secret = process.env.SUPABASE_JWT_SECRET;
@@ -33,7 +34,7 @@ export async function createSession(data: SessionData) {
     const value = await new SignJWT(payload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('15m')
+        .setExpirationTime('2h')
         .sign(getSecretKey());
 
     cookieStore.set(SESSION_COOKIE_NAME, value, {
@@ -56,12 +57,15 @@ export async function getSession(): Promise<SessionData | null> {
             algorithms: ['HS256'],
         });
 
-        return {
+        const data: SessionData = {
             companyId: payload.company_id as string,
             role: payload.app_role as string,
             ip: payload.ip as string,
             userAgent: payload.userAgent as string,
         };
+        // Ventana deslizante: cada GET/POST autenticado extiende la cookie (evita 401 al finalizar tras pausas).
+        await createSession(data);
+        return data;
     } catch (e) {
         return null; // Token expired or invalid signature
     }

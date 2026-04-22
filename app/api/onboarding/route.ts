@@ -22,7 +22,10 @@ export async function OPTIONS(request: Request) {
 export async function GET(request: Request) {
     const session = await getSession();
     if (!session) {
-        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+            { success: false, message: "Sesión expirada o no válida. Vuelva a ingresar con su código de acceso." },
+            { status: 401 }
+        );
     }
 
     const { searchParams } = new URL(request.url);
@@ -60,7 +63,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const session = await getSession();
     if (!session) {
-        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+            { success: false, message: "Sesión expirada o no válida. Vuelva a ingresar con su código de acceso." },
+            { status: 401 }
+        );
     }
 
     try {
