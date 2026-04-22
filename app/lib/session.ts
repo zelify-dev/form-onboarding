@@ -10,8 +10,9 @@ type SessionData = {
 };
 
 const SESSION_COOKIE_NAME = 'onboarding_session';
-/** Tiempo suficiente para formularios largos; se renueva en cada petición autenticada (getSession). */
-const COOKIE_MAX_AGE = 60 * 120; // 2 horas
+/** Sesión deslizante suficiente para completar formularios en varios bloques durante 1-2 días. */
+const SESSION_DURATION_HOURS = 48;
+const COOKIE_MAX_AGE = 60 * 60 * SESSION_DURATION_HOURS; // 48 horas
 
 const getSecretKey = () => {
     const secret = process.env.SUPABASE_JWT_SECRET;
@@ -34,7 +35,7 @@ export async function createSession(data: SessionData) {
     const value = await new SignJWT(payload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('2h')
+        .setExpirationTime(`${SESSION_DURATION_HOURS}h`)
         .sign(getSecretKey());
 
     cookieStore.set(SESSION_COOKIE_NAME, value, {

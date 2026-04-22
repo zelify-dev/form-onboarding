@@ -6,7 +6,7 @@ import { jwtVerify } from 'jose';
 
 export const runtime = 'edge';
 
-/** Vercel limita ~60–300s según plan; el SSE no puede vivir hasta expirar el JWT (p. ej. 2h) o la función es matada. */
+/** Vercel limita ~60–300s según plan; el SSE no puede vivir hasta expirar el JWT (p. ej. 48h) o la función es matada. */
 const MAX_SSE_MS = 240_000;
 
 const encoder = new TextEncoder();
