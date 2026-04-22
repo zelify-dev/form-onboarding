@@ -787,6 +787,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
       setValidationMessage(null);
     }
 
+    void refreshOnboardingSession();
+
     const newAnswers = [...answers];
     if (isCountryQuestion(currentQuestionIndex)) {
       newAnswers[currentQuestionIndex] = selectedCountries.join(", ");
@@ -820,6 +822,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0 && !isExiting) {
+      void refreshOnboardingSession();
       const newAnswers = [...answers];
       newAnswers[currentQuestionIndex] = currentAnswer;
       setAnswers(newAnswers);
