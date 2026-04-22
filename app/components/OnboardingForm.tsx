@@ -12,6 +12,7 @@ import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import type { FormConfig } from "../lib/formConfigs";
 import { COMERCIAL_FORM, TECNOLOGICO_FORM } from "../lib/formConfigs";
 import { refreshOnboardingSession } from "../lib/sessionRefreshClient";
+import { clearOnboardingFormDrafts } from "../lib/formLocalStorage";
 
 /** Renueva la sesión en segundo plano mientras el usuario está en el formulario (evita 401 al finalizar). */
 const SESSION_HEARTBEAT_MS = 3 * 60 * 1000;
@@ -138,12 +139,33 @@ const getResumeQuestionIndex = (answers: string[], totalQuestions: number): numb
   return Math.max(0, totalQuestions - 1);
 };
 
+function parseAnswersArrayFromJson(raw: unknown, length: number): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  return Array.from({ length }, (_, i) => (typeof raw[i] === "string" ? raw[i] : ""));
+}
+
+/** Prioriza texto en servidor; si está vacío, usa respaldo local (guardado en BD falló o aún no sincronizó). */
+function mergeServerAndLocalAnswers(server: string[], local: string[] | null, length: number): string[] {
+  const normalizedServer = Array.from({ length }, (_, i) =>
+    typeof server[i] === "string" ? server[i] : ""
+  );
+  if (!local || local.length !== length) return normalizedServer;
+  return Array.from({ length }, (_, i) => {
+    const s = (normalizedServer[i] ?? "").trim();
+    const l = (local[i] ?? "").trim();
+    if (s !== "") return normalizedServer[i] ?? "";
+    if (l !== "") return local[i] ?? "";
+    return "";
+  });
+}
+
 export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   const questions = config.questions;
   const placeholders = config.placeholders;
   const storageKey = config.storageKey;
   const progressKey = `${storageKey}-current-index`;
+  const answersBackupKey = `${storageKey}-answers-backup`;
   const { budgetQuestionIndex, servicesQuestionIndex, countryQuestionIndex } = config.indices;
   const selectQuestions = config.selectQuestions || {};
 
@@ -218,7 +240,8 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
   const [preGeneratedPDF, setPreGeneratedPDF] = useState<Blob | null>(null);
   const answersRef = useRef(answers);
   const hasSubmittedRef = useRef(false);
-  const hasRestoredProgressRef = useRef(false);
+  /** Evita escribir en localStorage antes de fusionar servidor + borrador local. */
+  const [progressRestored, setProgressRestored] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detectar si es formulario técnico
@@ -243,9 +266,27 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!hasRestoredProgressRef.current) return;
-    localStorage.setItem(progressKey, String(currentQuestionIndex));
-  }, [currentQuestionIndex, progressKey]);
+    if (!progressRestored) return;
+    try {
+      localStorage.setItem(progressKey, String(currentQuestionIndex));
+    } catch {
+      // ignore
+    }
+  }, [currentQuestionIndex, progressKey, progressRestored]);
+
+  /** Respaldo local de respuestas (si falla Supabase o la sesión, no se pierde todo). */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!progressRestored || isCompleted) return;
+    const id = window.setTimeout(() => {
+      try {
+        localStorage.setItem(answersBackupKey, JSON.stringify(answers));
+      } catch {
+        // ignore
+      }
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [answers, answersBackupKey, progressRestored, isCompleted]);
 
 
 
@@ -707,47 +748,69 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
     };
   }, [isCompleted]);
 
-  // Load from Supabase on mount
-  // Load from Supabase on mount via Server Action
+  // Carga inicial: Supabase + fusión con borrador local. La pregunta activa = primera sin responder (nunca un índice guardado que salte por delante).
   useEffect(() => {
+    const readLocalAnswersBackup = (): string[] | null => {
+      try {
+        const raw = localStorage.getItem(answersBackupKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as unknown;
+        return parseAnswersArrayFromJson(parsed, questions.length);
+      } catch {
+        return null;
+      }
+    };
+
+    const applyMergedAnswers = (merged: string[]) => {
+      const resumedIndex = getResumeQuestionIndex(merged, questions.length);
+      setAnswers(merged);
+      setCurrentQuestionIndex(resumedIndex);
+      setCurrentAnswer(merged[resumedIndex] || "");
+      try {
+        localStorage.setItem(answersBackupKey, JSON.stringify(merged));
+        localStorage.setItem(progressKey, String(resumedIndex));
+      } catch {
+        // ignore
+      }
+    };
+
     const fetchSupabaseData = async () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === "undefined") return;
       const role = localStorage.getItem("onboarding_role");
 
-      if (role === 'commercial' || role === 'technical') {
+      if (role === "commercial" || role === "technical") {
+        const localBackup = readLocalAnswersBackup();
         try {
           const res = await fetch(`/api/onboarding?formType=${role}`, {
-            credentials: 'same-origin',
-            cache: 'no-store',
+            credentials: "same-origin",
+            cache: "no-store",
           });
           const result = await res.json();
+
           if (result.success && result.answers && Array.isArray(result.answers)) {
             const normalizedAnswers = Array.from({ length: questions.length }, (_, index) => {
               const value = result.answers[index];
               return typeof value === "string" ? value : "";
             });
-            const savedIndexRaw = localStorage.getItem(progressKey);
-            const savedIndex = savedIndexRaw ? parseInt(savedIndexRaw, 10) : NaN;
-            const inferredIndex = getResumeQuestionIndex(normalizedAnswers, questions.length);
-            const resumedIndex = Number.isFinite(savedIndex)
-              ? Math.min(Math.max(savedIndex, 0), questions.length - 1)
-              : inferredIndex;
-
-            setAnswers(normalizedAnswers);
-            setCurrentQuestionIndex(resumedIndex);
-            setCurrentAnswer(normalizedAnswers[resumedIndex] || "");
+            const merged = mergeServerAndLocalAnswers(normalizedAnswers, localBackup, questions.length);
+            applyMergedAnswers(merged);
+          } else if (localBackup?.some((a) => a.trim() !== "")) {
+            applyMergedAnswers(localBackup);
           }
-        } catch (e) {
+        } catch {
+          if (localBackup?.some((a) => a.trim() !== "")) {
+            applyMergedAnswers(localBackup);
+          }
         } finally {
-          hasRestoredProgressRef.current = true;
+          setProgressRestored(true);
         }
       } else {
-        hasRestoredProgressRef.current = true;
-      };
+        setProgressRestored(true);
+      }
     };
 
     fetchSupabaseData();
-  }, [progressKey, questions.length]);
+  }, [answersBackupKey, progressKey, questions.length]);
 
   const totalSteps = questions.length;
   const currentStep = currentQuestionIndex + 1;
@@ -1019,6 +1082,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                           onClick={() => {
                             localStorage.removeItem("onboarding_role");
                             localStorage.removeItem("onboarding_company_id");
+                            clearOnboardingFormDrafts();
                             window.location.href = "/";
                           }}
                           className="bg-red-500/80 hover:bg-red-600 text-white py-4 px-8 rounded-xl font-medium transition-all duration-300"
@@ -1058,6 +1122,7 @@ export default function OnboardingForm({ config }: OnboardingFormProps) {
                                   onClick={() => {
                                     localStorage.removeItem("onboarding_role");
                                     localStorage.removeItem("onboarding_company_id");
+                                    clearOnboardingFormDrafts();
                                     window.location.href = "/";
                                   }}
                                   className="flex-1 bg-red-500/80 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all duration-300"

@@ -6,6 +6,7 @@ import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 
 import iconAlaiza from "../assets/icons/iconAlaiza.svg";
 import zelifyLogoLight from "../assets/icons/zelifyLogo_ligth.svg";
+import { clearOnboardingFormDrafts } from "../lib/formLocalStorage";
 
 export default function Navbar({ showExitButton = true }: { showExitButton?: boolean }) {
   const router = useRouter();
@@ -15,8 +16,7 @@ export default function Navbar({ showExitButton = true }: { showExitButton?: boo
     if (typeof window !== "undefined") {
       localStorage.removeItem("onboarding_company_id");
       localStorage.removeItem("onboarding_role");
-      // Optional: Clear form answers if desired, but maybe user wants to resume later?
-      // For security "Exit", better to clear sensitive access.
+      clearOnboardingFormDrafts();
     }
     router.push("/");
   };

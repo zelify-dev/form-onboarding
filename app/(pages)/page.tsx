@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 import ContactForm from "../components/ContactForm";
 import { BriefcaseIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { clearOnboardingFormDrafts } from "../lib/formLocalStorage";
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState<"selection" | "auth" | "contact">("selection");
@@ -68,6 +69,7 @@ export default function Home() {
 
       const role = result.role;
       if (typeof window !== 'undefined') {
+        clearOnboardingFormDrafts();
         localStorage.setItem("onboarding_role", role);
         localStorage.setItem("onboarding_company_id", "session_active");
       }
